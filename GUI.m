@@ -186,7 +186,7 @@ if evolving == 0
             vec = grid_manager.percent_count;
             y_axis_label = 'Percent Population Size';
         else
-            vec = grid_manager.mean_fitness;
+            vec = grid_manager.overall_mean_fitness;
             y_axis_label = 'Mean Fitness';
         end
         if handles.plot_button_log.Value

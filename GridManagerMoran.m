@@ -46,6 +46,7 @@ classdef GridManagerMoran < GridManagerAbstract
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i))*obj.percent_count(i, obj.timestep); 
             end
+            obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
             obj.proportion_vec = [];
             if min(obj.total_count(:,obj.timestep)) < 100
                 multiplier = 100;

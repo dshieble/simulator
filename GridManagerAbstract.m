@@ -8,6 +8,7 @@ classdef GridManagerAbstract < handle
         percent_count;
         colors;
         mean_fitness;
+        overall_mean_fitness;
     end
     methods (Access = public)
         function obj = GridManagerAbstract(dim, Ninit)
@@ -30,6 +31,8 @@ classdef GridManagerAbstract < handle
             obj.total_count = [];
             obj.percent_count = [];
             obj.mean_fitness = [];
+            obj.overall_mean_fitness = [];
+
         end
       
          %mat - new updated matrix
