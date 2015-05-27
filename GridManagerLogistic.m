@@ -63,7 +63,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i)-obj.death_rate(i))*obj.percent_count(i, obj.timestep); 
-            end 
+            end
         end
 
     end

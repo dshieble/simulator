@@ -29,7 +29,7 @@ classdef GridManagerAbstract < handle
             
             obj.total_count = [];
             obj.percent_count = [];
-            obj.mean_fitness = []; 
+            obj.mean_fitness = [];
         end
       
          %mat - new updated matrix

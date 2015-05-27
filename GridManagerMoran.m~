@@ -39,21 +39,15 @@ classdef GridManagerMoran < GridManagerAbstract
             end
         end
         
-        %used tic and toc - this does not need any speed up
         function update_params(obj)
             for i = 1:obj.num_types
                 obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i))*obj.percent_count(i, obj.timestep); 
-            end
-            obj.proportion_vec = [];
-            if min(obj.total_count(:,obj.timestep)) < 100
-                multiplier = 100;
-            else 
-                multiplier = 1;
-            end
-            for i = 1:obj.num_types
-                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(obj.birth_rate(i)*multiplier*obj.total_count(i, obj.timestep)))];
+            end 
+            for i = 1:length(b)
+                
+                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(b(i)*100))];
             end
         end
 

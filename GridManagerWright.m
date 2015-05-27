@@ -12,9 +12,6 @@ classdef GridManagerWright < GridManagerAbstract
             obj@GridManagerAbstract(dim, Ninit);
             obj.fitness = f;
             obj.proportion_vec = [];
-            for i = 1:length(f)
-                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(f(i)*100))];
-            end
             obj.update_params();
         end
         
@@ -49,13 +46,24 @@ classdef GridManagerWright < GridManagerAbstract
             h = obj.isHomogenous();
         end
         
+        %used tic and toc - this does not need any speed up
         function update_params(obj)
             obj.timestep
             for i = 1:obj.num_types
                 obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.fitness(i))*obj.percent_count(i, obj.timestep); 
-            end 
+            end
+            obj.proportion_vec = [];
+            if min(obj.total_count(:,obj.timestep)) < 100
+                multiplier = 100;
+            else 
+                multiplier = 1;
+            end
+            for i = 1:obj.num_types
+                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(obj.birth_rate(i)*multiplier*obj.total_count(i, obj.timestep)))];
+            end
+            
         end
 
     end
