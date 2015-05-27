@@ -205,7 +205,7 @@ if evolving == 0
             for i = 1:size(grid_manager.total_count,1)
                 legend_input = [legend_input sprintf('Type %d', i)];
             end
-            legend(legend_input);
+            legend(legend_input, 'Location', 'northwest');
         end
         if halt
             break
