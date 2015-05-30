@@ -37,7 +37,7 @@ classdef GridManagerWright < GridManagerAbstract
             end
             long_mat = long_mat(randperm(length(long_mat)));            
             mat = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
-            if obj.timestep <= 2
+            if obj.timestep <= 2 || ~obj.plot_grid
                 changed = (1:numel(obj.matrix))';
             else
                 changed = find(mat ~= obj.matrix);

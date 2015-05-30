@@ -167,24 +167,25 @@ if evolving == 0
         [matrix, c, t, halt] = grid_manager.get_next();
         if handles.plot_grid_button.Value
             draw_iteration(matrix, c, t, halt, handles, grid_manager, rects);
-            if first_run
-                first_run = 0;
-                legend_input = {};
-                for i = 1:size(grid_manager.total_count,1)
-                    legend_input = [legend_input sprintf('Type %d', i)];
-                end
-                legend(legend_input, 'Location', 'northwest');
+        end
+       if first_run
+            first_run = 0;
+            legend_input = {};
+            for i = 1:size(grid_manager.total_count,1)
+                legend_input = [legend_input sprintf('Type %d', i)];
             end
-            pause(0.01);
-            drawnow;
+            legend(legend_input, 'Location', 'northwest');
         end
         if halt
             break
         end
     end
     save_data = grid_manager.output;
+    if ~first_run
+        
+        draw_iteration(matrix, c, t, halt, handles, grid_manager, rects);
+    end
 end
-draw_iteration(matrix, 1:parameter_manager.matrix.edge_size.^2', t, halt, handles, grid_manager, rects);
 evolving = 0;
 handles.run_button.String = 'Run';
 handles.run_button.BackgroundColor = [0 1 0];
@@ -228,7 +229,8 @@ for i = 1:size(vec,1)
 end
 xlabel('Timestep', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
-
+pause(0.01);
+drawnow;
 
 
 % --------------------------------------------------------------------

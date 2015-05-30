@@ -55,6 +55,9 @@ classdef GridManagerLogistic < GridManagerAbstract
             obj.output = [obj.output; obj.matrix(:)'];
             mat = obj.matrix;
             changed = find(old_mat ~= obj.matrix);
+            if ~obj.plot_grid
+                changed = (1:numel(obj.matrix))';
+            end
             t = obj.timestep;
             h = isempty(find(mat > 0, 1)) || isempty(find(mat == 0, 1));
         end

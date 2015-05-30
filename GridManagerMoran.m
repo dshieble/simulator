@@ -35,7 +35,7 @@ classdef GridManagerMoran < GridManagerAbstract
             mat = obj.matrix;
             t = obj.timestep;
             h = obj.isHomogenous();
-            if obj.timestep <= 2
+            if obj.timestep <= 2 || ~obj.plot_grid
                 changed = (1:numel(obj.matrix))';
             end
         end
