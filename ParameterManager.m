@@ -6,6 +6,7 @@ classdef ParameterManager < handle
         logistic;
         moran;
         wright;
+        matrix;
     end
     
     methods (Access = public)
@@ -16,6 +17,7 @@ classdef ParameterManager < handle
             obj.logistic = struct();
             obj.moran = struct();
             obj.wright = struct();
+            obj.matrix = struct();
             %logistic
             obj.logistic.Ninit_default = [5];
             obj.logistic.birth_rate_default = [0.5];
@@ -33,6 +35,9 @@ classdef ParameterManager < handle
             obj.wright.fitness_default = [0.5];
             obj.wright.Ninit = [obj.wright.Ninit_default obj.wright.Ninit_default];
             obj.wright.fitness = [obj.wright.fitness_default obj.wright.fitness_default];
+            %matrix
+            obj.matrix.plotting = 1;
+            obj.matrix.edge_size = 50;
          
         end
         
@@ -123,6 +128,20 @@ classdef ParameterManager < handle
                 obj.handles.init_pop_box_wright.String = obj.wright.Ninit(type);
             end
         end
+        
+        function noerror = updateMatrixProperties(obj)
+            size_temp = str2double(obj.handles.population_box.String);
+            noerror = 0;
+            if ~isnan(size_temp)
+                if round(sqrt(size_temp))^2 == size_temp && size_temp <= 2500 && size_temp >= 16
+                    obj.matrix.edge_size = sqrt(size_temp);
+                    noerror = 1;
+                else
+                    warndlg('Population size must be a perfect square and between 16 than 2500!');
+                end
+            end
+        end
+        
         
     end
 end

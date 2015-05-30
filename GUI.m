@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 14-May-2015 00:02:33
+% Last Modified by GUIDE v2.5 28-May-2015 16:49:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,19 +61,18 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global grid_size evolving old_matrix parameter_manager save_data;
+global evolving old_matrix parameter_manager save_data;
 evolving = 0;
-grid_size = 50;
-old_matrix = zeros(grid_size);
 parameter_manager = ParameterManager(handles);
+old_matrix = zeros(parameter_manager.matrix.edge_size);
 save_data = [];
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
 set(handles.axes_grid,'XTick',[]);
 set(handles.axes_grid,'YTick',[]);
-handles.axes_grid.XLim = [1 grid_size];
-handles.axes_grid.YLim = [1 grid_size];
+handles.axes_grid.XLim = [1 parameter_manager.matrix.edge_size];
+handles.axes_grid.YLim = [1 parameter_manager.matrix.edge_size];
 
 
 %fill the boxes properly
@@ -125,26 +124,26 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global grid_size evolving parameter_manager save_data;
-
+global evolving parameter_manager save_data;
+parameter_manager.updateMatrixProperties();
 if evolving == 0
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
-        grid_manager = GridManagerLogistic(grid_size, ...
+        grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
             parameter_manager.logistic.Ninit, ...
             parameter_manager.logistic.birth_rate, ...
             parameter_manager.logistic.death_rate);
     else
-        if sum(parameter_manager.moran.Ninit) ~= (grid_size^2)
-            warndlg(sprintf('Initial Populations must sum to %d', grid_size.^2));
+        if sum(parameter_manager.moran.Ninit) ~= (parameter_manager.matrix.edge_size^2)
+            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
             handles.run_button.String = 'Run';
             return;
         elseif handles.moran_button.Value
-            grid_manager = GridManagerMoran(grid_size, ...
+            grid_manager = GridManagerMoran(parameter_manager.matrix.edge_size, ...
                 parameter_manager.moran.Ninit, ...
                 parameter_manager.moran.birth_rate);
         elseif handles.wright_button.Value
-            grid_manager = GridManagerWright(grid_size, ...
+            grid_manager = GridManagerWright(parameter_manager.matrix.edge_size, ...
                 parameter_manager.wright.Ninit, ...
                 parameter_manager.wright.fitness);
         else
@@ -156,7 +155,7 @@ if evolving == 0
     evolving = 1;
     cla(handles.axes_grid);
     cla(handles.axes_graph);
-    rects = cell(grid_size);
+    rects = cell(parameter_manager.matrix.edge_size);
     handles.run_button.String = 'Stop';
     handles.run_button.BackgroundColor = [1 0 0];
     first_run = 1;
@@ -167,13 +166,14 @@ if evolving == 0
         handles.timestep_text.String = sprintf('Timestep: %d', t);
         perm = c(randperm(length(c)))';
         for p = perm
-            [i, j] = ind2sub(grid_size, p);
+            [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
             if (matrix(i,j) == 0)
                 if (~isempty(rects(i,j)))
                     delete(rects{i,j});
                 end
             else
-                rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[i j 1 1],'facecolor',grid_manager.get_color(matrix(i,j)));
+                mult = (50/parameter_manager.matrix.edge_size);
+                rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
             end
         end
         drawnow;
@@ -393,6 +393,15 @@ else
 end
 
  
+function population_box_Callback(hObject, eventdata, handles)
+% hObject    handle to population_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of population_box as text
+%        str2double(get(hObject,'String')) returns contents of population_box as a double
+global parameter_manager;
+parameter_manager.updateMatrixProperties();
 
 
 
@@ -508,6 +517,19 @@ function types_popup_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function population_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to population_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
