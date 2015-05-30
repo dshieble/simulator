@@ -7,11 +7,12 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, f)
+        function obj = GridManagerWright(dim, Ninit, f, plot_grid)
             assert(sum(Ninit)==dim.^2);
             obj@GridManagerAbstract(dim, Ninit);
             obj.fitness = f;
             obj.proportion_vec = [];
+            obj.plot_grid = plot_grid;
             obj.update_params();
         end
         

@@ -164,19 +164,7 @@ if evolving == 0
     first_run = 1;
     drawnow;
     while evolving == 1
-        [matrix, c, t, halt] = grid_manager.get_next();
-        if handles.plot_grid_button.Value
-            draw_iteration(matrix, c, t, halt, handles, grid_manager, rects);
-            if first_run
-                first_run = 0;
-                legend_input = {};
-                for i = 1:size(grid_manager.total_count,1)
-                    legend_input = [legend_input sprintf('Type %d', i)];
-                end
-                legend(legend_input, 'Location', 'northwest');
-            end
-            pause(0.01);
-            drawnow;
+
         end
         if halt
             break
@@ -184,50 +172,12 @@ if evolving == 0
     end
     save_data = grid_manager.output;
 end
-draw_iteration(matrix, 1:parameter_manager.matrix.edge_size.^2', t, halt, handles, grid_manager, rects);
 evolving = 0;
 handles.run_button.String = 'Run';
 handles.run_button.BackgroundColor = [0 1 0];
 
+function draw_iteration()
 
-
-function draw_iteration(matrix, c, t, halt, handles, grid_manager, rects)
-global parameter_manager;
-%represents a single iteration of the grid and graph
-handles.timestep_text.String = sprintf('Timestep: %d', t);
-perm = c(randperm(length(c)))';
-for p = perm
-    [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
-    if (matrix(i,j) == 0)
-        if (~isempty(rects(i,j)))
-            delete(rects{i,j});
-        end
-    else
-        mult = (50/parameter_manager.matrix.edge_size);
-        rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
-    end
-end
-%plot the graph
-if handles.plot_button_count.Value
-    vec = grid_manager.total_count;
-    y_axis_label = 'Population Size';
-elseif handles.plot_button_percent.Value
-    vec = grid_manager.percent_count;
-    y_axis_label = 'Percent Population Size';
-else
-    vec = grid_manager.overall_mean_fitness;
-    y_axis_label = 'Mean Fitness';
-end
-if handles.plot_button_log.Value
-    vec = log(vec);
-    y_axis_label = sprintf('log(%s)', y_axis_label);
-end
-for i = 1:size(vec,1)
-    hold on;
-    plot(1:size(vec,2), vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
-end
-xlabel('Timestep', 'Parent', handles.axes_graph);
-ylabel(y_axis_label, 'Parent', handles.axes_graph);
 
 
 

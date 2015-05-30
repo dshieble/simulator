@@ -7,11 +7,12 @@ classdef GridManagerMoran < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerMoran(dim, Ninit, b)
+        function obj = GridManagerMoran(dim, Ninit, b, plot_grid)
             assert(sum(Ninit)==dim.^2);
             obj@GridManagerAbstract(dim, Ninit);
             obj.birth_rate = b;
             obj.proportion_vec = [];
+            obj.plot_grid = plot_grid;
             obj.update_params();
         end
         

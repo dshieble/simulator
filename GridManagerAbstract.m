@@ -9,6 +9,7 @@ classdef GridManagerAbstract < handle
         colors;
         mean_fitness;
         overall_mean_fitness;
+        plot_grid;
     end
     methods (Access = public)
         function obj = GridManagerAbstract(dim, Ninit)
