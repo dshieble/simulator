@@ -63,7 +63,7 @@ classdef GridManagerWright < GridManagerAbstract
                 multiplier = 1;
             end
             for i = 1:obj.num_types
-                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(obj.birth_rate(i)*multiplier*obj.total_count(i, obj.timestep)))];
+                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(obj.fitness(i)*multiplier*obj.total_count(i, obj.timestep)))];
             end
             
         end
