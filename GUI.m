@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 29-May-2015 22:16:59
+% Last Modified by GUIDE v2.5 31-May-2015 16:57:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -593,3 +593,10 @@ function plot_grid_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of plot_grid_button
+
+
+% --- Executes on button press in preview_button.
+function preview_button_Callback(hObject, eventdata, handles)
+% hObject    handle to preview_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
