@@ -61,11 +61,14 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
 save_data = [];
+rects = [];
+paused = 0;
+grid_manager = [];
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -124,9 +127,9 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data;
+global evolving parameter_manager save_data rects grid_manager paused;
 parameter_manager.updateMatrixProperties();
-if evolving == 0
+if evolving == 0 && ~paused
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
         grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
@@ -159,26 +162,101 @@ if evolving == 0
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
-    handles.run_button.String = 'Stop';
+    handles.run_button.String = 'Pause';
     handles.run_button.BackgroundColor = [1 0 0];
-    first_run = 1;
+    handles.save_button.String = 'Reset';
     drawnow;
-    while evolving == 1
-
-        end
-        if halt
-            break
-        end
-    end
+    run_loop(1, handles);
     save_data = grid_manager.output;
+    evolving = 0;
+elseif evolving == 0 && paused
+    evolving = 1;
+    paused = 0;
+    handles.run_button.String = 'Pause';
+    handles.run_button.BackgroundColor = [1 0 0];
+    handles.save_button.String = 'Reset';
+    drawnow;
+    run_loop(0, handles);
+    evolving = 0;
+elseif evolving == 1
+	evolving = 0;
+    paused = 1;
+    handles.run_button.String = 'Continue';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
 end
-evolving = 0;
-handles.run_button.String = 'Run';
-handles.run_button.BackgroundColor = [0 1 0];
+if ~paused && evolving == 0;
+    handles.run_button.String = 'Run';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
+end
 
-function draw_iteration()
+function run_loop(first_run, handles)
+global evolving grid_manager;
+while evolving == 1
+    [matrix, c, t, halt] = grid_manager.get_next();
+    if handles.plot_grid_button.Value
+        draw_iteration(matrix, c, t, halt, handles);
+    end
+   if first_run
+        first_run = 0;
+        legend_input = {};
+        for i = 1:size(grid_manager.total_count,1)
+            legend_input = [legend_input sprintf('Type %d', i)];
+        end
+        legend(legend_input, 'Location', 'northwest');
+    end
+    if halt
+        break
+    end
+end
+if ~first_run
+    draw_iteration(matrix, c, t, halt, handles);
+end
 
+    
 
+function draw_iteration(matrix, c, t, halt, handles)
+global parameter_manager rects grid_manager;
+%represents a single iteration of the grid and graph
+handles.timestep_text.String = sprintf('Timestep: %d', t);
+perm = c(randperm(length(c)))';
+for p = perm
+    [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
+    if (matrix(i,j) == 0)
+        if (~isempty(rects(i,j)))
+            delete(rects{i,j});
+        end
+    else
+        mult = (50/parameter_manager.matrix.edge_size);
+        rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
+    end
+end
+%plot the graph
+if handles.plot_button_count.Value
+    vec = grid_manager.total_count;
+    y_axis_label = 'Population Size';
+elseif handles.plot_button_percent.Value
+    vec = grid_manager.percent_count;
+    y_axis_label = 'Percent Population Size';
+else
+    vec = grid_manager.overall_mean_fitness;
+    y_axis_label = 'Mean Fitness';
+end
+if handles.plot_button_log.Value
+    vec = log(vec);
+    y_axis_label = sprintf('log(%s)', y_axis_label);
+end
+for i = 1:size(vec,1)
+    hold on;
+    plot(1:size(vec,2), vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
+end
+xlabel('Timestep', 'Parent', handles.axes_graph);
+ylabel(y_axis_label, 'Parent', handles.axes_graph);
+pause(0.01);
+drawnow;
 
 
 % --------------------------------------------------------------------
@@ -283,7 +361,11 @@ function save_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global save_data;
-save(sprintf('Saved Population Dynamics Data: %s',date)', 'save_data')
+if ~evolving
+    save(sprintf('Saved Population Dynamics Data: %s',date)', 'save_data')
+else
+    
+end
 
 
 

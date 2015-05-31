@@ -61,11 +61,14 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
 save_data = [];
+rects = [];
+paused = 0;
+grid_manager = [];
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -124,9 +127,9 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data;
+global evolving parameter_manager save_data rects grid_manager paused;
 parameter_manager.updateMatrixProperties();
-if evolving == 0
+if ~evolving && ~paused %run
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
         grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
@@ -159,41 +162,64 @@ if evolving == 0
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
-    handles.run_button.String = 'Stop';
+    handles.run_button.String = 'Pause';
     handles.run_button.BackgroundColor = [1 0 0];
-    first_run = 1;
+    handles.save_button.String = 'Reset';
     drawnow;
-    while evolving == 1
-        [matrix, c, t, halt] = grid_manager.get_next();
-        if handles.plot_grid_button.Value
-            draw_iteration(matrix, c, t, halt, handles, grid_manager, rects);
-        end
-       if first_run
-            first_run = 0;
-            legend_input = {};
-            for i = 1:size(grid_manager.total_count,1)
-                legend_input = [legend_input sprintf('Type %d', i)];
-            end
-            legend(legend_input, 'Location', 'northwest');
-        end
-        if halt
-            break
-        end
-    end
+    run_loop(1, handles);
     save_data = grid_manager.output;
-    if ~first_run
-        
-        draw_iteration(matrix, c, t, halt, handles, grid_manager, rects);
+    evolving = 0;
+elseif ~evolving && paused %continue
+    evolving = 1;
+    paused = 0;
+    handles.run_button.String = 'Pause';
+    handles.run_button.BackgroundColor = [1 0 0];
+    handles.save_button.String = 'Reset';
+    drawnow;
+    run_loop(0, handles);
+    evolving = 0;
+elseif evolving && ~paused %pause
+	evolving = 0;
+    paused = 1;
+    handles.run_button.String = 'Continue';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
+end
+if ~paused && ~evolving;
+    handles.run_button.String = 'Run';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
+end
+
+function run_loop(first_run, handles)
+global evolving grid_manager;
+while evolving == 1
+    [matrix, c, t, halt] = grid_manager.get_next();
+    if handles.plot_grid_button.Value
+        draw_iteration(matrix, c, t, halt, handles);
+    end
+   if first_run
+        first_run = 0;
+        legend_input = {};
+        for i = 1:size(grid_manager.total_count,1)
+            legend_input = [legend_input sprintf('Type %d', i)];
+        end
+        legend(legend_input, 'Location', 'northwest');
+    end
+    if halt
+        break
     end
 end
-evolving = 0;
-handles.run_button.String = 'Run';
-handles.run_button.BackgroundColor = [0 1 0];
+if ~first_run
+    draw_iteration(matrix, c, t, halt, handles);
+end
 
+    
 
-
-function draw_iteration(matrix, c, t, halt, handles, grid_manager, rects)
-global parameter_manager;
+function draw_iteration(matrix, c, t, halt, handles)
+global parameter_manager rects grid_manager;
 %represents a single iteration of the grid and graph
 handles.timestep_text.String = sprintf('Timestep: %d', t);
 perm = c(randperm(length(c)))';
@@ -334,8 +360,17 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global save_data;
-save(sprintf('Saved Population Dynamics Data: %s',date)', 'save_data')
+global save_data paused evolving;
+if ~evolving
+    save(sprintf('Saved Population Dynamics Data: %s',date)', 'save_data')
+else
+    paused = 0;
+    evolving = 0;
+    handles.run_button.String = 'Run';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
+end
 
 
 
