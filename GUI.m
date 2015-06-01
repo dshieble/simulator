@@ -455,6 +455,46 @@ parameter_manager.updateMatrixProperties();
 
 
 
+% --- Executes on button press in plot_grid_button.
+function plot_grid_button_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_grid_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of plot_grid_button
+
+
+% --- Executes on button press in preview_button.
+function preview_button_Callback(hObject, eventdata, handles)
+% hObject    handle to preview_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global parameter_manager;
+%Table Formatting in a dialog box is a pain in the butt
+%TODO: set a standard number of spaces for each and enforce it
+str = {};
+str = [str 'Type |  Size(Logistic)  Birth Rate(Logistic)  Death Rate(Logistic)  Size(Moran)  Birth Rate(Moran)  Size(Wright-Fisher)  Fitness(Wright-Fisher)'];
+str = [str ' ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' ];
+for i = 1:parameter_manager.num_types
+    if i < 10 
+        spacer = '  ';
+    else
+        spacer = '';
+    end
+    str = [str, sprintf(' %g     %s |  %g                    %g                          %g                          %g             %g                        %g                       %g',...
+        i,...
+        spacer,...
+        parameter_manager.logistic.Ninit(i),...
+        parameter_manager.logistic.birth_rate(i),...
+        parameter_manager.logistic.death_rate(i),...
+        parameter_manager.moran.Ninit(i),...
+        parameter_manager.moran.birth_rate(i),...
+        parameter_manager.wright.Ninit(i),...
+        parameter_manager.wright.fitness(i))];
+end
+PopulationParametersDialog(str);
+
+
 % --- Executes during object creation, after setting all properties.
 function init_pop_box_wright_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to init_pop_box_wright (see GCBO)
@@ -585,18 +625,3 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes on button press in plot_grid_button.
-function plot_grid_button_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_grid_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of plot_grid_button
-
-
-% --- Executes on button press in preview_button.
-function preview_button_Callback(hObject, eventdata, handles)
-% hObject    handle to preview_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

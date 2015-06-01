@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 29-May-2015 22:16:59
+% Last Modified by GUIDE v2.5 31-May-2015 16:57:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -129,7 +129,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % axis off; axis equal;
 global evolving parameter_manager save_data rects grid_manager paused;
 parameter_manager.updateMatrixProperties();
-if evolving == 0 && ~paused
+if ~evolving && ~paused %run
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
         grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
@@ -169,7 +169,7 @@ if evolving == 0 && ~paused
     run_loop(1, handles);
     save_data = grid_manager.output;
     evolving = 0;
-elseif evolving == 0 && paused
+elseif ~evolving && paused %continue
     evolving = 1;
     paused = 0;
     handles.run_button.String = 'Pause';
@@ -178,7 +178,7 @@ elseif evolving == 0 && paused
     drawnow;
     run_loop(0, handles);
     evolving = 0;
-elseif evolving == 1
+elseif evolving && ~paused %pause
 	evolving = 0;
     paused = 1;
     handles.run_button.String = 'Continue';
@@ -186,7 +186,7 @@ elseif evolving == 1
     handles.save_button.String = 'Save';
     drawnow;
 end
-if ~paused && evolving == 0;
+if ~paused && ~evolving;
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
     handles.save_button.String = 'Save';
@@ -360,11 +360,16 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global save_data;
+global save_data paused evolving;
 if ~evolving
     save(sprintf('Saved Population Dynamics Data: %s',date)', 'save_data')
 else
-    
+    paused = 0;
+    evolving = 0;
+    handles.run_button.String = 'Run';
+    handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
+    drawnow;
 end
 
 
@@ -448,6 +453,46 @@ function population_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMatrixProperties();
 
+
+
+% --- Executes on button press in plot_grid_button.
+function plot_grid_button_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_grid_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of plot_grid_button
+
+
+% --- Executes on button press in preview_button.
+function preview_button_Callback(hObject, eventdata, handles)
+% hObject    handle to preview_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global parameter_manager;
+%Table Formatting in a dialog box is a pain in the butt
+%TODO: set a standard number of spaces for each and 
+str = {};
+str = [str 'Type |  Size(Logistic)  Birth Rate(Logistic)  Death Rate(Logistic)  Size(Moran)  Birth Rate(Moran)  Size(Wright-Fisher)  Fitness(Wright-Fisher)'];
+str = [str ' ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' ];
+for i = 1:parameter_manager.num_types
+    if i < 10 
+        spacer = '  ';
+    else
+        spacer = '';
+    end
+    str = [str, sprintf(' %g     %s |  %g                    %g                          %g                          %g             %g                        %g                       %g',...
+        i,...
+        spacer,...
+        parameter_manager.logistic.Ninit(i),...
+        parameter_manager.logistic.birth_rate(i),...
+        parameter_manager.logistic.death_rate(i),...
+        parameter_manager.moran.Ninit(i),...
+        parameter_manager.moran.birth_rate(i),...
+        parameter_manager.wright.Ninit(i),...
+        parameter_manager.wright.fitness(i))];
+end
+PopulationParametersDialog(str);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -580,11 +625,3 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes on button press in plot_grid_button.
-function plot_grid_button_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_grid_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of plot_grid_button
