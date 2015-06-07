@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 31-May-2015 16:57:37
+% Last Modified by GUIDE v2.5 07-Jun-2015 13:01:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -69,6 +69,7 @@ save_data = [];
 rects = [];
 paused = 0;
 grid_manager = [];
+plot_grid = handles.plot_grid_button.Value;
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -127,16 +128,21 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data rects grid_manager paused;
+global evolving parameter_manager save_data rects grid_manager paused plot_grid;
 parameter_manager.updateMatrixProperties();
 if ~evolving && ~paused %run
+    if handles.plot_grid_button.Value
+        plot_grid = 1;
+    else 
+        plot_grid = 0;
+    end
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
         grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
             parameter_manager.logistic.Ninit, ...
             parameter_manager.logistic.birth_rate, ...
             parameter_manager.logistic.death_rate, ...
-            handles.plot_grid_button.Value);
+            plot_grid);
     else
         if sum(parameter_manager.moran.Ninit) ~= (parameter_manager.matrix.edge_size^2)
             warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
@@ -146,12 +152,12 @@ if ~evolving && ~paused %run
             grid_manager = GridManagerMoran(parameter_manager.matrix.edge_size, ...
                 parameter_manager.moran.Ninit, ...
                 parameter_manager.moran.birth_rate, ...
-                handles.plot_grid_button.Value);
+                plot_grid);
         elseif handles.wright_button.Value
             grid_manager = GridManagerWright(parameter_manager.matrix.edge_size, ...
                 parameter_manager.wright.Ninit, ...
                 parameter_manager.wright.fitness, ...
-                handles.plot_grid_button.Value);
+                plot_grid);
         else
             warndlg('Radio button error');
             handles.run_button.String = 'Run';
@@ -194,10 +200,10 @@ if ~paused && ~evolving;
 end
 
 function run_loop(first_run, handles)
-global evolving grid_manager;
+global evolving grid_manager plot_grid;
 while evolving == 1
     [matrix, c, t, halt] = grid_manager.get_next();
-    if handles.plot_grid_button.Value
+    if plot_grid
         draw_iteration(matrix, c, t, halt, handles);
     end
    if first_run
