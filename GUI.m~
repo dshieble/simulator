@@ -202,10 +202,10 @@ end
 function run_loop(first_run, handles)
 global evolving grid_manager plot_grid;
 while evolving == 1
-   [matrix, c, t, halt] = grid_manager.get_next();
-   if plot_grid
-       draw_iteration(matrix, c, t, halt, handles);
-   end
+    [matrix, c, t, halt] = grid_manager.get_next();
+    if plot_grid
+        draw_iteration(matrix, c, t, halt, handles);
+    end
    if first_run
         first_run = 0;
         legend_input = {};
@@ -225,21 +225,19 @@ end
     
 
 function draw_iteration(matrix, c, t, halt, handles)
-global parameter_manager rects grid_manager plot_grid;
+global parameter_manager rects grid_manager;
 %represents a single iteration of the grid and graph
-if plot_grid 
-    handles.timestep_text.String = sprintf('Timestep: %d', t);
-    perm = c(randperm(length(c)))';
-    for p = perm
-        [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
-        if (matrix(i,j) == 0)
-            if (~isempty(rects(i,j)))
-                delete(rects{i,j});
-            end
-        else
-            mult = (50/parameter_manager.matrix.edge_size);
-            rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
+handles.timestep_text.String = sprintf('Timestep: %d', t);
+perm = c(randperm(length(c)))';
+for p = perm
+    [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
+    if (matrix(i,j) == 0)
+        if (~isempty(rects(i,j)))
+            delete(rects{i,j});
         end
+    else
+        mult = (50/parameter_manager.matrix.edge_size);
+        rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
     end
 end
 %plot the graph
@@ -261,11 +259,7 @@ for i = 1:size(vec,1)
     hold on;
     plot(1:size(vec,2), vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
-if plot_grid
-    xlabel('Major Timestep', 'Parent', handles.axes_graph);
-else
-    xlabel('Minor Timestep', 'Parent', handles.axes_graph);
-end
+xlabel('Timestep', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 pause(0.01);
 drawnow;

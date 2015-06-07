@@ -29,7 +29,7 @@ classdef GridManagerAbstract < handle
             obj.num_types = length(Ninit);
             obj.colors = rand(obj.num_types, 3);
             
-            obj.total_count = [];
+            obj.total_count = Ninit';
             obj.percent_count = [];
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];

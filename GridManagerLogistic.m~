@@ -9,8 +9,8 @@ classdef GridManagerLogistic < GridManagerAbstract
         
         function obj = GridManagerLogistic(dim, Ninit, b, d, plot_grid)
             obj@GridManagerAbstract(dim, Ninit);
-            obj.birth_rate = b';
-            obj.death_rate = d';
+            obj.birth_rate = b;
+            obj.death_rate = d;
             obj.plot_grid = plot_grid;
             obj.update_params();
         end
@@ -53,25 +53,25 @@ classdef GridManagerLogistic < GridManagerAbstract
                 changed = find(old_mat ~= obj.matrix);
                 obj.output = [obj.output; obj.matrix(:)'];
             else
-                obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
                 changed = (1:numel(obj.matrix))';
                 mat = [];
-                tot_rates = obj.total_count(:,obj.timestep + 1).*(obj.birth_rate + obj.death_rate);
+                tot_rates = obj.total_count.*(obj.birth_rate + obj.death_rate);
                 num = rand()*sum(tot_rates);
                 chosen_type = 0;
                 while num > 0
-                    chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
+                    chosen_type = chosen_type + 1;
                 end
-                if num + obj.birth_rate(chosen_type)*obj.total_count(chosen_type, obj.timestep + 1) > 0
-                    obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) + 1;
+                if num + obj.birth_rate(chosen_type)*obj.total_count(chosen_type) > 0
+                    obj.total_count(chosen_type,obj.timestep) = obj.total_count(chosen_type,obj.timestep) + 1;
                 else
-                    obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) - 1;
+                    obj.total_count(chosen_type,obj.timestep) = obj.total_count(chosen_type,obj.timestep) - 1;
                 end
             end
             %then, include all computation updates
             obj.timestep = obj.timestep + 1;
             obj.update_params();
+            obj.total_count
             h = ~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix);
             t = obj.timestep;
         end
