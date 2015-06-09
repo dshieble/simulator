@@ -10,6 +10,7 @@ classdef GridManagerAbstract < handle
         mean_fitness;
         overall_mean_fitness;
         plot_grid;
+        generations;
     end
     methods (Access = public)
         function obj = GridManagerAbstract(dim, Ninit)
@@ -33,14 +34,14 @@ classdef GridManagerAbstract < handle
             obj.percent_count = [];
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];
-
+            obj.generations = [0];
         end
       
          %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [mat, changed, t, h] = get_next(obj)
+        function [mat, changed, t, h, g] = get_next(obj)
         end
 
                 

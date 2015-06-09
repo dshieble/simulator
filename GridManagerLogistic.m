@@ -37,14 +37,16 @@ classdef GridManagerLogistic < GridManagerAbstract
                 end
 
                 %birth
+                new = [];
                 for i = 1:obj.num_types
                     ind = find(obj.matrix == i);
                     for j = ind'
-                        if (rand() < obj.birth_rate(i))
+                        if rand() < obj.birth_rate(i) && isempty(find(new == j, 1))
                             [a, b] = ind2sub(size(obj.matrix), j);
                             f = obj.get_nearest_free(a, b);
                             if (f > 0)
                                 obj.matrix(f) = i;
+                                new = [new f];
                             end
                         end
                     end
@@ -52,6 +54,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 mat = obj.matrix;
                 changed = find(old_mat ~= obj.matrix);
                 obj.output = [obj.output; obj.matrix(:)'];
+                obj.generations = [obj.generations obj.timestep];
             else
                 obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
                 changed = (1:numel(obj.matrix))';
@@ -68,6 +71,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 else
                     obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) - 1;
                 end
+                obj.generations = [obj.generations (obj.generations(end) + 1/sum(obj.total_count(:, obj.timestep)))];
             end
             %then, include all computation updates
             obj.timestep = obj.timestep + 1;

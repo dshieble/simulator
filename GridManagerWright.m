@@ -22,6 +22,7 @@ classdef GridManagerWright < GridManagerAbstract
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
             %For each cell, replace it with a multinomially chosen type
+            obj.generations = [obj.generations obj.timestep];
             obj.timestep = obj.timestep + 1;
             obj.update_params();
             counts = zeros(1,length(obj.fitness));

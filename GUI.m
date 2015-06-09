@@ -259,13 +259,11 @@ if handles.plot_button_log.Value
 end
 for i = 1:size(vec,1)
     hold on;
-    plot(1:size(vec,2), vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
+    length(grid_manager.generations)
+    length(vec(i,:))
+    plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
-if plot_grid
-    xlabel('Major Timestep', 'Parent', handles.axes_graph);
-else
-    xlabel('Minor Timestep', 'Parent', handles.axes_graph);
-end
+xlabel('Generations', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 pause(0.01);
 drawnow;
