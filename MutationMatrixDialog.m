@@ -25,7 +25,7 @@ function matrix = MutationMatrixDialog(current)
         'ColumnEditable', logical(ones(1,size(current,1))));
        
        
-       
+    uiwait;
     function cancel(~,~)
         uiresume;
         delete(gcf);

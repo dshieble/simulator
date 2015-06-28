@@ -14,14 +14,15 @@ classdef MutationManager < handle
         function matrix = mutate(obj, matrix)
             for i = 1:numel(matrix)
                 allele = matrix(i);
-                num = rand();
-                new_allele = 0;
-                while num > 0
-                    new_allele = new_allele + 1;
-                    obj.parameter_manager.mutation_matrix
-                    num = num - obj.parameter_manager.mutation_matrix(new_allele, allele);
+                if allele ~= 0
+                    num = rand();
+                    new_allele = 0;
+                    while num > 0
+                        new_allele = new_allele + 1;
+                        num = num - obj.parameter_manager.mutation_matrix(new_allele, allele);
+                    end
+                    matrix(i) = new_allele;
                 end
-                matrix(i) = new_allele;
             end
 
         end

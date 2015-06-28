@@ -229,6 +229,7 @@ while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
    if mutating
        matrix = mutation_manager.mutate(matrix);
+       grid_manager.matrix = matrix;
    end
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
@@ -239,7 +240,7 @@ while evolving == 1
         for i = 1:size(grid_manager.total_count,1)
             legend_input = [legend_input sprintf('Type %d', i)];
         end
-        warning('OFF','Plot empty.')
+        warning('OFF','MATLAB:legend:PlotEmpty')
         if plot_grid
             legend(legend_input, 'Location', 'northwest');
         end
@@ -261,13 +262,14 @@ if plot_grid
     perm = c(randperm(length(c)))';
     for p = perm
         [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
-        if (matrix(i,j) == 0)
-            if (~isempty(rects(i,j)))
-                delete(rects{i,j});
-            end
-        else
+        if (~isempty(rects(i,j)))
+            delete(rects{i,j});
+        end
+        if (matrix(i,j) ~= 0)
             mult = (50/parameter_manager.matrix.edge_size);
-            rects{i,j} = rectangle('Parent', handles.axes_grid, 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],'facecolor',grid_manager.get_color(matrix(i,j)));
+            rects{i,j} = rectangle('Parent', handles.axes_grid,...
+                'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
+                'facecolor',grid_manager.get_color(matrix(i,j)));
         end
     end
 end
@@ -555,8 +557,6 @@ if ~isempty(m)
 end
 
 
-
-
 % --- Executes on button press in demography_button.
 function demography_button_Callback(hObject, eventdata, handles)
 global mutating;
@@ -568,6 +568,52 @@ global mutating;
 mutating = 1;
 
 
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
 
 % --- Executes during object creation, after setting all properties.
 function init_pop_box_wright_CreateFcn(hObject, eventdata, handles)
