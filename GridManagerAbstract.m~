@@ -28,9 +28,7 @@ classdef GridManagerAbstract < handle
             obj.timestep = 1;
             
             obj.num_types = length(Ninit);
-            obj.colors = [1 0 0; 0 1 0; 0 0 1; 1 1 0; 1 0 1;...
-                          0 1 1; 1 0.5 0.5; 0.5 1 0.5; 1 0.5 0.5;...
-                          0.5 0.5 0.5];
+            obj.colors = [1 0 0; 0 1 0; 0 0 1; 1 1 0; 1 0 1; 0 1 1; 1 0.5 0.5; 0.5 1 0.5; 1 0.5 0.5; 0.5 0.5 0.5]
             
             obj.total_count = Ninit';
             obj.percent_count = [];

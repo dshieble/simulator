@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 28-Jun-2015 06:31:31
+% Last Modified by GUIDE v2.5 28-Jun-2015 05:50:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -130,11 +130,8 @@ function run_button_Callback(hObject, eventdata, handles)
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
 global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear;
-if ~evolving && ~paused
-    parameter_manager.updateMatrixProperties();
-end
+parameter_manager.updateMatrixProperties();
 if ~evolving && ~paused && parameters_clear %run
-    parameter_manager.updateMatrixProperties();
     if handles.plot_grid_button.Value
         plot_grid = 1;
     else 
@@ -177,8 +174,6 @@ if ~evolving && ~paused && parameters_clear %run
         end
     end
     evolving = 1;
-    handles.save_button.BackgroundColor = [0 0 0];
-    handles.reset_button.BackgroundColor = [0 0 0];
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
@@ -194,16 +189,13 @@ elseif ~evolving && paused %continue
     paused = 0;
     handles.run_button.String = 'Pause';
     handles.run_button.BackgroundColor = [1 0 0];
-    handles.save_button.BackgroundColor = [0 0 0];
-    handles.reset_button.BackgroundColor = [0 0 0];
+    handles.save_button.String = 'Reset';
     drawnow;
     run_loop(0, handles);
     evolving = 0;
 elseif evolving && ~paused %pause
 	evolving = 0;
     paused = 1;
-    handles.save_button.BackgroundColor = [0 1 1];
-    handles.reset_button.BackgroundColor = [1 0 0];
     handles.run_button.String = 'Continue';
     handles.run_button.BackgroundColor = [0 1 0];
     handles.save_button.String = 'Save';
@@ -212,6 +204,7 @@ end
 if ~paused && ~evolving;
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.String = 'Save';
     drawnow;
 end
 
@@ -384,30 +377,22 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global evolving ;
+global save_data paused evolving;
 if ~evolving
     c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
     save(str, 'save_data');
-end
-
-
-% --- Executes on button press in reset_button.
-function reset_button_Callback(hObject, eventdata, handles)
-% hObject    handle to reset_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global paused evolving rects parameter_manager;
-if ~evolving
+    
+else %reset
     paused = 0;
     evolving = 0;
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
     handles.save_button.String = 'Save';
-    cla(handles.axes_grid);
-    cla(handles.axes_graph);
-    rects = cell(parameter_manager.matrix.edge_size);
+    
     drawnow;
 end
+
+
 
 
 function birth_rate_box_moran_Callback(hObject, eventdata, handles)

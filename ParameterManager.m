@@ -1,6 +1,7 @@
 classdef ParameterManager < handle
     
     properties
+        max_types;
         num_types;
         handles;
         logistic;
@@ -12,6 +13,7 @@ classdef ParameterManager < handle
     methods (Access = public)
         
         function obj = ParameterManager(handles)
+            obj.max_types = 10;
             obj.num_types = 2;
             obj.handles = handles;
             obj.logistic = struct();
@@ -79,7 +81,8 @@ classdef ParameterManager < handle
 
         
         function updateNumTypes(obj)
-            num = str2double(obj.handles.num_types_box.String);
+            num = min(obj.max_types, str2double(obj.handles.num_types_box.String));
+            obj.handles.num_types_box.String = num2str(num);
             if ~isnan(num)
                 if num <= obj.num_types
                     obj.handles.types_popup.String(num+1:end) = [];
