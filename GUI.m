@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 28-Jun-2015 06:31:31
+% Last Modified by GUIDE v2.5 28-Jun-2015 12:09:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear model mutation_manager mutating;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -70,7 +70,10 @@ rects = [];
 paused = 0;
 grid_manager = [];
 parameters_clear = 1;
+model = 1;
 plot_grid = handles.plot_grid_button.Value;
+mutation_manager = MutationManager(parameter_manager);
+mutating = 0;
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -129,7 +132,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear;
+global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear model;
 if ~evolving && ~paused
     parameter_manager.updateMatrixProperties();
 end
@@ -148,6 +151,7 @@ if ~evolving && ~paused && parameters_clear %run
             parameter_manager.logistic.death_rate, ...
             plot_grid, ...
             0);
+        model = 1;
     elseif handles.exp_button.Value
         grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
             parameter_manager.logistic.Ninit, ...
@@ -155,6 +159,7 @@ if ~evolving && ~paused && parameters_clear %run
             parameter_manager.logistic.death_rate, ...
             plot_grid, ...
             1);
+        model = 2;
     else
         if sum(parameter_manager.moran.Ninit) ~= (parameter_manager.matrix.edge_size^2)
             warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
@@ -165,11 +170,13 @@ if ~evolving && ~paused && parameters_clear %run
                 parameter_manager.moran.Ninit, ...
                 parameter_manager.moran.birth_rate, ...
                 plot_grid);
+            model = 3;
         elseif handles.wright_button.Value
             grid_manager = GridManagerWright(parameter_manager.matrix.edge_size, ...
                 parameter_manager.wright.Ninit, ...
                 parameter_manager.wright.fitness, ...
                 plot_grid);
+            model = 4;
         else
             warndlg('Radio button error');
             handles.run_button.String = 'Run';
@@ -215,20 +222,27 @@ if ~paused && ~evolving;
     drawnow;
 end
 
+%Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid;
+global evolving grid_manager plot_grid mutation_manager mutating;
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
+   if mutating
+       matrix = mutation_manager.mutate(matrix);
+   end
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
    end
-   if first_run
+   if first_run 
         first_run = 0;
         legend_input = {};
         for i = 1:size(grid_manager.total_count,1)
             legend_input = [legend_input sprintf('Type %d', i)];
         end
-        legend(legend_input, 'Location', 'northwest');
+        warning('OFF','Plot empty.')
+        if plot_grid
+            legend(legend_input, 'Location', 'northwest');
+        end
     end
     if halt
         break
@@ -241,10 +255,9 @@ end
     
 
 function draw_iteration(matrix, c, t, halt, handles)
-global parameter_manager rects grid_manager plot_grid;
+global parameter_manager rects grid_manager plot_grid model;
 %represents a single iteration of the grid and graph
 if plot_grid 
-    handles.timestep_text.String = sprintf('Timestep: %d', t);
     perm = c(randperm(length(c)))';
     for p = perm
         [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
@@ -277,7 +290,11 @@ for i = 1:size(vec,1)
     hold on;
     plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
-xlabel('Generations', 'Parent', handles.axes_graph);
+if model == 4 || (~plot_grid && (model <= 2))
+    xlabel('Generations', 'Parent', handles.axes_graph);
+else
+    xlabel('Reproductive Events', 'Parent', handles.axes_graph);
+end
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 pause(0.01);
 drawnow;
@@ -335,7 +352,7 @@ parameter_manager.updateBoxes();
 
 
 
-function num_types_box_Callback(hObject, eventdata, handles)
+function num_types_box_Callback(~, eventdata, handles)
 % hObject    handle to num_types_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -456,6 +473,10 @@ parameter_manager.updateStructs();
 function logistic_button_Callback(hObject, eventdata, handles)
 switchDisplay(handles)
 
+% --- Executes on button press in exp_button.
+function exp_button_Callback(hObject, eventdata, handles)
+switchDisplay(handles)
+
 % --- Executes on button press in moran_button.
 function moran_button_Callback(hObject, eventdata, handles)
 switchDisplay(handles)
@@ -471,7 +492,7 @@ handles.logistic_panel.Visible = 'off';
 handles.wright_panel.Visible = 'off';
 if handles.moran_button.Value
     handles.moran_panel.Visible = 'on';
-elseif handles.logistic_button.Value
+elseif handles.logistic_button.Value || handles.exp_button.Value
     handles.logistic_panel.Visible = 'on';
 else
     handles.wright_panel.Visible = 'on';
@@ -508,10 +529,12 @@ global parameter_manager;
 %Table Formatting in a dialog box is a pain in the butt
 %TODO: set a standard number of spaces for each and enforce it
 str = {};
-str = [str 'Type |  Size(Logistic)       Birth Rate(Logistic)       Death Rate(Logistic)       Size(Moran)       Birth Rate(Moran)       Size(Wright-Fisher)       Fitness(Wright-Fisher)'];
-str = [str ' -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' ];
+str = [str '                               Logistic/Exponential                                                                 Moran                                               Wright Fisher'];
+str = [str ' '];
+str = [str 'Type |  Size                    Birth Rate                    Death Rate                      Size                 Birth Rate                    Size                          Fitness'];
+str = [str '         | ----------------------------------------------------------------------------------                     --------------------------------------                     ----------------------------------------------' ];
 for i = 1:parameter_manager.num_types
-    str = [str, sprintf(' %02d   |    %04d                  %0.2f                             %0.2f                               %04d                  %0.2f                           %04d                          %0.2f',...
+    str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f                               %04d                  %0.2f                           %04d                          %0.2f',...
         i,...
         parameter_manager.logistic.Ninit(i),...
         parameter_manager.logistic.birth_rate(i),...
@@ -522,6 +545,28 @@ for i = 1:parameter_manager.num_types
         parameter_manager.wright.fitness(i))];
 end
 PopulationParametersDialog(str);
+
+% --- Executes on button press in mutation_matrix_button.
+function mutation_matrix_button_Callback(hObject, eventdata, handles)
+global parameter_manager;
+m = MutationMatrixDialog(parameter_manager.mutation_matrix);
+if ~isempty(m)
+    parameter_manager.mutation_matrix = m;
+end
+
+
+
+
+% --- Executes on button press in demography_button.
+function demography_button_Callback(hObject, eventdata, handles)
+global mutating;
+mutating = 0;
+
+% --- Executes on button press in genetics_button.
+function genetics_button_Callback(hObject, eventdata, handles)
+global mutating;
+mutating = 1;
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -653,52 +698,3 @@ function population_box_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
-% str = {};
-% str = [str 'Type |  Size(Logistic)  Birth Rate(Logistic)  Death Rate(Logistic)  Size(Moran)  Birth Rate(Moran)  Size(Wright-Fisher)  Fitness(Wright-Fisher)'];
-% str = [str ' ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------' ];
-% for i = 1:parameter_manager.num_types
-%     if i < 10 
-%         spacer = '  ';
-%     else
-%         spacer = '';
-%     end
-%     str = [str, sprintf(' %g     %s |  %g                    %g                          %g                          %g             %g                        %g                       %g',...
-%         i,...
-%         spacer,...
-%         parameter_manager.logistic.Ninit(i),...
-%         parameter_manager.logistic.birth_rate(i),...
-%         parameter_manager.logistic.death_rate(i),...
-%         parameter_manager.moran.Ninit(i),...
-%         parameter_manager.moran.birth_rate(i),...
-%         parameter_manager.wright.Ninit(i),...
-%         parameter_manager.wright.fitness(i))];
-%     
-% end
-
-
-% --- Executes on button press in radiobutton16.
-function radiobutton16_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobutton16 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radiobutton16
-
-
-% --- Executes on button press in radiobutton17.
-function radiobutton17_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobutton17 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radiobutton17
-
-
-% --- Executes on button press in mutation_matrix_button.
-function mutation_matrix_button_Callback(hObject, eventdata, handles)
-% hObject    handle to mutation_matrix_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

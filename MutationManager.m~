@@ -1,0 +1,17 @@
+classdef MutationManager < handle
+    
+    properties
+        handles;
+    end
+    
+    methods (Access = public)
+        
+        function obj = MutationManager(handles)
+        end
+        
+        function matrix = mutate(parameter_manager, old_mat)
+            
+        end
+    end
+
+end

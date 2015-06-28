@@ -30,7 +30,6 @@ classdef GridManagerMoran < GridManagerAbstract
                 index = randi(length(obj.proportion_vec));
                 obj.matrix(changed) = obj.proportion_vec(index);
                 %then, include all computation updates
-                obj.update_params();
                 obj.output = [obj.output; obj.matrix(:)'];
                 mat = obj.matrix;
                 h = obj.isHomogenous();
@@ -55,13 +54,11 @@ classdef GridManagerMoran < GridManagerAbstract
                 obj.total_count(dead_type, obj.timestep + 1)    = obj.total_count(dead_type  , obj.timestep + 1) - 1;
                 h = length(find(obj.total_count(:, obj.timestep + 1)>=numel(obj.matrix), 1));
                 %obj.total_count(:, obj.timestep + 1)
-                
             end
             obj.timestep = obj.timestep + 1;
-            t = obj.timestep;
-
-                
+            t = obj.timestep; 
             obj.generations = [obj.generations obj.generations(end) + (1/numel(obj.matrix))];
+            obj.update_params();
         end
         
         %used tic and toc - this does not need any speed up

@@ -50,7 +50,6 @@ classdef GridManagerWright < GridManagerAbstract
         
         %used tic and toc - this does not need any speed up
         function update_params(obj)
-            obj.timestep
             for i = 1:obj.num_types
                 obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
