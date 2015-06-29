@@ -1,0 +1,49 @@
+%This class handles the mutations of elements in the matrix. When >1 loci
+%are selected, this class also converts types to their binary allele
+%strings via the converstion allele_n = log(num-1)
+
+classdef MutationManager < handle
+    
+    properties
+        parameter_manager;
+    end
+    
+    methods (Access = public)
+        
+        function obj = MutationManager(parameter_manager)
+            obj.parameter_manager = parameter_manager;
+        end
+        
+        %Elements in the matrix are represented as 
+        function [matrix, c] = mutate(obj, matrix)
+            c = [];
+            for i = 1:numel(matrix)
+                type = matrix(i);
+                new_type = 0;
+                for j = 0:(obj.parameter_manager.num_loci-1)
+                    allele = obj.get_nth_allele(type, j);
+                    if allele ~= 0
+                        num = rand();
+                        new_allele = 0;
+                        while num > 0
+                            new_allele = new_allele + 1;
+                            num = num - obj.parameter_manager.mutation_matrix(new_allele, allele);
+                        end
+                        if allele ~= new_allele;
+                            c = [c i];
+                        end
+                    end
+                    new_type = new_type + new_allele*(2^j);
+                end
+                matrix(i) = new_type;
+            end
+
+            function [val] = get_nth_allele(obj, x, n)
+                val = bitand(bitshift(x,-n),1);
+            end
+            
+            
+        end
+    end
+
+end

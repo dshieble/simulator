@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 28-Jun-2015 12:09:26
+% Last Modified by GUIDE v2.5 29-Jun-2015 08:42:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -136,7 +136,7 @@ if ~evolving && ~paused
     parameter_manager.updateMatrixProperties();
 end
 if ~evolving && ~paused && parameters_clear %run
-    parameter_manager.updateMatrixProperties();
+    parameter_manager.updateNumTypes();
     if handles.plot_grid_button.Value
         plot_grid = 1;
     else 
@@ -144,7 +144,8 @@ if ~evolving && ~paused && parameters_clear %run
     end
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
-        grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
+        grid_manager = GridManagerLogistic(...
+            parameter_manager.matrix.edge_size, ...
             parameter_manager.logistic.Ninit, ...
             parameter_manager.logistic.birth_rate, ...
             parameter_manager.logistic.death_rate, ...
@@ -152,7 +153,8 @@ if ~evolving && ~paused && parameters_clear %run
             0);
         model = 1;
     elseif handles.exp_button.Value
-        grid_manager = GridManagerLogistic(parameter_manager.matrix.edge_size, ...
+        grid_manager = GridManagerLogistic(...
+            parameter_manager.matrix.edge_size, ...
             parameter_manager.logistic.Ninit, ...
             parameter_manager.logistic.birth_rate, ...
             parameter_manager.logistic.death_rate, ...
@@ -165,13 +167,19 @@ if ~evolving && ~paused && parameters_clear %run
             handles.run_button.String = 'Run';
             return;
         elseif handles.moran_button.Value
-            grid_manager = GridManagerMoran(parameter_manager.matrix.edge_size, ...
+            grid_manager = GridManagerMoran(...
+                parameter_manager.matrix.edge_size, ...
                 parameter_manager.moran.Ninit, ...
                 parameter_manager.moran.birth_rate, ...
                 plot_grid);
             model = 3;
+        elseif sum(parameter_manager.wright.Ninit) ~= (parameter_manager.matrix.edge_size^2)
+            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+            handles.run_button.String = 'Run';
+            return;
         elseif handles.wright_button.Value
-            grid_manager = GridManagerWright(parameter_manager.matrix.edge_size, ...
+            grid_manager = GridManagerWright(...
+                parameter_manager.matrix.edge_size, ...
                 parameter_manager.wright.Ninit, ...
                 parameter_manager.wright.fitness, ...
                 plot_grid);
@@ -223,15 +231,13 @@ end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid mutation_manager;
+global evolving grid_manager plot_grid mutation_manager parameter_manager;
 warning('OFF','MATLAB:legend:PlotEmpty')
 while evolving == 1
-   [matrix, c, t, halt] = grid_manager.get_next();
    if parameter_manager.mutating
-       [matrix, c2] = mutation_manager.mutate(matrix);
-       c = union(c,c2);
-       grid_manager.matrix = matrix;
+       mutation_manager.mutate(grid_manager);
    end
+   [matrix, c, t, halt] = grid_manager.get_next();
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
    end
@@ -239,10 +245,14 @@ while evolving == 1
         first_run = 0;
         legend_input = {};
         for i = 1:size(grid_manager.total_count,1)
-            legend_input = [legend_input sprintf('Type %d', i)];
+            if parameter_manager.num_loci > 1 && parameter_manager.mutating
+                legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1))];
+            else   
+                legend_input = [legend_input sprintf('Type %d', i)];
+            end
         end
         if plot_grid
-            legend(legend_input, 'Location', 'northwest');
+            legend(legend_input, 'Location', 'northwest')
         end
     end
     if halt
@@ -569,6 +579,9 @@ global parameter_manager;
 parameter_manager.mutating = 1;
 
 
+function loci_box_Callback(hObject, eventdata, handles)
+global parameter_manager;
+parameter_manager.updateNumTypes();
 
 %
 %
@@ -737,6 +750,19 @@ end
 % --- Executes during object creation, after setting all properties.
 function population_box_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to population_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function loci_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loci_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

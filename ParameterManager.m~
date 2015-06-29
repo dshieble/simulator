@@ -102,21 +102,20 @@ classdef ParameterManager < handle
                 num_l = str2double(obj.handles.loci_box.String);
                 if ~isnan(num_l)
                     obj.num_loci = max(1,num_l);
-                    if obj.mutating && (obj.num_loci > 1)
-                        num = 2^obj.num_loci;
+                    if obj.mutating && (num_l > 1)
+                        num = 2^num_l;
                     end
                 end
                 if obj.num_loci == 1
                     num_a = num;
                 else
-                    num_a = 2;
-                end
+                    num
                 %reinitialize mutation matrix
-                obj.mutation_matrix = zeros(num_a);
-                for i = 1:num_a
-                    for j = 1:num_a
+                obj.mutation_matrix = zeros(num);
+                for i = 1:num
+                    for j = 1:num
                         if i == j
-                            obj.mutation_matrix(i,j) = 1 - 0.01*(num_a-1);
+                            obj.mutation_matrix(i,j) = 1 - 0.01*(num-1);
                         else
                             obj.mutation_matrix(i,j) = 0.01;
                         end

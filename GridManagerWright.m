@@ -38,14 +38,15 @@ classdef GridManagerWright < GridManagerAbstract
             end
             long_mat = long_mat(randperm(length(long_mat)));            
             mat = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
-            if obj.timestep <= 2 || ~obj.plot_grid
-                changed = (1:numel(obj.matrix))';
-            else
-                changed = find(mat ~= obj.matrix);
-            end
             t = obj.timestep;
             obj.matrix = mat;
             h = obj.isHomogenous();
+            if obj.timestep <= 2
+                changed = (1:numel(obj.matrix))';
+            else
+                changed = find(obj.old_matrix ~= obj.matrix);
+            end
+            obj.old_matrix = obj.matrix;
         end
         
         %used tic and toc - this does not need any speed up

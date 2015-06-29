@@ -63,9 +63,14 @@ classdef GridManagerLogistic < GridManagerAbstract
                     end
                 end
                 mat = obj.matrix;
-                changed = find(old_mat ~= obj.matrix);
                 obj.output = [obj.output; obj.matrix(:)'];
                 obj.generations = [obj.generations obj.timestep];
+                if obj.timestep <= 2
+                    changed = (1:numel(obj.matrix))';
+                else
+                	changed = find(obj.old_matrix ~= obj.matrix);
+                end
+                obj.old_matrix = obj.matrix;
             else
                 obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
                 changed = (1:numel(obj.matrix))';

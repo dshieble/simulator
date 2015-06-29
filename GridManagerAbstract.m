@@ -11,10 +11,12 @@ classdef GridManagerAbstract < handle
         overall_mean_fitness;
         plot_grid;
         generations;
+        old_matrix;
     end
     methods (Access = public)
         function obj = GridManagerAbstract(dim, Ninit)
             obj.matrix = zeros(dim);
+            obj.old_matrix = obj.matrix;
             r = randperm(numel(obj.matrix));
             i = 1;
             for type = 1:length(Ninit)
@@ -28,9 +30,15 @@ classdef GridManagerAbstract < handle
             obj.timestep = 1;
             
             obj.num_types = length(Ninit);
+            %when there are more than 10 types, colors become randomized
             obj.colors = [1 0 0; 0 1 0; 0 0 1; 1 1 0; 1 0 1;...
                           0 1 1; 1 0.5 0.5; 0.5 1 0.5; 1 0.5 0.5;...
                           0.5 0.5 0.5];
+            if obj.num_types > 10
+                for i = 11:obj.num_types
+                    obj.colors(i,:) = rand(1,3);
+                end
+            end
             
             obj.total_count = Ninit';
             obj.percent_count = [];

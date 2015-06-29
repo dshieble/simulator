@@ -26,16 +26,19 @@ classdef GridManagerMoran < GridManagerAbstract
             if obj.plot_grid
                 n = size(obj.matrix, 1);
                 c = randi(n,1,2);
-                changed = sub2ind(size(obj.matrix),c(1),c(2));
+                ch = sub2ind(size(obj.matrix),c(1),c(2));
                 index = randi(length(obj.proportion_vec));
-                obj.matrix(changed) = obj.proportion_vec(index);
+                obj.matrix(ch) = obj.proportion_vec(index);
                 %then, include all computation updates
                 obj.output = [obj.output; obj.matrix(:)'];
                 mat = obj.matrix;
                 h = obj.isHomogenous();
-                if obj.timestep <= 2 || ~obj.plot_grid
+                if obj.timestep <= 2
                     changed = (1:numel(obj.matrix))';
+                else
+                	changed = find(obj.old_matrix ~= obj.matrix);
                 end
+                obj.old_matrix = obj.matrix;
             else
                 obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
                 changed = (1:numel(obj.matrix))';
