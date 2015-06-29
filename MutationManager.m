@@ -1,3 +1,5 @@
+%This class handles the mutations of elements in the matrix. 
+
 classdef MutationManager < handle
     
     properties
@@ -11,7 +13,8 @@ classdef MutationManager < handle
            
         end
         
-        function matrix = mutate(obj, matrix)
+        function [matrix, c] = mutate(obj, matrix)
+            c = [];
             for i = 1:numel(matrix)
                 allele = matrix(i);
                 if allele ~= 0
@@ -22,6 +25,9 @@ classdef MutationManager < handle
                         num = num - obj.parameter_manager.mutation_matrix(new_allele, allele);
                     end
                     matrix(i) = new_allele;
+                    if allele ~= new_allele;
+                        c = [c i];
+                    end
                 end
             end
 

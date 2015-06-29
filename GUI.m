@@ -61,7 +61,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear model mutation_manager mutating;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear model mutation_manager;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -73,7 +73,6 @@ parameters_clear = 1;
 model = 1;
 plot_grid = handles.plot_grid_button.Value;
 mutation_manager = MutationManager(parameter_manager);
-mutating = 0;
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -191,7 +190,6 @@ if ~evolving && ~paused && parameters_clear %run
     rects = cell(parameter_manager.matrix.edge_size);
     handles.run_button.String = 'Pause';
     handles.run_button.BackgroundColor = [1 0 0];
-    handles.save_button.String = 'Reset';
     drawnow;
     run_loop(1, handles);
     save_data = grid_manager.output;
@@ -213,34 +211,36 @@ elseif evolving && ~paused %pause
     handles.reset_button.BackgroundColor = [1 0 0];
     handles.run_button.String = 'Continue';
     handles.run_button.BackgroundColor = [0 1 0];
-    handles.save_button.String = 'Save';
     drawnow;
 end
 if ~paused && ~evolving;
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
+    handles.save_button.BackgroundColor = [0 1 1];
+    handles.reset_button.BackgroundColor = [1 0 0];
     drawnow;
 end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid mutation_manager mutating;
+global evolving grid_manager plot_grid mutation_manager;
+warning('OFF','MATLAB:legend:PlotEmpty')
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
-   if mutating
-       matrix = mutation_manager.mutate(matrix);
+   if parameter_manager.mutating
+       [matrix, c2] = mutation_manager.mutate(matrix);
+       c = union(c,c2);
        grid_manager.matrix = matrix;
    end
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
    end
-   if first_run 
+   if first_run
         first_run = 0;
         legend_input = {};
         for i = 1:size(grid_manager.total_count,1)
             legend_input = [legend_input sprintf('Type %d', i)];
         end
-        warning('OFF','MATLAB:legend:PlotEmpty')
         if plot_grid
             legend(legend_input, 'Location', 'northwest');
         end
@@ -267,7 +267,8 @@ if plot_grid
         end
         if (matrix(i,j) ~= 0)
             mult = (50/parameter_manager.matrix.edge_size);
-            rects{i,j} = rectangle('Parent', handles.axes_grid,...
+            rects{i,j} = rectangle(...
+                'Parent', handles.axes_grid,...
                 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
                 'facecolor',grid_manager.get_color(matrix(i,j)));
         end
@@ -559,13 +560,13 @@ end
 
 % --- Executes on button press in demography_button.
 function demography_button_Callback(hObject, eventdata, handles)
-global mutating;
-mutating = 0;
+global parameter_manager;
+parameter_manager.mutating = 0;
 
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
-global mutating;
-mutating = 1;
+global parameter_manager;
+parameter_manager.mutating = 1;
 
 
 

@@ -1,7 +1,6 @@
 classdef ParameterManager < handle
     
     properties
-        mutation_matrix;
         max_types;
         num_types;
         handles;
@@ -9,12 +8,14 @@ classdef ParameterManager < handle
         moran;
         wright;
         matrix;
+        mutating;
+        mutation_matrix;
+        num_loci;
     end
     
     methods (Access = public)
         
         function obj = ParameterManager(handles)
-            obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.max_types = 10;
             obj.num_types = 2;
             obj.handles = handles;
@@ -43,6 +44,10 @@ classdef ParameterManager < handle
             obj.matrix.plotting = 1;
             obj.matrix.edge_size = 50;
             obj.updateNumTypes();
+            %mutations
+            obj.mutating = 0;
+            obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
+            obj.num_loci = 1;
         end
         
         function updateStructs(obj)
@@ -93,6 +98,9 @@ classdef ParameterManager < handle
                         obj.mutation_matrix(i,j) = 0.01;
                     end
                 end
+            end
+            if obj.mutating
+                num = num^obj.num_loci;
             end
             obj.handles.num_types_box.String = num2str(num);
             if ~isnan(num)
