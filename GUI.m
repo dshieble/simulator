@@ -234,7 +234,7 @@ function run_loop(first_run, handles)
 global evolving grid_manager plot_grid mutation_manager parameter_manager;
 warning('OFF','MATLAB:legend:PlotEmpty')
 while evolving == 1
-   if parameter_manager.mutating
+   if parameter_manager.mutating && ~first_run
        mutation_manager.mutate(grid_manager);
    end
    [matrix, c, t, halt] = grid_manager.get_next();
@@ -244,7 +244,7 @@ while evolving == 1
    if first_run
         first_run = 0;
         legend_input = {};
-        for i = 1:size(grid_manager.total_count,1)
+        for i = 1:min(16,size(grid_manager.total_count,1))
             if parameter_manager.num_loci > 1 && parameter_manager.mutating
                 legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1))];
             else   
@@ -414,11 +414,16 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global evolving ;
-if ~evolving
-    c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
-    save(str, 'save_data');
+global evolving parameter_manager;
+try 
+    if ~evolving
+        c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
+        save(str, 'save_data');
+    end
+catch 
+    fprintf('ERROR: Save Error');
 end
+
 
 
 % --- Executes on button press in reset_button.
@@ -572,11 +577,13 @@ end
 function demography_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 0;
+parameter_manager.updateNumTypes();
 
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 1;
+parameter_manager.updateNumTypes();
 
 
 function loci_box_Callback(hObject, eventdata, handles)

@@ -16,7 +16,7 @@ classdef ParameterManager < handle
     methods (Access = public)
         
         function obj = ParameterManager(handles)
-            obj.max_types = 10;
+            obj.max_types = 16;
             obj.num_types = 2;
             obj.handles = handles;
             obj.logistic = struct();
@@ -126,7 +126,7 @@ classdef ParameterManager < handle
                 %genotype if in >1 loci case
                 if (obj.mutating && (obj.num_loci > 1))
                     %TODO: replace defaults with inputted amounts
-                    new_Ninit = [numel(obj.matrix) zeros(1,num - 1)];
+                    new_Ninit = [obj.matrix.edge_size^2  zeros(1,num - 1)];
                     obj.logistic.Ninit = new_Ninit;
                     obj.logistic.birth_rate = repmat(obj.logistic.birth_rate_default,1,num);
                     obj.logistic.death_rate = repmat(obj.logistic.death_rate_default,1,num);
@@ -135,7 +135,7 @@ classdef ParameterManager < handle
                     obj.wright.Ninit = new_Ninit;
                     obj.wright.fitness = repmat(obj.wright.fitness_default,1,num);
                 else
-                    if num <= obj.num_types
+                    if num < obj.num_types
                         obj.handles.types_popup.String(num+1:end) = [];
                         %logistic
                         obj.logistic.birth_rate(num+1:end) = [];
@@ -147,8 +147,8 @@ classdef ParameterManager < handle
                         %wright
                         obj.wright.fitness(num+1:end) = [];
                         obj.wright.Ninit(num+1:end) = [];
-                    elseif num > obj.num_types
-                        for i = obj.num_types+1:num
+                    elseif num >= obj.num_types
+                        for i = 1:num
                             obj.handles.types_popup.String{i} = i;
                             %logistic
                             obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
