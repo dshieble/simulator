@@ -44,7 +44,7 @@ classdef GridManagerAbstract < handle
             obj.percent_count = [];
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];
-            obj.generations = [0];
+            obj.generations = [1];
         end
       
          %mat - new updated matrix

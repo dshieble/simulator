@@ -1,6 +1,7 @@
 classdef ParameterManager < handle
     
     properties
+        max_iterations;
         max_types;
         num_types;
         handles;
@@ -16,6 +17,7 @@ classdef ParameterManager < handle
     methods (Access = public)
         
         function obj = ParameterManager(handles)
+            obj.max_iterations = 10000;
             obj.max_types = 16;
             obj.num_types = 2;
             obj.handles = handles;
@@ -127,7 +129,7 @@ classdef ParameterManager < handle
                 if (obj.mutating && (obj.num_loci > 1))
                     %TODO: replace defaults with inputted amounts
                     new_Ninit = [obj.matrix.edge_size^2  zeros(1,num - 1)];
-                    obj.logistic.Ninit = new_Ninit;
+                    obj.logistic.Ninit = [5 zeros(1,num - 1)];
                     obj.logistic.birth_rate = repmat(obj.logistic.birth_rate_default,1,num);
                     obj.logistic.death_rate = repmat(obj.logistic.death_rate_default,1,num);
                     obj.moran.Ninit = new_Ninit;
@@ -197,6 +199,14 @@ classdef ParameterManager < handle
             end
         end
         
+        function updateMaxIterations(obj)
+            num = str2double(obj.handles.max_iterations_box.String);
+            if ~isnan(num)
+                obj.max_iterations = num;
+            else
+                obj.handles.max_iterations_box.String = obj.max_iterations;
+            end
+        end
         
     end
 end

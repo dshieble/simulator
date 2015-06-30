@@ -592,11 +592,10 @@ else
 end
 if parameter_manager.mutating
     handles.num_types_string.String = 'Number of Alleles:';
-    handles.params_string.String =  'Parameters for Allele:';
     handles.mutation_panel.Visible = 'on';
 else
-    handles.num_types_string.String = 'Number of Types:';
-    handles.params_string.String =  'Parameters for Type:';
+    handles.num_types_string.String = 'Number of Typ:';
+    'Parameters for Allele:';
     handles.mutation_panel.Visible = 'off';
 end
 

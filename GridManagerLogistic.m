@@ -64,7 +64,6 @@ classdef GridManagerLogistic < GridManagerAbstract
                 end
                 mat = obj.matrix;
                 obj.output = [obj.output; obj.matrix(:)'];
-                obj.generations = [obj.generations obj.timestep];
                 if obj.timestep <= 2
                     changed = (1:numel(obj.matrix))';
                 else
@@ -87,10 +86,11 @@ classdef GridManagerLogistic < GridManagerAbstract
                 else
                     obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) - 1;
                 end
-                obj.generations = [obj.generations (obj.generations(end) + 1/sum(obj.total_count(:, obj.timestep)))];
+                %obj.generations = [obj.generations obj.timestep];%(obj.generations(end) + 1/sum(obj.total_count(:, obj.timestep)))];
             end
             %then, include all computation updates
             obj.timestep = obj.timestep + 1;
+            obj.generations = [obj.generations obj.timestep];
             obj.update_params();
             h = ~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix);
             t = obj.timestep;

@@ -60,7 +60,7 @@ classdef GridManagerMoran < GridManagerAbstract
             end
             obj.timestep = obj.timestep + 1;
             t = obj.timestep; 
-            obj.generations = [obj.generations obj.generations(end) + (1/numel(obj.matrix))];
+            obj.generations = [obj.generations obj.timestep];
             obj.update_params();
         end
         
