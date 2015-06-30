@@ -75,19 +75,23 @@ classdef ParameterManager < handle
                 end
             %moran
             elseif obj.current_model == 3         
-                if ~isnan(ninit_temp)
-                    obj.moran.Ninit(type) = round(ninit_temp);
+                Ninit_temp_moran = str2double(obj.handles.init_pop_box.String);
+                birth_rate_temp_moran = str2double(obj.handles.param_1_box.String);
+                if ~isnan(Ninit_temp_moran)
+                    obj.moran.Ninit(type) = round(Ninit_temp_moran);
                 end
-                if ~isnan(param_1_temp)
-                    obj.moran.birth_rate(type) = param_1_temp;
+                if ~isnan(birth_rate_temp_moran)
+                    obj.moran.birth_rate(type) = birth_rate_temp_moran;
                 end
             elseif obj.current_model == 4       
                 %wright
-                if ~isnan(ninit_temp)
-                    obj.wright.Ninit(type) = round(ninit_temp);
+                Ninit_temp_wright = str2double(obj.handles.init_pop_box.String);
+                fitness_temp_wright = str2double(obj.handles.param_1_box.String);
+                if ~isnan(Ninit_temp_moran)
+                    obj.wright.Ninit(type) = round(Ninit_temp_wright);
                 end
-                if ~isnan(param_1_temp)
-                    obj.wright.birth_rate(type) = param_1_temp;
+                if ~isnan(birth_rate_temp_moran)
+                    obj.wright.birth_rate(type) = fitness_temp_wright;
                 end
             end
         end
@@ -173,6 +177,8 @@ classdef ParameterManager < handle
         %Updates the boxes to the stored struct values
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
+            obj.handles.init_pop_box
+            obj.current_model
             if obj.current_model <= 2
                 obj.handles.param_1_box.String = obj.logistic.birth_rate(type);
                 obj.handles.param_2_box.String = obj.logistic.death_rate(type);

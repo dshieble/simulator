@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 30-Jun-2015 09:09:49
+% Last Modified by GUIDE v2.5 30-Jun-2015 16:20:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear model mutation_manager;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear mutation_manager;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -70,7 +70,6 @@ rects = [];
 paused = 0;
 grid_manager = [];
 parameters_clear = 1;
-model = 1;
 plot_grid = handles.plot_grid_button.Value;
 mutation_manager = MutationManager(parameter_manager);
 
@@ -84,7 +83,7 @@ handles.axes_grid.YLim = [1 parameter_manager.matrix.edge_size];
 
 %fill the boxes properly
 parameter_manager.updateBoxes();
-switchDisplay(handles);
+parameter_manager.updateStructs();
 
 
 
@@ -105,7 +104,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear model;
+global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear;
 if ~evolving && ~paused
     verify_parameters();
 end
@@ -120,7 +119,6 @@ if ~evolving && ~paused && parameters_clear %run
             parameter_manager.logistic.death_rate, ...
             plot_grid, ...
             0);
-        model = 1;
     elseif handles.exp_button.Value
         grid_manager = GridManagerLogistic(...
             parameter_manager.matrix.edge_size, ...
@@ -129,7 +127,6 @@ if ~evolving && ~paused && parameters_clear %run
             parameter_manager.logistic.death_rate, ...
             plot_grid, ...
             1);
-        model = 2;
     else
         if sum(parameter_manager.moran.Ninit) ~= (parameter_manager.matrix.edge_size^2)
             warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
@@ -141,7 +138,6 @@ if ~evolving && ~paused && parameters_clear %run
                 parameter_manager.moran.Ninit, ...
                 parameter_manager.moran.birth_rate, ...
                 plot_grid);
-            model = 3;
         elseif sum(parameter_manager.wright.Ninit) ~= (parameter_manager.matrix.edge_size^2)
             warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
             handles.run_button.String = 'Run';
@@ -152,7 +148,6 @@ if ~evolving && ~paused && parameters_clear %run
                 parameter_manager.wright.Ninit, ...
                 parameter_manager.wright.fitness, ...
                 plot_grid);
-            model = 4;
         else
             warndlg('Radio button error');
             handles.run_button.String = 'Run';
@@ -200,12 +195,13 @@ end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid mutation_manager parameter_manager model;
+global evolving grid_manager plot_grid mutation_manager parameter_manager;
 warning('OFF','MATLAB:legend:PlotEmpty')
 while evolving == 1
    if parameter_manager.mutating
-       if first_run || (plot_grid && model <= 2) || (model == 4)...
-               || (((~plot_grid && model <= 2) || model == 3) && mod(grid_manager.timestep, numel(grid_manager.matrix))==0);
+       if first_run || (plot_grid && parameter_manager.current_model <= 2) || (parameter_manager.current_model == 4)...
+               || (((~plot_grid && parameter_manager.current_model <= 2) || parameter_manager.current_model == 3)...
+               && mod(grid_manager.timestep, numel(grid_manager.matrix))==0);
            mutation_manager.mutate(grid_manager);
        end
    end
@@ -238,7 +234,7 @@ end
     
 
 function draw_iteration(matrix, c, t, halt, handles)
-global parameter_manager rects grid_manager plot_grid model;
+global parameter_manager rects grid_manager plot_grid;
 %represents a single iteration of the grid and graph
 if plot_grid 
     perm = c(randperm(length(c)))';
@@ -275,7 +271,7 @@ for i = 1:size(vec,1)
     hold on;
     plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
-if model == 4 || (plot_grid && (model <= 2))
+if parameter_manager.current_model == 4 || (plot_grid && (parameter_manager.current_model <= 2))
     xlabel('Generations', 'Parent', handles.axes_graph);
 else
     xlabel('Reproductive Events', 'Parent', handles.axes_graph);
@@ -347,35 +343,35 @@ function num_types_box_Callback(~, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateNumTypes();
 
-function death_rate_box_logistic_Callback(hObject, eventdata, handles)
-% hObject    handle to death_rate_box_logistic (see GCBO)
+function param_1_box_Callback(hObject, eventdata, handles)
+% hObject    handle to param_1_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of death_rate_box_logistic as text
-%        str2double(get(hObject,'String')) returns contents of death_rate_box_logistic as a double
+% Hints: get(hObject,'String') returns contents of param_1_box as text
+%        str2double(get(hObject,'String')) returns contents of param_1_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
 
-function init_pop_box_logistic_Callback(hObject, eventdata, handles)
-% hObject    handle to init_pop_box_logistic (see GCBO)
+function init_pop_box_Callback(hObject, eventdata, handles)
+% hObject    handle to init_pop_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of init_pop_box_logistic as text
-%        str2double(get(hObject,'String')) returns contents of init_pop_box_logistic as a double
+% Hints: get(hObject,'String') returns contents of init_pop_box as text
+%        str2double(get(hObject,'String')) returns contents of init_pop_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
 
-function birth_rate_box_logistic_Callback(hObject, eventdata, handles)
-% hObject    handle to birth_rate_box_logistic (see GCBO)
+function param_2_box_Callback(hObject, eventdata, handles)
+% hObject    handle to param_2_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of birth_rate_box_logistic as text
-%        str2double(get(hObject,'String')) returns contents of birth_rate_box_logistic as a double
+% Hints: get(hObject,'String') returns contents of param_2_box as text
+%        str2double(get(hObject,'String')) returns contents of param_2_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
@@ -461,35 +457,54 @@ parameter_manager.updateStructs();
 
 % --- Executes on button press in logistic_button.
 function logistic_button_Callback(hObject, eventdata, handles)
+global parameter_manager;
+parameter_manager.current_model = 1;
 handles.log_exp_banner.String = 'Logistic Model';
-switchDisplay(handles)
+parameter_manager.updateBoxes();
+adjust_text(handles);
+
 
 % --- Executes on button press in exp_button.
 function exp_button_Callback(hObject, eventdata, handles)
+global parameter_manager;
+parameter_manager.current_model = 2;
 handles.log_exp_banner.String = 'Exponential Model';
-switchDisplay(handles)
+parameter_manager.updateBoxes();
+adjust_text(handles);
 
 % --- Executes on button press in moran_button.
 function moran_button_Callback(hObject, eventdata, handles)
-switchDisplay(handles)
+global parameter_manager;
+parameter_manager.current_model = 3;
+handles.log_exp_banner.String = 'Moran Model';
+parameter_manager.updateBoxes();
+adjust_text(handles);
 
 % --- Executes on button press in wright_button.
 function wright_button_Callback(hObject, eventdata, handles)
-switchDisplay(handles)
-    
-function switchDisplay(handles)
+global parameter_manager;
+parameter_manager.current_model = 4;
+handles.log_exp_banner.String = 'Wright-Fisher Model';
+parameter_manager.updateBoxes();
+adjust_text(handles);
 
-handles.moran_panel.Visible = 'off';
-handles.logistic_panel.Visible = 'off';
-handles.wright_panel.Visible = 'off';
-if handles.moran_button.Value
-    handles.moran_panel.Visible = 'on';
-elseif handles.logistic_button.Value || handles.exp_button.Value
-    handles.logistic_panel.Visible = 'on';
+function adjust_text(handles)
+global parameter_manager;
+if parameter_manager.current_model <= 2
+    handles.param_1_text.String = 'Birth Rate';
+    handles.param_2_text.String = 'Death Rate';
+    handles.param_2_text.Visible = 'on';
+    handles.param_2_box.Visible = 'on';
+elseif parameter_manager.current_model == 3
+    handles.param_1_text.String = 'Birth Rate';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
 else
-    handles.wright_panel.Visible = 'on';
+    handles.param_1_text.String = 'Fitness';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
 end
-
+    
  
 function population_box_Callback(hObject, eventdata, handles)
 % hObject    handle to population_box (see GCBO)
@@ -566,6 +581,9 @@ global parameter_manager;
 parameter_manager.mutating = 0;
 parameter_manager.updateNumTypes();
 toggle_mutation_visible(handles);
+handles.mutation_panel.Visible = 'off';
+handles.num_types_string.String = 'Number of Types:';
+handles.params_string.String =  'Parameters for Type:';
 
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
@@ -573,7 +591,9 @@ global parameter_manager;
 parameter_manager.mutating = 1;
 parameter_manager.updateNumTypes();
 toggle_mutation_visible(handles);
-
+handles.mutation_panel.Visible = 'on';
+handles.num_types_string.String = 'Number of Alleles:';
+handles.params_string.String =  'Parameters for Allele:';
 
 function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
@@ -586,25 +606,43 @@ global parameter_manager;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.type_panel.Visible = 'off';
     handles.static_type_panel.Visible = 'on';
+    handles.init_pop_box.Visible = 'off';
+    handles.init_pop_text.Visible = 'off';
 else
     handles.static_type_panel.Visible = 'off';
     handles.type_panel.Visible = 'on';
+    handles.init_pop_box.Visible = 'on';
+    handles.init_pop_text.Visible = 'on';
 end
-if parameter_manager.mutating
-    handles.num_types_string.String = 'Number of Alleles:';
-    handles.params_string.String =  'Parameters for Allele:';
-    handles.mutation_panel.Visible = 'on';
-else
-    handles.num_types_string.String = 'Number of Types:';
-    handles.params_string.String =  'Parameters for Type:';
-    handles.mutation_panel.Visible = 'off';
-end
+
+
 
 function max_iterations_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMaxIterations();
 
 
+
+% --- Executes on button press in spatial_structure_check.
+function spatial_structure_check_Callback(hObject, eventdata, handles)
+% hObject    handle to spatial_structure_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of spatial_structure_check
+
+
+% --- Executes on button press in recombination_check.
+function recombination_check_Callback(hObject, eventdata, handles)
+if handles.recombination_check.Value == 1
+    handles.recombination_panel.Visible = 'on';
+else
+    handles.recombination_panel.Visible = 'off';
+end
+
+
+function recombination_box_Callback(hObject, eventdata, handles)
+%TODO: Fill this in
 
 %
 %
@@ -705,8 +743,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function birth_rate_box_logistic_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to birth_rate_box_logistic (see GCBO)
+function param_2_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to param_2_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -718,8 +756,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function init_pop_box_logistic_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to init_pop_box_logistic (see GCBO)
+function init_pop_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to init_pop_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -731,8 +769,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function death_rate_box_logistic_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to death_rate_box_logistic (see GCBO)
+function param_1_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to param_1_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -798,6 +836,32 @@ end
 % --- Executes during object creation, after setting all properties.
 function max_iterations_box_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to max_iterations_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edit28_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loci_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function recombination_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recombination_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
