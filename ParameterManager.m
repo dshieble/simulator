@@ -13,6 +13,9 @@ classdef ParameterManager < handle
         mutating;
         mutation_matrix;
         num_loci;
+        logistic_saved;
+        moran_saved;
+        wright_saved;
     end
     
     methods (Access = public)
@@ -52,6 +55,9 @@ classdef ParameterManager < handle
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
             %clean
+            obj.logistic_saved = obj.logistic;
+            obj.moran_saved = obj.moran;
+            obj.wright_saved = obj.wright;
             obj.updateNumTypes();
 
         end
@@ -125,11 +131,20 @@ classdef ParameterManager < handle
                 %genotype if in >1 loci case
                 if (obj.mutating && (obj.num_loci > 1))
                     %TODO: replace defaults with inputted amounts
+                    obj.updateStructs();
                     new_Ninit = [obj.matrix.edge_size^2  zeros(1,num - 1)];
                     obj.logistic.Ninit = [5 zeros(1,num - 1)];
                     obj.moran.Ninit = new_Ninit;
                     obj.wright.Ninit = new_Ninit;
+                    obj.logistic.birth_rate = repmat(obj.logistic.birth_rate(1), 1, obj.num_types);
+                    obj.logistic.death_rate = repmat(obj.logistic.death_rate(1), 1, obj.num_types);
+                    obj.moran.birth_rate = repmat(obj.moran.birth_rate(1), 1, obj.num_types);
+                    obj.wright.fitness = repmat(obj.wright.fitness(1), 1, obj.num_types);
+
                 else
+                    obj.logistic = obj.logistic_saved;
+                    obj.moran = obj.moran_saved;
+                    obj.wright = obj.wright_saved;
                     if num < obj.num_types
                         obj.handles.types_popup.String(num+1:end) = [];
                         %logistic
@@ -143,7 +158,7 @@ classdef ParameterManager < handle
                         obj.wright.fitness(num+1:end) = [];
                         obj.wright.Ninit(num+1:end) = [];
                     elseif num >= obj.num_types
-                        for i = 1:num
+                        for i = obj.num_types:num
                             obj.handles.types_popup.String{i} = i;
                             %logistic 
                             obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
@@ -157,6 +172,9 @@ classdef ParameterManager < handle
                             obj.wright.Ninit(i) = obj.wright.Ninit_default;
                         end
                     end
+                    obj.logistic_saved = obj.logistic;
+                    obj.moran_saved = obj.moran;
+                    obj.wright_saved = obj.wright;
                 end
                 obj.num_types = num;
                 obj.handles.types_popup.Value = 1;
@@ -201,6 +219,8 @@ classdef ParameterManager < handle
                 obj.handles.max_iterations_box.String = obj.max_iterations;
             end
         end
+        
+        
         
     end
 end
