@@ -193,8 +193,6 @@ classdef ParameterManager < handle
                 if round(sqrt(size_temp))^2 == size_temp && size_temp <= 2500 && size_temp >= 16
                     obj.matrix.edge_size = sqrt(size_temp);
                     noerror = 1;
-                else
-                    warndlg('Population size must be a perfect square and between 16 than 2500!');
                 end
             end
         end

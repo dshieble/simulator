@@ -133,7 +133,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % axis off; axis equal;
 global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear model;
 if ~evolving && ~paused
-    parameter_manager.updateMatrixProperties();
+    verify_parameters();
 end
 if ~evolving && ~paused && parameters_clear %run
     parameter_manager.updateNumTypes();
@@ -231,11 +231,14 @@ end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid mutation_manager parameter_manager;
+global evolving grid_manager plot_grid mutation_manager parameter_manager model;
 warning('OFF','MATLAB:legend:PlotEmpty')
 while evolving == 1
-   if parameter_manager.mutating && ~first_run
-       mutation_manager.mutate(grid_manager);
+   if parameter_manager.mutating
+       if first_run || (plot_grid && model <= 2) || (model == 4)...
+               || (model == 3 && ~mod(grid_manager.timestep, numel(grid_manager.matrix)));
+           mutation_manager.mutate(grid_manager);
+       end
    end
    [matrix, c, t, halt] = grid_manager.get_next();
    if plot_grid
@@ -255,7 +258,7 @@ while evolving == 1
             legend(legend_input, 'Location', 'northwest')
         end
     end
-    if halt
+    if halt && ~parameter_manager.mutating
         break
     end
 end
@@ -524,10 +527,20 @@ function population_box_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of population_box as text
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
-global parameter_manager parameters_clear;
-parameters_clear = parameter_manager.updateMatrixProperties();
+verify_parameters();
 
+function verify_parameters
+global parameter_manager parameters_clear plot_grid;
+parameters_clear = 0;
+if ~parameter_manager.updateMatrixProperties()
+    warndlg('Population size must be a perfect square and between 16 than 2500!');
+elseif plot_grid && parameter_manager.num_loci > 4
+    warndlg('Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
+else
+    parameters_clear = 1;
+end
 
+    
 
 % --- Executes on button press in plot_grid_button.
 function plot_grid_button_Callback(hObject, eventdata, handles)
