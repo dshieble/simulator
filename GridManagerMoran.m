@@ -50,7 +50,9 @@ classdef GridManagerMoran < GridManagerAbstract
                     chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
                 end
-                dead_type = randi([1 obj.num_types]);
+                t = 1:obj.num_types;
+                t = t(obj.total_count(:, obj.timestep) > 0);
+                dead_type = t(randi(length(t)));
                 %birth one
                 obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) + 1;
                 %kill one
