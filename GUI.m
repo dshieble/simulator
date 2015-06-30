@@ -219,9 +219,7 @@ while evolving == 1
                 legend_input = [legend_input sprintf('Type %d', i)];
             end
         end
-        if plot_grid
-            legend(legend_input, 'Location', 'northwest')
-        end
+        legend(legend_input, 'Location', 'northwest');
     end
     if halt && ~parameter_manager.mutating || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
         break
@@ -229,6 +227,7 @@ while evolving == 1
 end
 if ~first_run
     draw_iteration(matrix, c, t, halt, handles);
+    legend(legend_input, 'Location', 'northwest')
 end
 
     
@@ -615,13 +614,9 @@ else
     handles.init_pop_text.Visible = 'on';
 end
 
-
-
 function max_iterations_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMaxIterations();
-
-
 
 % --- Executes on button press in spatial_structure_check.
 function spatial_structure_check_Callback(hObject, eventdata, handles)

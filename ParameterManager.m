@@ -127,12 +127,8 @@ classdef ParameterManager < handle
                     %TODO: replace defaults with inputted amounts
                     new_Ninit = [obj.matrix.edge_size^2  zeros(1,num - 1)];
                     obj.logistic.Ninit = [5 zeros(1,num - 1)];
-                    obj.logistic.birth_rate = repmat(obj.logistic.birth_rate_default,1,num);
-                    obj.logistic.death_rate = repmat(obj.logistic.death_rate_default,1,num);
                     obj.moran.Ninit = new_Ninit;
-                    obj.moran.birth_rate = repmat(obj.moran.birth_rate_default,1,num);
                     obj.wright.Ninit = new_Ninit;
-                    obj.wright.fitness = repmat(obj.wright.fitness_default,1,num);
                 else
                     if num < obj.num_types
                         obj.handles.types_popup.String(num+1:end) = [];
