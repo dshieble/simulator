@@ -145,7 +145,7 @@ classdef ParameterManager < handle
                     elseif num >= obj.num_types
                         for i = 1:num
                             obj.handles.types_popup.String{i} = i;
-                            %logistic
+                            %logistic 
                             obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
                             obj.logistic.death_rate(i) = obj.logistic.death_rate_default;
                             obj.logistic.Ninit(i) = obj.logistic.Ninit_default;
