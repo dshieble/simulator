@@ -22,33 +22,39 @@ classdef GridManagerMoran < GridManagerAbstract
         function [mat, changed, t, h] = get_next(obj)
             %pick a cell at random, kill it, then pick a type in proportion
             %to birth rate and replace killed cell with that type
+
             if obj.plot_grid
-                n = size(obj.matrix, 1);
-                c = randi(n,1,2);
-                ch = sub2ind(size(obj.matrix),c(1),c(2));
-                index = randi(length(obj.proportion_vec));
-                obj.matrix(ch) = obj.proportion_vec(index);
-                %then, include all computation updates
+                for i = 1:numel(obj.matrix)
+                    n = size(obj.matrix, 1);
+                    c = randi(n,1,2);
+                    ch = sub2ind(size(obj.matrix),c(1),c(2));
+                    index = randi(length(obj.proportion_vec));
+                    obj.matrix(ch) = obj.proportion_vec(index);
+                end
                 h = obj.isHomogenous();
             else
-                obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
-                tot_rates = obj.total_count(:,obj.timestep + 1).*(obj.birth_rate);
-                num = rand()*sum(tot_rates);
-                chosen_type = 0;
-                while num > 0
-                    chosen_type = chosen_type + 1;
-                    num = num - tot_rates(chosen_type);
+                gen_vec = obj.total_count(:, obj.timestep);
+                for i = 1:numel(obj.matrix)
+                    tot_rates = gen_vec.*(obj.birth_rate);
+                    num = rand()*sum(tot_rates);
+                    chosen_type = 0;
+                    while num > 0
+                        chosen_type = chosen_type + 1;
+                        num = num - tot_rates(chosen_type);
+                    end
+                    t = 1:obj.num_types;
+                    t = t(gen_vec > 0);
+                    dead_type = t(randi(length(t)));
+                    %birth one
+                    gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                    %kill one
+                    gen_vec(dead_type) = gen_vec(dead_type) - 1;
                 end
-                t = 1:obj.num_types;
-                t = t(obj.total_count(:, obj.timestep) > 0);
-                dead_type = t(randi(length(t)));
-                %birth one
-                obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) + 1;
-                %kill one
-                obj.total_count(dead_type, obj.timestep + 1)    = obj.total_count(dead_type  , obj.timestep + 1) - 1;
+                obj.total_count(:, obj.timestep + 1) = gen_vec;
                 h = length(find(obj.total_count(:, obj.timestep + 1)>=numel(obj.matrix), 1));
             end
             [mat, changed, t] = obj.get_next_cleanup();
+            h = h && ~obj.mutation_manager.mutating;
         end
         
         %used tic and toc - this does not need any speed up

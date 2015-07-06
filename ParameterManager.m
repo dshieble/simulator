@@ -9,6 +9,7 @@ classdef ParameterManager < handle
         logistic;
         moran;
         wright;
+        exp;
         matrix;
         mutating;
         mutation_matrix;
@@ -20,11 +21,12 @@ classdef ParameterManager < handle
         
         function obj = ParameterManager(handles)
             obj.current_model = 1;
-            obj.max_iterations = 10000;
+            obj.max_iterations = 10;
             obj.max_types = 16;
             obj.num_types = 2;
             obj.handles = handles;
             obj.logistic = struct();
+            obj.exp = struct();
             obj.moran = struct();
             obj.wright = struct();
             obj.matrix = struct();
@@ -35,6 +37,13 @@ classdef ParameterManager < handle
             obj.logistic.Ninit = [obj.logistic.Ninit_default obj.logistic.Ninit_default];
             obj.logistic.birth_rate = [obj.logistic.birth_rate_default obj.logistic.birth_rate_default];
             obj.logistic.death_rate = [obj.logistic.death_rate_default obj.logistic.death_rate_default];
+            %exp
+            obj.exp.Ninit_default = [5];
+            obj.exp.birth_rate_default = [0.5];
+            obj.exp.death_rate_default = [0.01];
+            obj.exp.Ninit = [obj.exp.Ninit_default obj.exp.Ninit_default];
+            obj.exp.birth_rate = [obj.exp.birth_rate_default obj.exp.birth_rate_default];
+            obj.exp.death_rate = [obj.exp.death_rate_default obj.exp.death_rate_default];
             %moran
             obj.moran.Ninit_default = [1250];
             obj.moran.birth_rate_default = [0.5];
@@ -55,11 +64,15 @@ classdef ParameterManager < handle
             %multipl loci params
             obj.multiple_loci = struct();
             obj.multiple_loci.logistic = struct();
+            obj.multiple_loci.exp = struct();
             obj.multiple_loci.moran = struct();
             obj.multiple_loci.wright = struct();
             obj.multiple_loci.logistic.Ninit = obj.logistic.Ninit_default;
             obj.multiple_loci.logistic.birth_rate = obj.logistic.birth_rate_default;
             obj.multiple_loci.logistic.death_rate = obj.logistic.death_rate_default;
+            obj.multiple_loci.exp.Ninit = obj.logistic.Ninit_default;
+            obj.multiple_loci.exp.birth_rate = obj.logistic.birth_rate_default;
+            obj.multiple_loci.exp.death_rate = obj.logistic.death_rate_default;
             obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
             obj.multiple_loci.moran.birth_rate = obj.moran.birth_rate_default;
             obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
@@ -75,7 +88,7 @@ classdef ParameterManager < handle
             ninit_temp = str2double(obj.handles.init_pop_box.String);
             param_1_temp = str2double(obj.handles.param_1_box.String);
             param_2_temp = str2double(obj.handles.param_2_box.String);
-            if obj.current_model <= 2 
+            if obj.current_model == 1
                 if ~isnan(ninit_temp)
                     obj.logistic.Ninit(type) = round(ninit_temp);
                 end
@@ -84,6 +97,16 @@ classdef ParameterManager < handle
                 end
                 if ~isnan(param_2_temp)
                     obj.logistic.death_rate(type) = param_2_temp;
+                end
+            elseif obj.current_model == 2
+                if ~isnan(ninit_temp)
+                    obj.exp.Ninit(type) = round(ninit_temp);
+                end
+                if ~isnan(param_1_temp)
+                    obj.exp.birth_rate(type) = param_1_temp;
+                end
+                if ~isnan(param_2_temp)
+                    obj.exp.death_rate(type) = param_2_temp;
                 end
             %moran
             elseif obj.current_model == 3         
@@ -115,6 +138,10 @@ classdef ParameterManager < handle
                     obj.logistic.birth_rate(num+1:end) = [];
                     obj.logistic.death_rate(num+1:end) = [];
                     obj.logistic.Ninit(num+1:end) = [];
+                    %exp
+                    obj.exp.birth_rate(num+1:end) = [];
+                    obj.exp.death_rate(num+1:end) = [];
+                    obj.exp.Ninit(num+1:end) = [];        
                     %moran
                     obj.moran.birth_rate(num+1:end) = [];
                     obj.moran.Ninit(num+1:end) = [];
@@ -128,6 +155,10 @@ classdef ParameterManager < handle
                         obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
                         obj.logistic.death_rate(i) = obj.logistic.death_rate_default;
                         obj.logistic.Ninit(i) = obj.logistic.Ninit_default;
+                        %exp
+                        obj.exp.birth_rate(i) = obj.logistic.birth_rate_default;
+                        obj.exp.death_rate(i) = obj.logistic.death_rate_default;
+                        obj.exp.Ninit(i) = obj.logistic.Ninit_default;             
                         %moran
                         obj.moran.birth_rate(i) = obj.moran.birth_rate_default;
                         obj.moran.Ninit(i) = obj.moran.Ninit_default;
@@ -166,15 +197,6 @@ classdef ParameterManager < handle
                     end
                 end
             end  
-              
-            %adjust the stored values to be 100% of the all-zeros
-            %TODO: replace defaults with inputted amounts
-            if obj.num_loci > 1
-                obj.multiple_loci.logistic.birth_rate = repmat(obj.logistic.birth_rate(1), 1, obj.num_types);
-                obj.multiple_loci.logistic.death_rate = repmat(obj.logistic.death_rate(1), 1, obj.num_types);
-                obj.multiple_loci.moran.birth_rate = repmat(obj.moran.birth_rate(1), 1, obj.num_types);
-                obj.multiple_loci.wright.fitness = repmat(obj.wright.fitness(1), 1, obj.num_types);
-            end
             obj.handles.num_loci_box.String = num2str(obj.num_loci);
 
         end
@@ -182,10 +204,14 @@ classdef ParameterManager < handle
         %Updates the num_loci == 1 boxes to the stored struct values
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
-            if obj.current_model <= 2
+            if obj.current_model == 1
                 obj.handles.param_1_box.String = obj.logistic.birth_rate(type);
                 obj.handles.param_2_box.String = obj.logistic.death_rate(type);
                 obj.handles.init_pop_box.String = obj.logistic.Ninit(type);
+            elseif obj.current_model == 2
+                obj.handles.param_1_box.String = obj.exp.birth_rate(type);
+                obj.handles.param_2_box.String = obj.exp.death_rate(type);
+                obj.handles.init_pop_box.String = obj.exp.Ninit(type);
             elseif obj.current_model == 3
                 obj.handles.param_1_box.String = obj.moran.birth_rate(type);
                 obj.handles.init_pop_box.String = obj.moran.Ninit(type);
@@ -218,6 +244,15 @@ classdef ParameterManager < handle
         end
         
         function out = getField(obj, model, param)
+            if strcmp(param,'num_types')
+                if ~obj.mutating || obj.num_loci == 1
+                    out = obj.num_types;
+                    return;
+                else
+                    out = 2^obj.num_loci;
+                    return;
+                end
+            end
             if obj.num_loci > 1 && obj.mutating
                 if strcmp(param, 'Ninit') 
                     out = [getfield(getfield(obj.multiple_loci,model),'Ninit') zeros(1, 2^obj.num_loci - 1)];
@@ -240,56 +275,3 @@ classdef ParameterManager < handle
 
     end
 end
-% 
-% 
-%                 switch model
-%                     case 'logistic'
-%                         if strcmp(param, 'Ninit') 
-%                         	out = [obj.multiple_loci.logistic.Ninit zeros(1, 2^obj.num_loci - 1)];
-%                         elseif strcmp(param, 'birth_rate') 
-%                             out = repmat(obj.multiple_loci.logistic.birth_rate, 1, 2^obj.num_loci);
-%                         elseif strcmp(param, 'death_rate')
-%                             out = repmat(obj.multiple_loci.logistic.death_rate, 1, 2^obj.num_loci);
-%                         end
-%                     case 'moran'
-%                         if strcmp(param, 'Ninit')
-%                             out = [obj.multiple_loci.moran.Ninit  zeros(1, 2^obj.num_loci - 1)];
-%                         else
-%                             out = repmat(obj.multiple_loci.moran.birth_rate, 1, 2^obj.num_loci);
-%                         end
-%                     case 'wright'
-%                         if strcmp(param, 'Ninit')
-%                         	out = [obj.multiple_loci.wright.Ninit  zeros(1, 2^obj.num_loci - 1)];
-%                         else
-%                             out = repmat(obj.multiple_loci.wright.fitness, 1, 2^obj.num_loci);
-%                         end
-%                     otherwise
-%                         error('ERROR: invalid get input!');
-%                         out = 0;
-%                 end
-%             elseif obj.num_loci == 1;
-%             	switch model
-%                     case 'logistic'
-%                         if strcmp(param, 'Ninit')
-%                         	out = obj.logistic.Ninit;
-%                         elseif strcmp(param, 'birth_rate')
-%                             out = obj.logistic.birth_rate;
-%                         else
-%                             out = obj.logistic.death_rate;
-%                         end
-%                     case 'moran'
-%                         if strcmp(param, 'Ninit')
-%                         	out = obj.moran.Ninit;
-%                         else
-%                             out = obj.moran.birth_rate;
-%                         end
-%                     case 'wright'
-%                         if strcmp(param, 'Ninit')
-%                         	out = obj.wright.Ninit;
-%                         else
-%                             out = obj.wright.fitness;
-%                         end
-%                     otherwise
-%                         error('ERROR: invalid get input!');
-%                         out = 0;
-%                 end

@@ -33,23 +33,15 @@ classdef GridManagerLogistic < GridManagerAbstract
                         end
                     end
                 end
-
                 %birth
                 new = [];
                 for i = 1:obj.num_types
                     ind = find(obj.matrix == i);
                     for j = ind'
                         if rand() < obj.birth_rate(i) && isempty(find(new == j, 1))
-                            [a, b] = ind2sub(size(obj.matrix), j);
-                            if obj.use_exp
-                                f = obj.get_nearest_free(a, b);
-                            else
-                                f = randi(numel(obj.matrix));
-                                if obj.matrix(f) ~= 0
-                                    f = 0;
-                                end
-                            end
-                            if (f > 0)
+                            %[a, b] = ind2sub(size(obj.matrix), j);
+                            f = randi(numel(obj.matrix));
+                            if obj.matrix(f) == 0
                                 obj.matrix(f) = i;
                                 new = [new f];
                             end
@@ -57,23 +49,30 @@ classdef GridManagerLogistic < GridManagerAbstract
                     end
                 end
             else
-                obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
-                tot_rates = obj.total_count(:,obj.timestep + 1).*(obj.birth_rate + obj.death_rate);
-                num = rand()*sum(tot_rates);
-                chosen_type = 0;
-                while num > 0
-                    chosen_type = chosen_type + 1;
-                    num = num - tot_rates(chosen_type);
+                gen_vec = obj.total_count(:, obj.timestep);
+                for i = 1:numel(obj.matrix)
+                    tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
+                    num = rand()*sum(tot_rates);
+                    chosen_type = 0;
+                    while num > 0
+                        chosen_type = chosen_type + 1;
+                        num = num - tot_rates(chosen_type);
+                    end
+                    if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
+                        if sum(gen_vec) < numel(obj.matrix)
+                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                        end
+                    else
+                    	gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
+                    end
                 end
-                if num + obj.birth_rate(chosen_type)*obj.total_count(chosen_type, obj.timestep + 1) > 0
-                    obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) + 1;
-                else
-                    obj.total_count(chosen_type, obj.timestep + 1) = obj.total_count(chosen_type, obj.timestep + 1) - 1;
-                end
+                obj.total_count(:, obj.timestep + 1) = gen_vec;
             end
+
             %then, include all computation updates
-            h = ~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix);
+            h = (~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix));
             [mat, changed, t] = obj.get_next_cleanup();
+            h = h && ~obj.mutation_manager.mutating;
         end
         
         function update_params(obj)

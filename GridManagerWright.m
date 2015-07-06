@@ -30,20 +30,28 @@ classdef GridManagerWright < GridManagerAbstract
             v = (obj.fitness.*counts);
             probs = v./sum(v);
             new_counts = mnrnd(numel(obj.matrix), probs);
-            long_mat = [];
-            for i = 1:obj.num_types
-                long_mat = [long_mat repmat(i,1,new_counts(i))];
+            if obj.plot_grid 
+                long_mat = [];
+                for i = 1:obj.num_types
+                    long_mat = [long_mat repmat(i,1,new_counts(i))];
+                end
+                long_mat = long_mat(randperm(length(long_mat)));
+                obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
+                h = obj.isHomogenous();
+            else
+                obj.total_count(:, obj.timestep + 1) = new_counts;
+            	h = length(find(obj.total_count(:, obj.timestep + 1)>=numel(obj.matrix), 1));
             end
-            long_mat = long_mat(randperm(length(long_mat)));
-            obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
-            h = obj.isHomogenous();
             [mat, changed, t] = obj.get_next_cleanup();
+            h = h && ~obj.mutation_manager.mutating;
         end
         
         %used tic and toc - this does not need any speed up
         function update_params(obj)
             for i = 1:obj.num_types
-                obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
+                if obj.plot_grid
+                    obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
+                end
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.fitness(i))*obj.percent_count(i, obj.timestep); 
             end

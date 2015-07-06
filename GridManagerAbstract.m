@@ -49,6 +49,7 @@ classdef GridManagerAbstract < handle
                 .25 0 .5; ...
                 0 .25 .5; ...
                 .15 .15 .15;];
+            
             obj.total_count = Ninit';
             obj.percent_count = [];
             obj.mean_fitness = [];

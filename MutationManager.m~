@@ -24,7 +24,7 @@ classdef MutationManager < handle
             obj.mutating = parameter_manager.mutating;
         end
         
-        %Elements in the matrix are represented as
+        %Elements in the matrix are represented as 
         function matrix = mutate(obj, grid_manager)
             matrix = grid_manager.matrix;
             if obj.mutating
@@ -58,40 +58,25 @@ classdef MutationManager < handle
                         end
                     end
                 else %non-plotting
-                    gen_vec = zeros(1, grid_manager.num_types);
-                    if obj.num_loci == 1
+                    if ocj.num_loci == 1
+                        gen_vec = zeros(1, grid_manager.num_types);
                         for i = 1:grid_manager.num_types
                             gen_vec = gen_vec + ...
                                 mnrnd(grid_manager.total_count(i, grid_manager.timestep), obj.mutation_matrix(:,i));
                         end
-                        
                     elseif obj.num_loci > 1 %currently written with the assumption that 2^num_loci is close to numel(population)
-                        %TODO: 1 -> 0 and 2 -> 1 in the mutation matrix
                         gen_vec = grid_manager.total_count(:, grid_manager.timestep);
                         for i = 1:grid_manager.num_types
-                            for j = 1:grid_manager.total_count(i, grid_manager.timestep)
-                                organism = i;
-                                gen_vec(organism) = gen_vec(organism) - 1;
-                                for k = 1:log2(grid_manager.num_types)
-                                    if bitget(organism, k) %if allele is 1
-                                        if rand() < obj.mutation_matrix(1,2)
-                                            organism = bitset(organism, k,0)
-                                        end
-                                    else %if allele is 0
-                                        if rand() < obj.mutation_matrix(2,1)
-                                            organism = bitset(organism, k, 1);
-                                        end
-                                    end
-                                end
-                                if i ~= organism
-                                    fprintf('%d -> %d\n',i, organism);
-                                end
-                                assert(organism<=grid_manager.num_types);
-                                gen_vec(organism) = gen_vec(organism) + 1;
+                        	for j = 1:grid_manager.total_count(i, grid_manager.timestep)
+                                
+                                
                             end
                         end
-                    end
-                    grid_manager.total_count(:, grid_manager.timestep) = gen_vec;
+                        
+                            
+                            
+                        grid_manager.total_count(:, grid_manager.timestep) = gen_vec;
+                    end 
                 end
             end
         end

@@ -119,13 +119,13 @@ if ~evolving && ~paused && parameters_clear %run
             parameter_manager.getField('logistic', 'birth_rate'), ...
             parameter_manager.getField('logistic','death_rate'));
     elseif handles.exp_button.Value
-        grid_manager = GridManagerLogistic(...
+        grid_manager = GridManagerExp(...
             parameter_manager.matrix.edge_size, ...
-            parameter_manager.getField('logistic', 'Ninit'), ...
+            parameter_manager.getField('exp', 'Ninit'), ...
             MutationManager(parameter_manager),...
             plot_grid,...
-            parameter_manager.getField('logistic', 'birth_rate'), ...
-            parameter_manager.getField('logistic','death_rate'));
+            parameter_manager.getField('exp', 'birth_rate'), ...
+            parameter_manager.getField('exp','death_rate'));
     elseif handles.moran_button.Value
             if ~parameter_manager.verifySizeOk('moran')
                 warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
@@ -219,7 +219,7 @@ while evolving == 1
         end
         legend(legend_input, 'Location', 'northwest');
     end
-    if halt && ~parameter_manager.mutating || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
+    if halt || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
         break
     end
 end
@@ -268,11 +268,7 @@ for i = 1:size(vec,1)
     hold on;
     plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
-if parameter_manager.current_model == 4 || (plot_grid && (parameter_manager.current_model <= 2))
-    xlabel('Generations', 'Parent', handles.axes_graph);
-else
-    xlabel('Reproductive Events', 'Parent', handles.axes_graph);
-end
+xlabel('Generations', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 pause(0.01);
 drawnow;
@@ -550,7 +546,7 @@ str = [str '                               Logistic/Exponential                 
 str = [str ' '];
 str = [str 'Type |  Size                    Birth Rate                    Death Rate                      Size                 Birth Rate                    Size                          Fitness'];
 str = [str '         | ----------------------------------------------------------------------------------                     --------------------------------------                     ----------------------------------------------' ];
-for i = 1:parameter_manager.num_types
+for i = 1:getField('','num_types')
     str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f                               %04d                  %0.2f                           %04d                          %0.2f',...
         i,...
         parameter_manager.logistic.Ninit(i),...
@@ -566,7 +562,7 @@ PopulationParametersDialog(str);
 % --- Executes on button press in mutation_matrix_button.
 function mutation_matrix_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-m = MutationMatrixDialog(parameter_manager.mutation_matrix);
+m = MutationMatrixDialog(parameter_manager.mutation_matrix, parameter_manager.num_loci);
 if ~isempty(m)
     parameter_manager.mutation_matrix = m;
 end
