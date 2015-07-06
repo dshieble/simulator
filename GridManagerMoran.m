@@ -7,12 +7,11 @@ classdef GridManagerMoran < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerMoran(dim, Ninit, b, plot_grid)
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, b)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid);
             obj.birth_rate = b';
             obj.proportion_vec = [];
-            obj.plot_grid = plot_grid;
             obj.update_params();
         end
         
@@ -30,19 +29,9 @@ classdef GridManagerMoran < GridManagerAbstract
                 index = randi(length(obj.proportion_vec));
                 obj.matrix(ch) = obj.proportion_vec(index);
                 %then, include all computation updates
-                obj.output = [obj.output; obj.matrix(:)'];
-                mat = obj.matrix;
                 h = obj.isHomogenous();
-                if obj.timestep <= 2
-                    changed = (1:numel(obj.matrix))';
-                else
-                	changed = find(obj.old_matrix ~= obj.matrix);
-                end
-                obj.old_matrix = obj.matrix;
             else
                 obj.total_count(:, obj.timestep + 1) = obj.total_count(:, obj.timestep);
-                changed = (1:numel(obj.matrix))';
-                mat = [];
                 tot_rates = obj.total_count(:,obj.timestep + 1).*(obj.birth_rate);
                 num = rand()*sum(tot_rates);
                 chosen_type = 0;
@@ -58,12 +47,8 @@ classdef GridManagerMoran < GridManagerAbstract
                 %kill one
                 obj.total_count(dead_type, obj.timestep + 1)    = obj.total_count(dead_type  , obj.timestep + 1) - 1;
                 h = length(find(obj.total_count(:, obj.timestep + 1)>=numel(obj.matrix), 1));
-                %obj.total_count(:, obj.timestep + 1)
             end
-            obj.timestep = obj.timestep + 1;
-            t = obj.timestep; 
-            obj.generations = [obj.generations obj.timestep];
-            obj.update_params();
+            [mat, changed, t] = obj.get_next_cleanup();
         end
         
         %used tic and toc - this does not need any speed up

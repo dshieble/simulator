@@ -14,6 +14,7 @@ function varargout = GUI(varargin)
 %      applied to the GUI before GUI_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
 %      stop.  All inputs are passed to GUI_OpeningFcn via varargin.
+
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
@@ -61,7 +62,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear mutation_manager;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -71,7 +72,6 @@ paused = 0;
 grid_manager = [];
 parameters_clear = 1;
 plot_grid = handles.plot_grid_button.Value;
-mutation_manager = MutationManager(parameter_manager);
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -109,50 +109,53 @@ if ~evolving && ~paused
     verify_parameters();
 end
 if ~evolving && ~paused && parameters_clear %run
-    parameter_manager.updateNumTypes();
     handles.run_button.String = 'Calculating...';
     if handles.logistic_button.Value
         grid_manager = GridManagerLogistic(...
             parameter_manager.matrix.edge_size, ...
-            parameter_manager.logistic.Ninit, ...
-            parameter_manager.logistic.birth_rate, ...
-            parameter_manager.logistic.death_rate, ...
-            plot_grid, ...
-            0);
+            parameter_manager.getField('logistic', 'Ninit'), ...
+            MutationManager(parameter_manager),...
+            plot_grid,...
+            parameter_manager.getField('logistic', 'birth_rate'), ...
+            parameter_manager.getField('logistic','death_rate'));
     elseif handles.exp_button.Value
         grid_manager = GridManagerLogistic(...
             parameter_manager.matrix.edge_size, ...
-            parameter_manager.logistic.Ninit, ...
-            parameter_manager.logistic.birth_rate, ...
-            parameter_manager.logistic.death_rate, ...
-            plot_grid, ...
-            1);
+            parameter_manager.getField('logistic', 'Ninit'), ...
+            MutationManager(parameter_manager),...
+            plot_grid,...
+            parameter_manager.getField('logistic', 'birth_rate'), ...
+            parameter_manager.getField('logistic','death_rate'));
+    elseif handles.moran_button.Value
+            if ~parameter_manager.verifySizeOk('moran')
+                warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+                handles.run_button.String = 'Run';
+                return;
+            else    
+                grid_manager = GridManagerMoran(...
+                    parameter_manager.matrix.edge_size, ...
+                    parameter_manager.getField('moran', 'Ninit'), ...
+                    MutationManager(parameter_manager),...
+                    plot_grid,...
+                    parameter_manager.getField('moran','birth_rate'));
+            end
+    elseif handles.wright_button.Value
+            if ~parameter_manager.verifySizeOk('wright') 
+                warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+                handles.run_button.String = 'Run';
+                return;
+            else    
+                grid_manager = GridManagerWright(...
+                    parameter_manager.matrix.edge_size, ...
+                    parameter_manager.getField('wright', 'Ninit'), ...
+                    MutationManager(parameter_manager),...
+                    plot_grid,...
+                    parameter_manager.getField('wright','fitness'));
+            end
     else
-        if sum(parameter_manager.moran.Ninit) ~= (parameter_manager.matrix.edge_size^2)
-            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-            handles.run_button.String = 'Run';
-            return;
-        elseif handles.moran_button.Value
-            grid_manager = GridManagerMoran(...
-                parameter_manager.matrix.edge_size, ...
-                parameter_manager.moran.Ninit, ...
-                parameter_manager.moran.birth_rate, ...
-                plot_grid);
-        elseif sum(parameter_manager.wright.Ninit) ~= (parameter_manager.matrix.edge_size^2)
-            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-            handles.run_button.String = 'Run';
-            return;
-        elseif handles.wright_button.Value
-            grid_manager = GridManagerWright(...
-                parameter_manager.matrix.edge_size, ...
-                parameter_manager.wright.Ninit, ...
-                parameter_manager.wright.fitness, ...
-                plot_grid);
-        else
-            warndlg('Radio button error');
-            handles.run_button.String = 'Run';
-            return;        
-        end
+        warndlg('Radio button error');
+        handles.run_button.String = 'Run';
+        return;        
     end
     evolving = 1;
     handles.save_button.BackgroundColor = [0 0 0];
@@ -195,16 +198,11 @@ end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles)
-global evolving grid_manager plot_grid mutation_manager parameter_manager;
+global evolving grid_manager plot_grid parameter_manager;
 warning('OFF','MATLAB:legend:PlotEmpty')
+legend_input = {};
 while evolving == 1
-   if parameter_manager.mutating
-       if first_run || (plot_grid && parameter_manager.current_model <= 2) || (parameter_manager.current_model == 4)...
-               || (((~plot_grid && parameter_manager.current_model <= 2) || parameter_manager.current_model == 3)...
-               && mod(grid_manager.timestep, numel(grid_manager.matrix))==0);
-           mutation_manager.mutate(grid_manager);
-       end
-   end
+
    [matrix, c, t, halt] = grid_manager.get_next();
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
@@ -212,7 +210,7 @@ while evolving == 1
    if first_run
         first_run = 0;
         legend_input = {};
-        for i = 1:min(16,size(grid_manager.total_count,1))
+        for i = 1:min(16, grid_manager.num_types)
             if parameter_manager.num_loci > 1 && parameter_manager.mutating
                 legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1))];
             else   
@@ -382,7 +380,7 @@ function save_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global evolving parameter_manager;
-try 
+try
     if ~evolving
         c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
         save(str, 'save_data');
@@ -578,7 +576,6 @@ end
 function demography_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 0;
-parameter_manager.updateNumTypes();
 toggle_mutation_visible(handles);
 handles.mutation_panel.Visible = 'off';
 handles.num_types_string.String = 'Number of Types:';
@@ -588,7 +585,6 @@ handles.params_string.String =  'Parameters for Type:';
 function genetics_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 1;
-parameter_manager.updateNumTypes();
 toggle_mutation_visible(handles);
 handles.mutation_panel.Visible = 'on';
 handles.num_types_string.String = 'Number of Alleles:';
@@ -596,7 +592,7 @@ handles.params_string.String =  'Parameters for Allele:';
 
 function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.updateNumTypes();
+parameter_manager.updateMultipleLoci();
 toggle_mutation_visible(handles);
 
 

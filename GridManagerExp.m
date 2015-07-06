@@ -1,5 +1,4 @@
-
-classdef GridManagerLogistic < GridManagerAbstract
+classdef GridManagerExp < GridManagerAbstract
     
     properties
         birth_rate;
@@ -9,7 +8,7 @@ classdef GridManagerLogistic < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, b, d)
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, b, d)
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid);
             obj.birth_rate = b';
             obj.death_rate = d';
@@ -41,14 +40,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                     for j = ind'
                         if rand() < obj.birth_rate(i) && isempty(find(new == j, 1))
                             [a, b] = ind2sub(size(obj.matrix), j);
-                            if obj.use_exp
-                                f = obj.get_nearest_free(a, b);
-                            else
-                                f = randi(numel(obj.matrix));
-                                if obj.matrix(f) ~= 0
-                                    f = 0;
-                                end
-                            end
+                            f = obj.get_nearest_free(a, b);
                             if (f > 0)
                                 obj.matrix(f) = i;
                                 new = [new f];
@@ -89,3 +81,5 @@ classdef GridManagerLogistic < GridManagerAbstract
 
     end
 end
+
+

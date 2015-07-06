@@ -13,9 +13,7 @@ classdef ParameterManager < handle
         mutating;
         mutation_matrix;
         num_loci;
-        logistic_saved;
-        moran_saved;
-        wright_saved;
+        multiple_loci;
     end
     
     methods (Access = public)
@@ -54,10 +52,18 @@ classdef ParameterManager < handle
             obj.mutating = 0;
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
-            %clean
-            obj.logistic_saved = obj.logistic;
-            obj.moran_saved = obj.moran;
-            obj.wright_saved = obj.wright;
+            %multipl loci params
+            obj.multiple_loci = struct();
+            obj.multiple_loci.logistic = struct();
+            obj.multiple_loci.moran = struct();
+            obj.multiple_loci.wright = struct();
+            obj.multiple_loci.logistic.Ninit = obj.logistic.Ninit_default;
+            obj.multiple_loci.logistic.birth_rate = obj.logistic.birth_rate_default;
+            obj.multiple_loci.logistic.death_rate = obj.logistic.death_rate_default;
+            obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
+            obj.multiple_loci.moran.birth_rate = obj.moran.birth_rate_default;
+            obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
+            obj.multiple_loci.wright.fitness = obj.wright.fitness_default;
             obj.updateNumTypes();
 
         end
@@ -93,7 +99,7 @@ classdef ParameterManager < handle
                     obj.wright.Ninit(type) = round(ninit_temp);
                 end
                 if ~isnan(param_1_temp)
-                    obj.wright.birth_rate(type) = param_1_temp;
+                    obj.wright.fitness(type) = param_1_temp;
                 end
             end
         end
@@ -103,88 +109,77 @@ classdef ParameterManager < handle
         function updateNumTypes(obj)
             num = min(obj.max_types, str2double(obj.handles.num_types_box.String));
             if ~isnan(num)
-                %set the num types in the case of more than 1 loci
-                num_l = str2double(obj.handles.loci_box.String);
-                if ~isnan(num_l)
-                    obj.num_loci = max(1,num_l);
-                    if obj.mutating && (obj.num_loci > 1)
-                        num = 2^obj.num_loci;
-                    end
-                end
-                if obj.num_loci == 1
-                    num_a = num;
-                else
-                    num_a = 2;
-                end
-                %reinitialize mutation matrix
-                obj.mutation_matrix = zeros(num_a);
-                for i = 1:num_a
-                    for j = 1:num_a
-                        if i == j
-                            obj.mutation_matrix(i,j) = 1 - 0.01*(num_a-1);
-                        else
-                            obj.mutation_matrix(i,j) = 0.01;
-                        end
-                    end
-                end                
-                %adjust the stored values to be 100% of the all-zeros
-                %genotype if in >1 loci case
-                if (obj.mutating && (obj.num_loci > 1))
-                    %TODO: replace defaults with inputted amounts
-                    obj.updateStructs();
-                    new_Ninit = [obj.matrix.edge_size^2  zeros(1,num - 1)];
-                    obj.logistic.Ninit = [5 zeros(1,num - 1)];
-                    obj.moran.Ninit = new_Ninit;
-                    obj.wright.Ninit = new_Ninit;
-                    obj.logistic.birth_rate = repmat(obj.logistic.birth_rate(1), 1, obj.num_types);
-                    obj.logistic.death_rate = repmat(obj.logistic.death_rate(1), 1, obj.num_types);
-                    obj.moran.birth_rate = repmat(obj.moran.birth_rate(1), 1, obj.num_types);
-                    obj.wright.fitness = repmat(obj.wright.fitness(1), 1, obj.num_types);
-
-                else
-                    obj.logistic = obj.logistic_saved;
-                    obj.moran = obj.moran_saved;
-                    obj.wright = obj.wright_saved;
-                    if num < obj.num_types
-                        obj.handles.types_popup.String(num+1:end) = [];
+                if num < obj.num_types
+                    obj.handles.types_popup.String(num+1:end) = [];
+                    %logistic
+                    obj.logistic.birth_rate(num+1:end) = [];
+                    obj.logistic.death_rate(num+1:end) = [];
+                    obj.logistic.Ninit(num+1:end) = [];
+                    %moran
+                    obj.moran.birth_rate(num+1:end) = [];
+                    obj.moran.Ninit(num+1:end) = [];
+                    %wright
+                    obj.wright.fitness(num+1:end) = [];
+                    obj.wright.Ninit(num+1:end) = [];
+                elseif num > obj.num_types
+                    for i = obj.num_types+1:num
+                        obj.handles.types_popup.String{i} = i;
                         %logistic
-                        obj.logistic.birth_rate(num+1:end) = [];
-                        obj.logistic.death_rate(num+1:end) = [];
-                        obj.logistic.Ninit(num+1:end) = [];
+                        obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
+                        obj.logistic.death_rate(i) = obj.logistic.death_rate_default;
+                        obj.logistic.Ninit(i) = obj.logistic.Ninit_default;
                         %moran
-                        obj.moran.birth_rate(num+1:end) = [];
-                        obj.moran.Ninit(num+1:end) = [];
+                        obj.moran.birth_rate(i) = obj.moran.birth_rate_default;
+                        obj.moran.Ninit(i) = obj.moran.Ninit_default;
                         %wright
-                        obj.wright.fitness(num+1:end) = [];
-                        obj.wright.Ninit(num+1:end) = [];
-                    elseif num >= obj.num_types
-                        for i = obj.num_types:num
-                            obj.handles.types_popup.String{i} = i;
-                            %logistic 
-                            obj.logistic.birth_rate(i) = obj.logistic.birth_rate_default;
-                            obj.logistic.death_rate(i) = obj.logistic.death_rate_default;
-                            obj.logistic.Ninit(i) = obj.logistic.Ninit_default;
-                            %moran
-                            obj.moran.birth_rate(i) = obj.moran.birth_rate_default;
-                            obj.moran.Ninit(i) = obj.moran.Ninit_default;
-                            %wright
-                            obj.wright.fitness(i) = obj.wright.fitness_default;
-                            obj.wright.Ninit(i) = obj.wright.Ninit_default;
-                        end
+                        obj.wright.fitness(i) = obj.wright.fitness_default;
+                        obj.wright.Ninit(i) = obj.wright.Ninit_default;
                     end
-                    obj.logistic_saved = obj.logistic;
-                    obj.moran_saved = obj.moran;
-                    obj.wright_saved = obj.wright;
                 end
                 obj.num_types = num;
                 obj.handles.types_popup.Value = 1;
                 obj.updateBoxes();
             end
             obj.handles.num_types_box.String = num2str(obj.num_types);
-            obj.handles.num_loci_box.String = num2str(obj.num_loci);
+            obj.updateMultipleLoci();
         end
         
-        %Updates the boxes to the stored struct values
+        function updateMultipleLoci(obj) 
+            %set the num types in the case of more than 1 loci
+            num_l = str2double(obj.handles.loci_box.String);
+            if ~isnan(num_l)
+                obj.num_loci = max(1,num_l);
+            end
+            if obj.num_loci == 1
+                num_a = obj.num_types;
+            else
+                num_a = 2;
+            end
+            %reinitialize mutation matrix
+            obj.mutation_matrix = zeros(num_a);
+            for i = 1:num_a
+                for j = 1:num_a
+                    if i == j
+                        obj.mutation_matrix(i,j) = 1 - 0.01*(num_a-1);
+                    else
+                        obj.mutation_matrix(i,j) = 0.01;
+                    end
+                end
+            end  
+              
+            %adjust the stored values to be 100% of the all-zeros
+            %TODO: replace defaults with inputted amounts
+            if obj.num_loci > 1
+                obj.multiple_loci.logistic.birth_rate = repmat(obj.logistic.birth_rate(1), 1, obj.num_types);
+                obj.multiple_loci.logistic.death_rate = repmat(obj.logistic.death_rate(1), 1, obj.num_types);
+                obj.multiple_loci.moran.birth_rate = repmat(obj.moran.birth_rate(1), 1, obj.num_types);
+                obj.multiple_loci.wright.fitness = repmat(obj.wright.fitness(1), 1, obj.num_types);
+            end
+            obj.handles.num_loci_box.String = num2str(obj.num_loci);
+
+        end
+        
+        %Updates the num_loci == 1 boxes to the stored struct values
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
             if obj.current_model <= 2
@@ -194,7 +189,7 @@ classdef ParameterManager < handle
             elseif obj.current_model == 3
                 obj.handles.param_1_box.String = obj.moran.birth_rate(type);
                 obj.handles.init_pop_box.String = obj.moran.Ninit(type);
-            else
+            elseif obj.current_model == 4
                 obj.handles.param_1_box.String = obj.wright.fitness(type);
                 obj.handles.init_pop_box.String = obj.wright.Ninit(type);
             end
@@ -209,6 +204,8 @@ classdef ParameterManager < handle
                     noerror = 1;
                 end
             end
+            obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
+            obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
         end
         
         function updateMaxIterations(obj)
@@ -220,7 +217,79 @@ classdef ParameterManager < handle
             end
         end
         
-        
-        
+        function out = getField(obj, model, param)
+            if obj.num_loci > 1 && obj.mutating
+                if strcmp(param, 'Ninit') 
+                    out = [getfield(getfield(obj.multiple_loci,model),'Ninit') zeros(1, 2^obj.num_loci - 1)];
+                else
+                    out = repmat(getfield(getfield(obj.multiple_loci, model),param), 1, 2^obj.num_loci);
+                end
+            else
+                out = getfield(getfield(obj, model),param);
+            end
+        end
+
+        function out = verifySizeOk(obj, model)
+            out = 1;
+            if obj.num_loci == 1 || ~obj.mutating
+                if sum(getfield(getfield(obj, model), 'Ninit')) ~= (obj.matrix.edge_size^2)
+                    out = 0;
+                end
+            end
+        end
+
     end
 end
+% 
+% 
+%                 switch model
+%                     case 'logistic'
+%                         if strcmp(param, 'Ninit') 
+%                         	out = [obj.multiple_loci.logistic.Ninit zeros(1, 2^obj.num_loci - 1)];
+%                         elseif strcmp(param, 'birth_rate') 
+%                             out = repmat(obj.multiple_loci.logistic.birth_rate, 1, 2^obj.num_loci);
+%                         elseif strcmp(param, 'death_rate')
+%                             out = repmat(obj.multiple_loci.logistic.death_rate, 1, 2^obj.num_loci);
+%                         end
+%                     case 'moran'
+%                         if strcmp(param, 'Ninit')
+%                             out = [obj.multiple_loci.moran.Ninit  zeros(1, 2^obj.num_loci - 1)];
+%                         else
+%                             out = repmat(obj.multiple_loci.moran.birth_rate, 1, 2^obj.num_loci);
+%                         end
+%                     case 'wright'
+%                         if strcmp(param, 'Ninit')
+%                         	out = [obj.multiple_loci.wright.Ninit  zeros(1, 2^obj.num_loci - 1)];
+%                         else
+%                             out = repmat(obj.multiple_loci.wright.fitness, 1, 2^obj.num_loci);
+%                         end
+%                     otherwise
+%                         error('ERROR: invalid get input!');
+%                         out = 0;
+%                 end
+%             elseif obj.num_loci == 1;
+%             	switch model
+%                     case 'logistic'
+%                         if strcmp(param, 'Ninit')
+%                         	out = obj.logistic.Ninit;
+%                         elseif strcmp(param, 'birth_rate')
+%                             out = obj.logistic.birth_rate;
+%                         else
+%                             out = obj.logistic.death_rate;
+%                         end
+%                     case 'moran'
+%                         if strcmp(param, 'Ninit')
+%                         	out = obj.moran.Ninit;
+%                         else
+%                             out = obj.moran.birth_rate;
+%                         end
+%                     case 'wright'
+%                         if strcmp(param, 'Ninit')
+%                         	out = obj.wright.Ninit;
+%                         else
+%                             out = obj.wright.fitness;
+%                         end
+%                     otherwise
+%                         error('ERROR: invalid get input!');
+%                         out = 0;
+%                 end

@@ -1,3 +1,9 @@
+%do plot_grid stuff
+
+
+
+
+
 %This class handles the mutations of elements in the matrix. When >1 loci
 %are selected, this class also converts types to their binary allele
 %strings via the converstion allele_n = nth bit of (num-1) (0 indexed)
@@ -5,48 +11,52 @@
 classdef MutationManager < handle
     
     properties
-        parameter_manager;
+        num_loci;
+        mutation_matrix;
+        mutating;
     end
     
     methods (Access = public)
         
         function obj = MutationManager(parameter_manager)
-            obj.parameter_manager = parameter_manager;
+            obj.num_loci = parameter_manager.num_loci;
+            obj.mutation_matrix = parameter_manager.mutation_matrix;
+            obj.mutating = parameter_manager.mutating;
         end
         
         %Elements in the matrix are represented as 
-        function [matrix, c] = mutate(obj, grid_manager)
+        function matrix = mutate(obj, grid_manager)
             matrix = grid_manager.matrix;
-            c = [];
-            for i = 1:numel(matrix)
-                type = matrix(i)-1;
-                new_type = 0;
-                if type >= 0
-                    if obj.parameter_manager.num_loci == 1
-                        num = rand();
-                        while num > 0
-                            new_type = new_type + 1;
-                            num = num - obj.parameter_manager.mutation_matrix(new_type, matrix(i));
-                        end
-                    else
-                        for j = 0:(obj.parameter_manager.num_loci-1)
-                            allele = obj.get_nth_allele(type, j);
+            if obj.mutating
+                for i = 1:numel(matrix)
+                    type = matrix(i)-1;
+                    new_type = 0;
+                    if type >= 0
+                        if obj.num_loci == 1
                             num = rand();
-                            new_allele = -1;
                             while num > 0
-                                new_allele = new_allele + 1;
-                                num = num - obj.parameter_manager.mutation_matrix(new_allele + 1, allele + 1);
+                                new_type = new_type + 1;
+                                num = num - obj.mutation_matrix(new_type, matrix(i));
                             end
-                            new_type = new_type + new_allele*(2^j);
+                        else
+                            for j = 0:(obj.num_loci-1)
+                                allele = obj.get_nth_allele(type, j);
+                                num = rand();
+                                new_allele = -1;
+                                while num > 0
+                                    new_allele = new_allele + 1;
+                                    num = num - obj.mutation_matrix(new_allele + 1, allele + 1);
+                                end
+                                new_type = new_type + new_allele*(2^j);
+                            end
+                            new_type = new_type + 1;
                         end
-                        new_type = new_type + 1;
-                    end
-                    if type ~= new_type
-                        matrix(i) = new_type;
+                        if type ~= new_type
+                            matrix(i) = new_type;
+                        end
                     end
                 end
             end
-            grid_manager.matrix = matrix;
         end
         
         

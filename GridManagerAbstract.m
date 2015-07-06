@@ -12,9 +12,10 @@ classdef GridManagerAbstract < handle
         plot_grid;
         generations;
         old_matrix;
+        mutation_manager;
     end
     methods (Access = public)
-        function obj = GridManagerAbstract(dim, Ninit)
+        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
             r = randperm(numel(obj.matrix));
@@ -26,32 +27,55 @@ classdef GridManagerAbstract < handle
             end
             [x, y] = meshgrid(1:dim,1:dim);
             
-            obj.output = [x(:)'; y(:)'; obj.matrix(:)'];
+            obj.output = obj.matrix(:)';
             obj.timestep = 1;
             
             obj.num_types = length(Ninit);
             %when there are more than 10 types, colors become randomized
-            obj.colors = [1 0 0; 0 1 0; 0 0 1; 1 1 0; 1 0 1;...
-                          0 1 1; 1 0.5 0.5; 0.5 1 0.5; 1 0.5 0.5;...
-                          0.5 0.5 0.5];
-            if obj.num_types > 10
-                for i = 11:obj.num_types
-                    obj.colors(i,:) = rand(1,3);
-                end
-            end
-            
+            obj.colors = [1 0 0; ...
+                0 1 0; ...
+                0 0 1; ...
+                1 1 0; ...
+                1 0 1;...
+                0 1 1; ...
+                1 0.5 0.5; ...
+                0.5 1 0.5; ...
+                1 0.5 0.5;...
+                0.5 0.5 0.5; ...
+                0.25 0.25 1; ...
+                1 .25 .25;...
+                .25 1 .25;
+                .5 .25 0; ...
+                .25 0 .5; ...
+                0 .25 .5; ...
+                .15 .15 .15;];
             obj.total_count = Ninit';
             obj.percent_count = [];
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];
             obj.generations = [1];
+            obj.plot_grid = plot_grid;
+            obj.mutation_manager = mutation_manager;
         end
       
          %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [mat, changed, t, h, g] = get_next(obj)
+        function [mat, changed, t] = get_next_cleanup(obj)
+            obj.timestep = obj.timestep + 1;
+            obj.matrix = obj.mutation_manager.mutate(obj);
+            if ~obj.plot_grid
+                changed = (1:numel(obj.matrix))';
+            else
+                changed = find(obj.old_matrix ~= obj.matrix);
+                obj.output = [obj.output; obj.matrix(:)'];
+                obj.old_matrix = obj.matrix;
+            end
+            obj.generations = [obj.generations obj.timestep];
+            obj.update_params();
+            mat = obj.matrix;
+            t = obj.timestep;
         end
 
                 
@@ -102,5 +126,9 @@ classdef GridManagerAbstract < handle
                 end
             end
         end
+        
+        function update_params(obj)
+        end
+            
     end
 end

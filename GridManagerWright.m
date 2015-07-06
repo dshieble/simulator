@@ -7,12 +7,13 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, f, plot_grid)
+        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, f)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid);
             obj.fitness = f;
             obj.proportion_vec = [];
             obj.plot_grid = plot_grid;
+            obj.mutation_manager = mutation_manager;
             obj.update_params();
         end
         
@@ -22,8 +23,6 @@ classdef GridManagerWright < GridManagerAbstract
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
             %For each cell, replace it with a multinomially chosen type
-            obj.timestep = obj.timestep + 1;
-            obj.update_params();
             counts = zeros(1,length(obj.fitness));
             for i = 1:obj.num_types
                 counts(i) = length(find(obj.matrix == i));
@@ -35,18 +34,10 @@ classdef GridManagerWright < GridManagerAbstract
             for i = 1:obj.num_types
                 long_mat = [long_mat repmat(i,1,new_counts(i))];
             end
-            long_mat = long_mat(randperm(length(long_mat)));            
-            mat = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
-            t = obj.timestep;
-            obj.matrix = mat;
+            long_mat = long_mat(randperm(length(long_mat)));
+            obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
             h = obj.isHomogenous();
-            if obj.timestep <= 2
-                changed = (1:numel(obj.matrix))';
-            else
-                changed = find(obj.old_matrix ~= obj.matrix);
-            end
-            obj.old_matrix = obj.matrix;
-            obj.generations = [obj.generations obj.timestep];
+            [mat, changed, t] = obj.get_next_cleanup();
         end
         
         %used tic and toc - this does not need any speed up
