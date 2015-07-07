@@ -70,12 +70,11 @@ classdef MutationManager < handle
                         gen_vec = grid_manager.total_count(:, grid_manager.timestep);
                         for i = 1:grid_manager.num_types
                             for j = 1:grid_manager.total_count(i, grid_manager.timestep)
-                                organism = i;
-                                gen_vec(organism) = gen_vec(organism) - 1;
+                                organism = i - 1;
                                 for k = 1:log2(grid_manager.num_types)
                                     if bitget(organism, k) %if allele is 1
                                         if rand() < obj.mutation_matrix(1,2)
-                                            organism = bitset(organism, k,0)
+                                            organism = bitset(organism, k,0);
                                         end
                                     else %if allele is 0
                                         if rand() < obj.mutation_matrix(2,1)
@@ -83,11 +82,9 @@ classdef MutationManager < handle
                                         end
                                     end
                                 end
-                                if i ~= organism
-                                    fprintf('%d -> %d\n',i, organism);
-                                end
                                 assert(organism<=grid_manager.num_types);
-                                gen_vec(organism) = gen_vec(organism) + 1;
+                                gen_vec(i) = gen_vec(i) - 1;
+                                gen_vec(organism + 1) = gen_vec(organism + 1) + 1;
                             end
                         end
                     end
