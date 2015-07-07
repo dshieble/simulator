@@ -62,7 +62,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear stepping;
+global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -71,7 +71,6 @@ rects = [];
 paused = 0;
 grid_manager = [];
 parameters_clear = 1;
-stepping = 0;
 plot_grid = handles.plot_grid_button.Value;
 
 % remove tickmarks from axes
@@ -105,10 +104,7 @@ function run_button_Callback(hObject, eventdata, handles)
 % ax = axes('Parent',f);  %corrected from my original version
 %axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
 % axis off; axis equal;
-global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear stepping;
-if stepping
-    return;
-end
+global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear;
 if ~evolving && ~paused
     verify_parameters();
 end
@@ -164,7 +160,6 @@ if ~evolving && ~paused && parameters_clear %run
     evolving = 1;
     handles.save_button.BackgroundColor = [0 0 0];
     handles.reset_button.BackgroundColor = [0 0 0];
-    handles.step_button.BackgroundColor = [0 0 0];
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
@@ -181,7 +176,6 @@ elseif ~evolving && paused %continue
     handles.run_button.BackgroundColor = [1 0 0];
     handles.save_button.BackgroundColor = [0 0 0];
     handles.reset_button.BackgroundColor = [0 0 0];
-    handles.step_button.BackgroundColor = [0 0 0];
     drawnow;
     run_loop(0, handles);
     evolving = 0;
@@ -192,7 +186,6 @@ elseif evolving && ~paused %pause
     handles.reset_button.BackgroundColor = [1 0 0];
     handles.run_button.String = 'Continue';
     handles.run_button.BackgroundColor = [0 1 0];
-    handles.step_button.BackgroundColor = [0 0 1];
     drawnow;
 end
 if ~paused && ~evolving;
@@ -200,8 +193,6 @@ if ~paused && ~evolving;
     handles.run_button.BackgroundColor = [0 1 0];
     handles.save_button.BackgroundColor = [0 1 1];
     handles.reset_button.BackgroundColor = [1 0 0];
-    handles.step_button.BackgroundColor = [0 0 1];
-
     drawnow;
 end
 
@@ -383,9 +374,9 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global evolving parameter_manager save_data stepping;
+global evolving parameter_manager;
 try
-    if ~evolving && ~stepping
+    if ~evolving
         c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
         save(str, 'save_data');
     end
@@ -400,8 +391,8 @@ function reset_button_Callback(hObject, eventdata, handles)
 % hObject    handle to reset_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global paused evolving rects parameter_manager stepping;
-if ~evolving && ~stepping
+global paused evolving rects parameter_manager;
+if ~evolving
     paused = 0;
     evolving = 0;
     handles.run_button.String = 'Run';
@@ -654,16 +645,10 @@ parameter_manager.updateMaxIterations();
 
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
-global grid_manager stepping evolving;
-if ~stepping && ~evolving
-    stepping = 1;
-    handles.step_button.BackgroundColor = [0 0 0];
-    [matrix, c, t, halt] = grid_manager.get_next();
-    draw_iteration(matrix, c, t, halt, handles);
-    stepping = 0;
-    handles.step_button.BackgroundColor = [0 0 1];
-end
-
+global grid_manager;
+if ~stepping && 
+[matrix, c, t, halt] = grid_manager.get_next();
+draw_iteration(matrix, c, t, halt, handles);
 
 
 
