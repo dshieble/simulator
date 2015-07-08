@@ -13,9 +13,10 @@ classdef GridManagerAbstract < handle
         generations;
         old_matrix;
         mutation_manager;
+        plottingParams;
     end
     methods (Access = public)
-        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid)
+        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
             r = randperm(numel(obj.matrix));
@@ -59,6 +60,7 @@ classdef GridManagerAbstract < handle
             obj.generations = [1];
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
+            obj.plottingParams = plottingParams;
         end
       
          %mat - new updated matrix

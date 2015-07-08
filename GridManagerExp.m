@@ -8,8 +8,8 @@ classdef GridManagerExp < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid);
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams);
             obj.birth_rate = b';
             obj.death_rate = d';
             obj.plot_grid = plot_grid;

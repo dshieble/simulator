@@ -100,12 +100,7 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in run_button.
 function run_button_Callback(hObject, eventdata, handles)
-% handles
-% f = figure();
-% ax = axes('Parent',f);  %corrected from my original version
-%axis([0 size(matrix, 1) 0 size(matrix, 2)], 'Parent', ax);as
-% axis off; axis equal;
-global evolving parameter_manager save_data rects grid_manager paused plot_grid parameters_clear stepping;
+global evolving paused parameters_clear stepping;
 if stepping
     return;
 end
@@ -113,87 +108,11 @@ if ~evolving && ~paused
     verify_parameters();
 end
 if ~evolving && ~paused && parameters_clear %run
-    handles.run_button.String = 'Calculating...';
-    if handles.logistic_button.Value
-        grid_manager = GridManagerLogistic(...
-            parameter_manager.matrix.edge_size, ...
-            parameter_manager.getField('logistic', 'Ninit'), ...
-            MutationManager(parameter_manager),...
-            plot_grid,...
-            parameter_manager.getField('logistic', 'birth_rate'), ...
-            parameter_manager.getField('logistic','death_rate'));
-    elseif handles.exp_button.Value
-        grid_manager = GridManagerExp(...
-            parameter_manager.matrix.edge_size, ...
-            parameter_manager.getField('exp', 'Ninit'), ...
-            MutationManager(parameter_manager),...
-            plot_grid,...
-            parameter_manager.getField('exp', 'birth_rate'), ...
-            parameter_manager.getField('exp','death_rate'));
-    elseif handles.moran_button.Value
-            if ~parameter_manager.verifySizeOk('moran')
-                warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-                handles.run_button.String = 'Run';
-                return;
-            else    
-                grid_manager = GridManagerMoran(...
-                    parameter_manager.matrix.edge_size, ...
-                    parameter_manager.getField('moran', 'Ninit'), ...
-                    MutationManager(parameter_manager),...
-                    plot_grid,...
-                    parameter_manager.getField('moran','birth_rate'));
-            end
-    elseif handles.wright_button.Value
-            if ~parameter_manager.verifySizeOk('wright') 
-                warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-                handles.run_button.String = 'Run';
-                return;
-            else    
-                grid_manager = GridManagerWright(...
-                    parameter_manager.matrix.edge_size, ...
-                    parameter_manager.getField('wright', 'Ninit'), ...
-                    MutationManager(parameter_manager),...
-                    plot_grid,...
-                    parameter_manager.getField('wright','fitness'));
-            end
-    else
-        warndlg('Radio button error');
-        handles.run_button.String = 'Run';
-        return;        
-    end
-    evolving = 1;
-    handles.save_button.BackgroundColor = [0 0 0];
-    handles.reset_button.BackgroundColor = [0 0 0];
-    handles.step_button.BackgroundColor = [0 0 0];
-    cla(handles.axes_grid);
-    cla(handles.axes_graph);
-    rects = cell(parameter_manager.matrix.edge_size);
-    handles.run_button.String = 'Pause';
-    handles.run_button.BackgroundColor = [1 0 0];
-    drawnow;
-    run_loop(1, handles);
-    save_data = grid_manager.output;
-    evolving = 0;
+    run(handles, 0);
 elseif ~evolving && paused %continue
-    evolving = 1;
-    paused = 0;
-    handles.run_button.String = 'Pause';
-    handles.run_button.BackgroundColor = [1 0 0];
-    handles.save_button.BackgroundColor = [0 0 0];
-    handles.reset_button.BackgroundColor = [0 0 0];
-    handles.step_button.BackgroundColor = [0 0 0];
-    drawnow;
-    run_loop(0, handles);
-    evolving = 0;
+    continueRunning(handles);
 elseif evolving && ~paused %pause
-	evolving = 0;
-    paused = 1;
-    handles.save_button.BackgroundColor = [0 1 1];
-    handles.reset_button.BackgroundColor = [1 0 0];
-    handles.run_button.String = 'Continue';
-    handles.run_button.BackgroundColor = [0 1 0];
-    handles.step_button.BackgroundColor = [0 0 1];
-    drawnow;
+    pauseRunning(handles);
 end
 if ~paused && ~evolving;
     handles.run_button.String = 'Run';
@@ -204,83 +123,6 @@ if ~paused && ~evolving;
 
     drawnow;
 end
-
-%Get the new matrix, mutat it 
-function run_loop(first_run, handles)
-global evolving grid_manager plot_grid parameter_manager;
-warning('OFF','MATLAB:legend:PlotEmpty')
-legend_input = {};
-while evolving == 1
-   [matrix, c, t, halt] = grid_manager.get_next();
-   if plot_grid
-       draw_iteration(matrix, c, t, halt, handles);
-   end
-   if first_run
-        first_run = 0;
-        legend_input = {};
-        for i = 1:min(16, grid_manager.num_types)
-            if parameter_manager.num_loci > 1 && parameter_manager.mutating
-                legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1, log2(grid_manager.num_types)))];
-            else   
-                legend_input = [legend_input sprintf('Type %d', i)];
-            end
-        end
-        legend(legend_input, 'Location', 'northwest');
-    end
-    if halt || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
-        break
-    end
-end
-if ~plot_grid
-    draw_iteration(matrix, c, t, halt, handles);
-    legend(legend_input, 'Location', 'northwest')
-end
-
-    
-
-function draw_iteration(matrix, c, t, halt, handles)
-global parameter_manager rects grid_manager plot_grid;
-%represents a single iteration of the grid and graph
-if plot_grid 
-    perm = c(randperm(length(c)))';
-    for p = perm
-        [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
-        if (~isempty(rects(i,j)))
-            delete(rects{i,j});
-        end
-        if (matrix(i,j) ~= 0)
-            mult = (50/parameter_manager.matrix.edge_size);
-            rects{i,j} = rectangle(...
-                'Parent', handles.axes_grid,...
-                'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
-                'facecolor',grid_manager.get_color(matrix(i,j)));
-        end
-    end
-end
-%plot the graph
-if handles.plot_button_count.Value
-    vec = grid_manager.total_count;
-    y_axis_label = 'Population Size';
-elseif handles.plot_button_percent.Value
-    vec = grid_manager.percent_count;
-    y_axis_label = 'Percent Population Size';
-else
-    vec = grid_manager.overall_mean_fitness;
-    y_axis_label = 'Mean Fitness';
-end
-if handles.plot_button_log.Value
-    vec = log(vec);
-    y_axis_label = sprintf('log(%s)', y_axis_label);
-end
-for i = 1:size(vec,1)
-    hold on;
-    plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
-end
-xlabel('Generations', 'Parent', handles.axes_graph);
-ylabel(y_axis_label, 'Parent', handles.axes_graph);
-pause(0.01);
-drawnow;
-
 
 % --------------------------------------------------------------------
 function FileMenu_Callback(hObject, eventdata, handles)
@@ -516,16 +358,6 @@ function population_box_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
 verify_parameters();
 
-function verify_parameters
-global parameter_manager parameters_clear plot_grid;
-parameters_clear = 0;
-if ~parameter_manager.updateMatrixProperties()
-    warndlg('Population size must be a perfect square and between 16 than 2500!');
-elseif plot_grid && parameter_manager.num_loci > 4
-    warndlg('Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
-else
-    parameters_clear = 1;
-end
 
     
 
@@ -550,51 +382,59 @@ global parameter_manager;
 %Table Formatting in a dialog box is a pain in the butt
 %TODO: set a standard number of spaces for each and enforce it
 str = {};
+if parameter_manager.mutating && parameter_manager.num_loci > 1
+    s = parameter_manager.multiple_loci;
+    num = 1; %TODO: Change this to 2^parameter_manager.num_loci;
+else
+    s = parameter_manager;
+    num = parameter_manager.getField('','num_types');
+end
+
 if parameter_manager.current_model == 1
     str = [str '                                       Logistic                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Birth Rate                    Death Rate'];
     str = [str '         | ----------------------------------------------------------------------------------' ];
-    for i = 1:parameter_manager.getField('','num_types')
+    for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            parameter_manager.logistic.Ninit(i),...
-            parameter_manager.logistic.birth_rate(i),...
-            parameter_manager.logistic.death_rate(i))];
+            s.logistic.Ninit(i),...
+            s.logistic.birth_rate(i),...
+            s.logistic.death_rate(i))];
     end
 elseif parameter_manager.current_model == 2
     str = [str '                                       Exponential                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Birth Rate                    Death Rate'];
     str = [str '         | ----------------------------------------------------------------------------------' ];
-    for i = 1:parameter_manager.getField('','num_types')
+    for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            parameter_manager.exp.Ninit(i),...
-            parameter_manager.exp.birth_rate(i),...
-            parameter_manager.exp.death_rate(i))];
+            s.exp.Ninit(i),...
+            s.exp.birth_rate(i),...
+            s.exp.death_rate(i))];
     end
 elseif parameter_manager.current_model == 3
     str = [str '                          Moran                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Birth Rate'];
     str = [str '         | --------------------------------------------' ];
-    for i = 1:parameter_manager.getField('','num_types')
+    for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            parameter_manager.moran.Ninit(i),...
-            parameter_manager.moran.birth_rate(i))];
+            s.moran.Ninit(i),...
+            s.moran.birth_rate(i))];
     end
 elseif parameter_manager.current_model == 4
     str = [str '                   Wright-Fisher                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Fitness           '];
     str = [str '         | ---------------------------------------------' ];
-    for i = 1:parameter_manager.getField('','num_types')
+    for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            parameter_manager.wright.Ninit(i),...
-            parameter_manager.wright.fitness(i))];
+            s.wright.Ninit(i),...
+            s.wright.fitness(i))];
     end
 end
 PopulationParametersDialog(str);
@@ -615,7 +455,7 @@ parameter_manager.mutating = 0;
 toggle_mutation_visible(handles);
 handles.mutation_panel.Visible = 'off';
 handles.num_types_string.String = 'Number of Types:';
-handles.params_string.String =  'Parameters for Type:';
+handles.params_string.String =  'Parameters For Type:';
 
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
@@ -624,27 +464,13 @@ parameter_manager.mutating = 1;
 toggle_mutation_visible(handles);
 handles.mutation_panel.Visible = 'on';
 handles.num_types_string.String = 'Number of Alleles:';
-handles.params_string.String =  'Parameters for Allele:';
+handles.params_string.String =  'Parameters For Allele:';
 
 function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMultipleLoci();
 toggle_mutation_visible(handles);
 
-
-function toggle_mutation_visible(handles)
-global parameter_manager;
-if (parameter_manager.num_loci > 1) && parameter_manager.mutating
-    handles.type_panel.Visible = 'off';
-    handles.static_type_panel.Visible = 'on';
-    handles.init_pop_box.Visible = 'off';
-    handles.init_pop_text.Visible = 'off';
-else
-    handles.static_type_panel.Visible = 'off';
-    handles.type_panel.Visible = 'on';
-    handles.init_pop_box.Visible = 'on';
-    handles.init_pop_text.Visible = 'on';
-end
 
 function max_iterations_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
@@ -654,17 +480,20 @@ parameter_manager.updateMaxIterations();
 
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
-global grid_manager stepping evolving;
+global grid_manager stepping evolving paused;
 if ~stepping && ~evolving
-    stepping = 1;
-    handles.step_button.BackgroundColor = [0 0 0];
-    [matrix, c, t, halt] = grid_manager.get_next();
-    draw_iteration(matrix, c, t, halt, handles);
-    stepping = 0;
-    handles.step_button.BackgroundColor = [0 0 1];
+    if ~paused
+        run(handles,1)
+        pauseRunning(handles);
+    else
+        stepping = 1;
+        handles.step_button.BackgroundColor = [0 0 0];
+        [matrix, c, t, halt] = grid_manager.get_next();
+        draw_iteration(matrix, c, t, halt, handles);
+        stepping = 0;
+        handles.step_button.BackgroundColor = [0 0 1];
+    end
 end
-
-
 
 
 % --- Executes on button press in spatial_structure_check.
@@ -687,6 +516,247 @@ end
 
 function recombination_box_Callback(hObject, eventdata, handles)
 %TODO: Fill this in
+
+
+
+
+function verify_parameters
+global parameter_manager parameters_clear plot_grid;
+parameters_clear = 0;
+if ~parameter_manager.updateMatrixProperties()
+    warndlg('ERROR: Population size must be a perfect square and between 16 than 2500!');
+elseif plot_grid && parameter_manager.num_loci > 4
+    warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
+elseif ~parameter_manager.verifyAllBoxesClean();
+    warndlg('ERROR: All input must be numerical.');
+else
+    parameters_clear = 1;
+end
+
+%VisibilityFunctions
+function toggle_mutation_visible(handles)
+global parameter_manager;
+if (parameter_manager.num_loci > 1) && parameter_manager.mutating
+    %popup
+    handles.types_popup.Visible = 'off';
+    handles.params_string.Visible=  'off';
+    %num_types
+    handles.num_types_box.Style = 'text';
+    
+    %handles.static_type_panel.Visible = 'on';
+    handles.init_pop_box.Style = 'text';
+    parameter_manager.updateBoxes();
+
+else
+    %popup
+    handles.types_popup.Visible = 'on';
+    handles.params_string.Visible= 'on';
+    %num_types
+    handles.num_types_box.Style = 'edit';
+    %handles.static_type_panel.Visible = 'off';
+    handles.init_pop_box.Style = 'edit';
+    parameter_manager.updateBoxes();
+end
+
+
+
+%Get the new matrix, mutat it 
+function run_loop(first_run, handles, runOnce)
+global evolving grid_manager plot_grid parameter_manager;
+warning('OFF','MATLAB:legend:PlotEmpty')
+legend_input = {};
+while evolving == 1
+   [matrix, c, t, halt] = grid_manager.get_next();
+   if plot_grid
+       draw_iteration(matrix, c, t, halt, handles);
+   end
+   if first_run
+        first_run = 0;
+        legend_input = {};
+        for i = 1:min(16, grid_manager.num_types)
+            if parameter_manager.num_loci > 1 && parameter_manager.mutating
+                legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1, log2(grid_manager.num_types)))];
+            else   
+                legend_input = [legend_input sprintf('Type %d', i)];
+            end
+        end
+        legend(legend_input, 'Location', 'northwest');
+    end
+    if runOnce || halt || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
+        break
+    end
+end
+if ~plot_grid
+    draw_iteration(matrix, c, t, halt, handles);
+    legend(legend_input, 'Location', 'northwest')
+end
+
+    
+%IterationFunctions
+function draw_iteration(matrix, c, t, halt, handles)
+global parameter_manager rects grid_manager plot_grid;
+%represents a single iteration of the grid and graph
+if plot_grid 
+    perm = c(randperm(length(c)))';
+    for p = perm
+        [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
+        if (~isempty(rects(i,j)))
+            delete(rects{i,j});
+        end
+        if (matrix(i,j) ~= 0)
+            mult = (50/parameter_manager.matrix.edge_size);
+            rects{i,j} = rectangle(...
+                'Parent', handles.axes_grid,...
+                'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
+                'facecolor',grid_manager.get_color(matrix(i,j)));
+        end
+    end
+end
+%plot the graph
+switch grid_manager.plottingParams.plot_type
+    case 'total_count'
+    	vec = grid_manager.total_count;
+        y_axis_label = 'Population Size';
+    case 'percent_count'
+        vec = grid_manager.percent_count;
+        y_axis_label = 'Percent Population Size';
+    case 'overall_mean_fitness'
+        vec = grid_manager.overall_mean_fitness;
+        y_axis_label = 'Mean Fitness';
+end
+if grid_manager.plottingParams.plot_log
+    vec = log(vec);
+    y_axis_label = sprintf('log(%s)', y_axis_label);
+end
+for i = 1:size(vec,1)
+    hold on;
+    plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
+end
+xlabel('Generations', 'Parent', handles.axes_graph);
+ylabel(y_axis_label, 'Parent', handles.axes_graph);
+pause(0.01);
+drawnow;
+
+
+%RunFunctions
+function run(handles, runOnce)
+%Execute the simulation
+global grid_manager evolving save_data;
+handles.run_button.String = 'Calculating...';
+initializeGridManager(handles);
+evolving = 1;
+handles.save_button.BackgroundColor = [0 0 0];
+handles.reset_button.BackgroundColor = [0 0 0];
+handles.step_button.BackgroundColor = [0 0 0];
+handles.run_button.String = 'Pause';
+handles.run_button.BackgroundColor = [1 0 0];
+drawnow;
+run_loop(1, handles, runOnce);
+save_data = grid_manager.output;
+evolving = 0;
+
+function continueRunning(handles)
+%Break the pause and continue running the simulation
+global evolving paused;
+evolving = 1;
+paused = 0;
+handles.run_button.String = 'Pause';
+handles.run_button.BackgroundColor = [1 0 0];
+handles.save_button.BackgroundColor = [0 0 0];
+handles.reset_button.BackgroundColor = [0 0 0];
+handles.step_button.BackgroundColor = [0 0 0];
+drawnow;
+run_loop(0, handles, 0);
+evolving = 0;
+
+function pauseRunning(handles)
+%Pause the simulation
+global evolving paused;
+evolving = 0;
+paused = 1;
+handles.save_button.BackgroundColor = [0 1 1];
+handles.reset_button.BackgroundColor = [1 0 0];
+handles.run_button.String = 'Continue';
+handles.run_button.BackgroundColor = [0 1 0];
+handles.step_button.BackgroundColor = [0 0 1];
+drawnow;
+
+function initializeGridManager(handles)
+global grid_manager parameter_manager plot_grid rects
+%Initialize the grid manager object based on the parameter_manager and the
+%current model
+plottingParams = struct();
+if handles.plot_button_count.Value
+    plottingParams.plot_type = 'total_count';
+elseif handles.plot_button_percent.Value
+    plottingParams.plot_type = 'percent_count';
+else
+	plottingParams.plot_type = 'overall_mean_fitness';
+end
+if handles.plot_button_log.Value
+    plottingParams.plot_log = 1;
+else
+    plottingParams.plot_log = 0;
+end
+if parameter_manager.current_model == 1
+    grid_manager = GridManagerLogistic(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('logistic', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        parameter_manager.getField('logistic', 'birth_rate'), ...
+        parameter_manager.getField('logistic','death_rate'));
+elseif parameter_manager.current_model == 2
+    grid_manager = GridManagerExp(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('exp', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        parameter_manager.getField('exp', 'birth_rate'), ...
+        parameter_manager.getField('exp','death_rate'));
+elseif parameter_manager.current_model == 3
+        if ~parameter_manager.verifySizeOk('moran')
+            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+            handles.run_button.String = 'Run';
+            return;
+        else    
+            grid_manager = GridManagerMoran(...
+                parameter_manager.matrix.edge_size, ...
+                parameter_manager.getField('moran', 'Ninit'), ...
+                MutationManager(parameter_manager),...
+                plot_grid,...
+                plottingParams, ...
+                parameter_manager.getField('moran','birth_rate'));
+        end
+elseif parameter_manager.current_model == 4
+        if ~parameter_manager.verifySizeOk('wright') 
+            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+            handles.run_button.String = 'Run';
+            return;
+        else    
+            grid_manager = GridManagerWright(...
+                parameter_manager.matrix.edge_size, ...
+                parameter_manager.getField('wright', 'Ninit'), ...
+                MutationManager(parameter_manager),...
+                plot_grid,...
+                plottingParams, ...
+                parameter_manager.getField('wright','fitness'));
+        end
+else
+    warndlg('Radio button error');
+    handles.run_button.String = 'Run';
+    return;        
+end
+cla(handles.axes_grid);
+cla(handles.axes_graph);
+rects = cell(parameter_manager.matrix.edge_size);
+
+
+
+
+
 
 %
 %

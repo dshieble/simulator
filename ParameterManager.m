@@ -204,20 +204,30 @@ classdef ParameterManager < handle
         %Updates the num_loci == 1 boxes to the stored struct values
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
+            if obj.num_loci > 1
+                type = 1;
+            	s = obj.multiple_loci;
+                obj.handles.num_types_box.String = 2;
+            else
+                type = obj.handles.types_popup.Value;
+                s = obj;
+                obj.handles.num_types_box.String = obj.num_types;
+            end
+
             if obj.current_model == 1
-                obj.handles.param_1_box.String = obj.logistic.birth_rate(type);
-                obj.handles.param_2_box.String = obj.logistic.death_rate(type);
-                obj.handles.init_pop_box.String = obj.logistic.Ninit(type);
+                obj.handles.param_1_box.String = s.logistic.birth_rate(type);
+                obj.handles.param_2_box.String = s.logistic.death_rate(type);
+                obj.handles.init_pop_box.String = s.logistic.Ninit(type);
             elseif obj.current_model == 2
-                obj.handles.param_1_box.String = obj.exp.birth_rate(type);
-                obj.handles.param_2_box.String = obj.exp.death_rate(type);
-                obj.handles.init_pop_box.String = obj.exp.Ninit(type);
+                obj.handles.param_1_box.String = s.exp.birth_rate(type);
+                obj.handles.param_2_box.String = s.exp.death_rate(type);
+                obj.handles.init_pop_box.String = s.exp.Ninit(type);
             elseif obj.current_model == 3
-                obj.handles.param_1_box.String = obj.moran.birth_rate(type);
-                obj.handles.init_pop_box.String = obj.moran.Ninit(type);
+                obj.handles.param_1_box.String = s.moran.birth_rate(type);
+                obj.handles.init_pop_box.String = s.moran.Ninit(type);
             elseif obj.current_model == 4
-                obj.handles.param_1_box.String = obj.wright.fitness(type);
-                obj.handles.init_pop_box.String = obj.wright.Ninit(type);
+                obj.handles.param_1_box.String = s.wright.fitness(type);
+                obj.handles.init_pop_box.String = s.wright.Ninit(type);
             end
         end
         
@@ -264,6 +274,8 @@ classdef ParameterManager < handle
             end
         end
 
+        %For the num_loci<1 case, verifies that the sum of the Ninits for 
+        % all species is the original populaiton size 
         function out = verifySizeOk(obj, model)
             out = 1;
             if obj.num_loci == 1 || ~obj.mutating
@@ -271,6 +283,16 @@ classdef ParameterManager < handle
                     out = 0;
                 end
             end
+        end
+        
+        %Verifies that the input to all boxes is numerical
+        function ok = verifyAllBoxesClean(obj)
+            ok = ~(isnan(str2double(obj.handles.param_1_box.String)) || ...
+               isnan(str2double(obj.handles.param_2_box.String)) || ...
+               isnan(str2double(obj.handles.init_pop_box.String)) || ...
+               isnan(str2double(obj.handles.num_types_box.String)) || ...
+               isnan(str2double(obj.handles.population_box.String)) || ...
+               isnan(str2double(obj.handles.max_iterations_box.String)));
         end
 
     end
