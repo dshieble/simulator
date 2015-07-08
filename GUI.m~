@@ -487,15 +487,11 @@ if ~stepping && ~evolving
         pauseRunning(handles);
     else
         stepping = 1;
-        handles.run_button.BackgroundColor = [.25 .25 .25];
-        handles.save_button.BackgroundColor = [.25 .25 .25];
-        handles.reset_button.BackgroundColor = [.25 .25 .25];
-        handles.step_button.BackgroundColor = [.25 .25 .25];
-        drawnow;
+        handles.step_button.BackgroundColor = [0 0 0];
         [matrix, c, t, halt] = grid_manager.get_next();
         draw_iteration(matrix, c, t, halt, handles);
         stepping = 0;
-        pauseRunning(handles)
+        handles.step_button.BackgroundColor = [0 0 1];
     end
 end
 
@@ -644,14 +640,15 @@ drawnow;
 
 %RunFunctions
 function run(handles, runOnce)
+1
 %Execute the simulation
 global grid_manager evolving save_data;
 handles.run_button.String = 'Calculating...';
 initializeGridManager(handles);
 evolving = 1;
-handles.save_button.BackgroundColor = [.25 .25 .25];
-handles.reset_button.BackgroundColor = [.25 .25 .25];
-handles.step_button.BackgroundColor = [.25 .25 .25];
+handles.save_button.BackgroundColor = [0 0 0];
+handles.reset_button.BackgroundColor = [0 0 0];
+handles.step_button.BackgroundColor = [0 0 0];
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
@@ -666,9 +663,9 @@ evolving = 1;
 paused = 0;
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
-handles.save_button.BackgroundColor = [.25 .25 .25];
-handles.reset_button.BackgroundColor = [.25 .25 .25];
-handles.step_button.BackgroundColor = [.25 .25 .25];
+handles.save_button.BackgroundColor = [0 0 0];
+handles.reset_button.BackgroundColor = [0 0 0];
+handles.step_button.BackgroundColor = [0 0 0];
 drawnow;
 run_loop(0, handles, 0);
 evolving = 0;
