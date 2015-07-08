@@ -32,7 +32,7 @@ classdef GridManagerMoran < GridManagerAbstract
                         chosen_type = chosen_type + 1;
                         num = num - tot_rates(chosen_type);
                     end
-                    dead_cell = randi(numel(obj.matrix),1,2);
+                    dead_cell = randi(,1,2);
                     obj.matrix(dead_cell) = chosen_type;
                 end
                 h = obj.isHomogenous();

@@ -480,7 +480,7 @@ parameter_manager.updateMaxIterations();
 
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
-global grid_manager stepping evolving paused;
+global grid_manager stepping evolving paused plot_grid;
 if ~stepping && ~evolving
     if ~paused
         run(handles,1)
@@ -495,9 +495,13 @@ if ~stepping && ~evolving
         [matrix, c, t, halt] = grid_manager.get_next();
         draw_iteration(matrix, c, t, halt, handles);
         stepping = 0;
-        pauseRunning(handles)
+        handles.save_button.BackgroundColor = [0 1 1];
+        handles.reset_button.BackgroundColor = [1 0 0];
+        handles.run_button.BackgroundColor = [0 1 0];
+        handles.step_button.BackgroundColor = [0 0 1];    
     end
 end
+    
 
 
 % --- Executes on button press in spatial_structure_check.
@@ -566,7 +570,7 @@ end
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles, runOnce)
-global evolving grid_manager plot_grid parameter_manager;
+global evolving grid_manager plot_grid parameter_manager stepping;
 warning('OFF','MATLAB:legend:PlotEmpty')
 legend_input = {};
 while evolving == 1
@@ -590,7 +594,7 @@ while evolving == 1
         break
     end
 end
-if ~plot_grid
+if ~plot_grid && ~stepping
     draw_iteration(matrix, c, t, halt, handles);
     legend(legend_input, 'Location', 'northwest')
 end
@@ -615,6 +619,7 @@ if plot_grid
                 'facecolor',grid_manager.get_color(matrix(i,j)));
         end
     end
+    drawnow;
 end
 %plot the graph
 switch grid_manager.plottingParams.plot_type

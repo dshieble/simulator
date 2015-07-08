@@ -73,9 +73,10 @@ classdef GridManagerAbstract < handle
             if ~obj.plot_grid
                 changed = (1:numel(obj.matrix))';
             else
-                changed = find(obj.old_matrix ~= obj.matrix);
+                changed = find(obj.old_matrix ~= obj.matrix)
                 obj.output = [obj.output; obj.matrix(:)'];
                 obj.old_matrix = obj.matrix;
+                
             end
             obj.generations = [obj.generations obj.timestep];
             obj.update_params();
