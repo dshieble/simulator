@@ -1,8 +1,6 @@
+function matrix = MutationMatrixDialog(current, num_loci)
 %this function creates the popup dialog that allows us to edit the mutation
 %matrix
-function matrix = MutationMatrixDialog(current, num_loci)
-
-    %Start Script
     d = dialog('Position',[100 100 1100 600],'Name','Population Parameters');
     matrix = [];
     txt = uicontrol('Parent',d,...
@@ -34,28 +32,24 @@ function matrix = MutationMatrixDialog(current, num_loci)
         'Position',[50 100 1000 350],...
         'ColumnEditable', logical(ones(1,size(current,1))),...
         'ColumnWidth', widths,...
-        'CellEditCallback', @diagonalManager);
-        %'CellSelectionCallback', @changeEditable);
+        'CellEditCallback', @diagonalManager,...
+        'CellSelection');
     if num_loci > 1
         table.RowName =  {'0','1'};
         table.ColumnName =  {'0','1'};
     end
-    table.Data = num2cell(table.Data);
-    uiwait; %prevents the function from returning until uiresume is called
-   
+    set(table,'data',num2cell(get(table,'data')))
     
-    %Functions
     
-    %closes the window. uiresume 
+       
+    uiwait;
     function cancel(~,~)
         uiresume;
         delete(gcf);
     end
 
-    %Saves the data in the matrix to the matrix variable, which is returned
-    %to the GUI script upon the execution of uiresume
     function save(~,~)
-       data = cell2mat(table.Data);
+       data = cell2mat(get(table,'data'));
        if sum(isnan(data)) > 0
            warndlg('ERROR: All entries must be numerical!')
            return;
@@ -66,15 +60,13 @@ function matrix = MutationMatrixDialog(current, num_loci)
                 return;
             end
         end
-        matrix = cell2mat(table.Data);
+        matrix = table.Data;
         uiresume;
         delete(gcf);
     end
 
-    %Gets called whenever the user changes the value of a cell, and change
-    %the value of the diagonal in that column to balence out the change
     function diagonalManager(~,~)
-       D = cell2mat(table.Data);
+       D = cell2mat(get(table,'data'));
        if sum(isnan(D)) > 0
            return;
        end
@@ -86,20 +78,8 @@ function matrix = MutationMatrixDialog(current, num_loci)
                 D(i,i) = 0;
             end
         end
-        table.Data = num2cell(D);
+        set(table,'data',num2cell(D));
     end
-
-    %Gets called whenever the user selects a cell. Changes which columns are
-    %editable in the row that the selected cell is in, so that the user
-    %cannot edit the diagonal (necessary because the only documented
-    %editable control is the ColumnEditable property.
-%     function changeEditable(~,x)
-%         if numel(x.Indices == 2)
-%             all = logical(ones(1,size(current,1)));
-%             all(x.Indices(1)) = 0;
-%             table.ColumnEditable = all;
-%         end
-%     end
     
 
 end

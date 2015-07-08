@@ -52,9 +52,7 @@ classdef MutationManager < handle
                                 end
                                 new_type = new_type + 1;
                             end
-                            if type ~= new_type
-                                matrix(i) = new_type;
-                            end
+                            matrix(i) = new_type;
                         end
                     end
                 else %non-plotting
