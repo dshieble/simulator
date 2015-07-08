@@ -25,24 +25,21 @@ function matrix = MutationMatrixDialog(current, num_loci)
         widths{x} = 60;
     end
        
-    if num_loci == 1
-        table = uitable(gcf,...
-            'Parent',d,...
-            'Data', current,...
-            'Position',[50 100 1000 350],...
-            'ColumnEditable', logical(ones(1,size(current,1))),...
-            'ColumnWidth', widths);
-    else
-        table = uitable(gcf,...
-            'Parent',d,...
-            'Data', current,...
-            'Position',[50 100 1000 350],...
-            'RowName',{'0','1'},...
-            'ColumnName',{'0','1'},...
-            'ColumnEditable', logical(ones(1,size(current,1))),...
-            'ColumnWidth', widths);
+    
+    table = uitable(gcf,...
+        'Parent',d,...
+        'Data', current,...
+        'Position',[50 100 1000 350],...
+        'ColumnEditable', logical(ones(1,size(current,1))),...
+        'ColumnWidth', widths,...
+        'CellEditCallback', @diagonalManager);
+    if num_loci > 1
+        table.RowName =  {'0','1'};
+        table.ColumnName =  {'0','1'};
     end
-       
+    set(table,'data',num2cell(get(table,'data')))
+    
+    
        
     uiwait;
     function cancel(~,~)
@@ -51,8 +48,13 @@ function matrix = MutationMatrixDialog(current, num_loci)
     end
 
     function save(~,~)
-        for i = 1:size(table.Data,1)
-            if abs(sum(table.Data(:,i))-1) > 1e-3
+       data = cell2mat(get(table,'data'));
+       if sum(isnan(data)) > 0
+           warndlg('ERROR: All entries must be numerical!')
+           return;
+       end
+        for i = 1:size(data,1)
+            if abs(sum(data(:,i))-1) > 1e-3
                 warndlg('ERROR: All columns must sum to 1!')
                 return;
             end
@@ -61,6 +63,23 @@ function matrix = MutationMatrixDialog(current, num_loci)
         uiresume;
         delete(gcf);
     end
+
+    function diagonalManager(~,~)
+       D = cell2mat(get(table,'data'));
+       if sum(isnan(D)) > 0
+           return;
+       end
+        for i = 1:size(D,1)
+            s = sum(sum(D(:,i))) - D(i,i);
+            if s < 1
+                D(i,i) = 1 - s;
+            else
+                D(i,i) = 0;
+            end
+        end
+        set(table,'data',num2cell(D));
+    end
+    
 
 end
 
