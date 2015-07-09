@@ -11,7 +11,6 @@ classdef GridManagerWright < GridManagerAbstract
             assert(sum(Ninit)==dim.^2);
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams);
             obj.fitness = f;
-            obj.proportion_vec = [];
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.update_params();
@@ -23,10 +22,7 @@ classdef GridManagerWright < GridManagerAbstract
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
             %For each cell, replace it with a multinomially chosen type
-            counts = zeros(1,length(obj.fitness));
-            for i = 1:obj.num_types
-                counts(i) = length(find(obj.matrix == i));
-            end
+            counts = obj.total_count(:, obj.timestep)';
             v = (obj.fitness.*counts);
             probs = v./sum(v);
             new_counts = mnrnd(numel(obj.matrix), probs);

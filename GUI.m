@@ -52,9 +52,6 @@ function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to GUI (see VARARGIN)
 
-%tests that run at startup
-run_tests;
-
 % Choose default command line output for GUI
 handles.output = hObject;
 
