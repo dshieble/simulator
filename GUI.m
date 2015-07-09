@@ -105,7 +105,7 @@ if stepping
     return;
 end
 if ~evolving && ~paused
-    verify_parameters();
+    verify_parameters(handles);
 end
 if ~evolving && ~paused && parameters_clear %run
     run(handles, 0);
@@ -195,7 +195,7 @@ function param_1_box_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of param_1_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
-
+verify_parameters(handles);
 
 function init_pop_box_Callback(hObject, eventdata, handles)
 % hObject    handle to init_pop_box (see GCBO)
@@ -340,7 +340,7 @@ function population_box_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of population_box as text
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
-verify_parameters();
+verify_parameters(handles);
 
 
     
@@ -367,7 +367,7 @@ global parameter_manager;
 %TODO: set a standard number of spaces for each and enforce it
 str = {};
 if parameter_manager.mutating && parameter_manager.num_loci > 1
-    num = 1; %TODO: Change this to 2^parameter_manager.num_loci;
+    num = 2^parameter_manager.num_loci;
 else
     num = parameter_manager.getField('','num_types');
 end
@@ -511,7 +511,7 @@ function recombination_box_Callback(hObject, eventdata, handles)
 
 
 
-function verify_parameters
+function verify_parameters(handles)
 global parameter_manager parameters_clear plot_grid;
 parameters_clear = 0;
 if ~parameter_manager.updateMatrixProperties()
@@ -520,6 +520,8 @@ elseif plot_grid && parameter_manager.num_loci > 4
     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
+elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
+    warndlg('ERROR: S must be no less than -1!');
 else
     parameters_clear = 1;
 end

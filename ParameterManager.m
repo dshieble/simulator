@@ -35,26 +35,26 @@ classdef ParameterManager < handle
             obj.matrix = struct();
             %logistic
             obj.logistic.Ninit_default = [5];
-            obj.logistic.birth_rate_default = [0.5];
+            obj.logistic.birth_rate_default = 1;
             obj.logistic.death_rate_default = [0.01];
             obj.logistic.Ninit = [obj.logistic.Ninit_default obj.logistic.Ninit_default];
             obj.logistic.birth_rate = [obj.logistic.birth_rate_default obj.logistic.birth_rate_default];
             obj.logistic.death_rate = [obj.logistic.death_rate_default obj.logistic.death_rate_default];
             %exp
             obj.exp.Ninit_default = [5];
-            obj.exp.birth_rate_default = [0.5];
+            obj.exp.birth_rate_default = 1;
             obj.exp.death_rate_default = [0.01];
             obj.exp.Ninit = [obj.exp.Ninit_default obj.exp.Ninit_default];
             obj.exp.birth_rate = [obj.exp.birth_rate_default obj.exp.birth_rate_default];
             obj.exp.death_rate = [obj.exp.death_rate_default obj.exp.death_rate_default];
             %moran
             obj.moran.Ninit_default = [1250];
-            obj.moran.birth_rate_default = [0.5];
+            obj.moran.birth_rate_default = 1;
             obj.moran.Ninit = [obj.moran.Ninit_default obj.moran.Ninit_default];
             obj.moran.birth_rate = [obj.moran.birth_rate_default obj.moran.birth_rate_default];
             %wright
             obj.wright.Ninit_default = [1250];
-            obj.wright.fitness_default = [0.5];
+            obj.wright.fitness_default = 1;
             obj.wright.Ninit = [obj.wright.Ninit_default obj.wright.Ninit_default];
             obj.wright.fitness = [obj.wright.fitness_default obj.wright.fitness_default];
             %matrix

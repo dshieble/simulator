@@ -105,7 +105,7 @@ if stepping
     return;
 end
 if ~evolving && ~paused
-    verify_parameters();
+    verify_parameters(handles);
 end
 if ~evolving && ~paused && parameters_clear %run
     run(handles, 0);
@@ -195,7 +195,7 @@ function param_1_box_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of param_1_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
-
+verify_parameters(handles);
 
 function init_pop_box_Callback(hObject, eventdata, handles)
 % hObject    handle to init_pop_box (see GCBO)
@@ -340,7 +340,7 @@ function population_box_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of population_box as text
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
-verify_parameters();
+verify_parameters(handles);
 
 
     
@@ -367,10 +367,8 @@ global parameter_manager;
 %TODO: set a standard number of spaces for each and enforce it
 str = {};
 if parameter_manager.mutating && parameter_manager.num_loci > 1
-    s = parameter_manager.multiple_loci;
-    num = 1; %TODO: Change this to 2^parameter_manager.num_loci;
+    num = 2^parameter_manager.num_loci;
 else
-    s = parameter_manager;
     num = parameter_manager.getField('','num_types');
 end
 
@@ -382,9 +380,9 @@ if parameter_manager.current_model == 1
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            parameter_manager.getField('logistic','Ninit(i)'),...
-            s.logistic.birth_rate(i),...
-            s.logistic.death_rate(i))];
+            parameter_manager.getField('logistic','Ninit'),...
+            parameter_manager.getField('logistic','birth_rate'),...
+            parameter_manager.getField('logistic','death_rate'))];
     end
 elseif parameter_manager.current_model == 2
     str = [str '                                       Exponential                         '];
@@ -394,9 +392,10 @@ elseif parameter_manager.current_model == 2
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.exp.Ninit(i),...
-            s.exp.birth_rate(i),...
-            s.exp.death_rate(i))];
+            parameter_manager.getField('exp','Ninit'),...
+            parameter_manager.getField('exp','birth_rate'),...
+            parameter_manager.getField('exp','death_rate'))];
+
     end
 elseif parameter_manager.current_model == 3
     str = [str '                          Moran                         '];
@@ -406,8 +405,8 @@ elseif parameter_manager.current_model == 3
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.moran.Ninit(i),...
-            s.moran.birth_rate(i))];
+            parameter_manager.getField('moran','Ninit'),...
+            parameter_manager.getField('moran','birth_rate'))];
     end
 elseif parameter_manager.current_model == 4
     str = [str '                   Wright-Fisher                         '];
@@ -417,8 +416,8 @@ elseif parameter_manager.current_model == 4
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.wright.Ninit(i),...
-            s.wright.fitness(i))];
+            parameter_manager.getField('wright','Ninit'),...
+            parameter_manager.getField('wright','fitness'))];
     end
 end
 PopulationParametersDialog(str);
@@ -520,6 +519,8 @@ if ~parameter_manager.updateMatrixProperties()
 elseif plot_grid && parameter_manager.num_loci > 4
     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 elseif ~parameter_manager.verifyAllBoxesClean();
+    warndlg('ERROR: All input must be numerical.');
+    elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 else
     parameters_clear = 1;
