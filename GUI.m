@@ -331,22 +331,6 @@ handles.log_exp_banner.String = 'Wright-Fisher Model';
 parameter_manager.updateBoxes();
 adjust_text(handles);
 
-function adjust_text(handles)
-global parameter_manager;
-if parameter_manager.current_model <= 2
-    handles.param_1_text.String = 'Birth Rate';
-    handles.param_2_text.String = 'Death Rate';
-    handles.param_2_text.Visible = 'on';
-    handles.param_2_box.Visible = 'on';
-elseif parameter_manager.current_model == 3
-    handles.param_1_text.String = 'Birth Rate';
-    handles.param_2_text.Visible = 'off';
-    handles.param_2_box.Visible = 'off';
-else
-    handles.param_1_text.String = 'Fitness';
-    handles.param_2_text.Visible = 'off';
-    handles.param_2_box.Visible = 'off';
-end
     
  
 function population_box_Callback(hObject, eventdata, handles)
@@ -383,10 +367,8 @@ global parameter_manager;
 %TODO: set a standard number of spaces for each and enforce it
 str = {};
 if parameter_manager.mutating && parameter_manager.num_loci > 1
-    s = parameter_manager.multiple_loci;
     num = 1; %TODO: Change this to 2^parameter_manager.num_loci;
 else
-    s = parameter_manager;
     num = parameter_manager.getField('','num_types');
 end
 
@@ -398,9 +380,9 @@ if parameter_manager.current_model == 1
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.logistic.Ninit(i),...
-            s.logistic.birth_rate(i),...
-            s.logistic.death_rate(i))];
+            parameter_manager.getField('logistic','Ninit'),...
+            parameter_manager.getField('logistic','birth_rate'),...
+            parameter_manager.getField('logistic','death_rate'))];
     end
 elseif parameter_manager.current_model == 2
     str = [str '                                       Exponential                         '];
@@ -410,9 +392,10 @@ elseif parameter_manager.current_model == 2
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.exp.Ninit(i),...
-            s.exp.birth_rate(i),...
-            s.exp.death_rate(i))];
+            parameter_manager.getField('exp','Ninit'),...
+            parameter_manager.getField('exp','birth_rate'),...
+            parameter_manager.getField('exp','death_rate'))];
+
     end
 elseif parameter_manager.current_model == 3
     str = [str '                          Moran                         '];
@@ -422,8 +405,8 @@ elseif parameter_manager.current_model == 3
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.moran.Ninit(i),...
-            s.moran.birth_rate(i))];
+            parameter_manager.getField('moran','Ninit'),...
+            parameter_manager.getField('moran','birth_rate'))];
     end
 elseif parameter_manager.current_model == 4
     str = [str '                   Wright-Fisher                         '];
@@ -433,8 +416,8 @@ elseif parameter_manager.current_model == 4
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.wright.Ninit(i),...
-            s.wright.fitness(i))];
+            parameter_manager.getField('wright','Ninit'),...
+            parameter_manager.getField('wright','fitness'))];
     end
 end
 PopulationParametersDialog(str);
@@ -542,6 +525,45 @@ else
 end
 
 %VisibilityFunctions
+function adjust_text(handles)
+global parameter_manager;
+cla(handles.formula_axes);
+if parameter_manager.mutating && parameter_manager.num_loci > 1
+    handles.param_1_text.String = 'S:';
+    handles.param_2_text.String = 'E';
+    handles.param_2_text.Visible = 'on';
+    handles.param_2_box.Visible = 'on';
+    if parameter_manager.current_model <=2
+        str1 = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
+        str2 = 'Death Rate: 0.01';
+        text(0,0.5,str1,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+        text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+
+    elseif parameter_manager.current_model == 3
+        str = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
+        text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+    elseif parameter_manager.current_model == 4
+    	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
+        text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
+    end
+    
+elseif parameter_manager.current_model <= 2
+    handles.param_1_text.String = 'Birth Rate:';
+    handles.param_2_text.String = 'Death Rate:';
+    handles.param_2_text.Visible = 'on';
+    handles.param_2_box.Visible = 'on';
+elseif parameter_manager.current_model == 3
+    handles.param_1_text.String = 'Birth Rate:';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
+else
+    handles.param_1_text.String = 'Fitness:';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
+end
+%annotation('arrow','X',[0.32,0.5],'Y',[0.6,0.4])
+
+
 function toggle_mutation_visible(handles)
 global parameter_manager;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
@@ -554,7 +576,6 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %handles.static_type_panel.Visible = 'on';
     handles.init_pop_box.Style = 'text';
     parameter_manager.updateBoxes();
-
 else
     %popup
     handles.types_popup.Visible = 'on';
@@ -565,7 +586,7 @@ else
     handles.init_pop_box.Style = 'edit';
     parameter_manager.updateBoxes();
 end
-
+adjust_text(handles);
 
 
 %Get the new matrix, mutat it 

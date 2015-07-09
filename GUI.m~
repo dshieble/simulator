@@ -331,22 +331,6 @@ handles.log_exp_banner.String = 'Wright-Fisher Model';
 parameter_manager.updateBoxes();
 adjust_text(handles);
 
-function adjust_text(handles)
-global parameter_manager;
-if parameter_manager.current_model <= 2
-    handles.param_1_text.String = 'Birth Rate';
-    handles.param_2_text.String = 'Death Rate';
-    handles.param_2_text.Visible = 'on';
-    handles.param_2_box.Visible = 'on';
-elseif parameter_manager.current_model == 3
-    handles.param_1_text.String = 'Birth Rate';
-    handles.param_2_text.Visible = 'off';
-    handles.param_2_box.Visible = 'off';
-else
-    handles.param_1_text.String = 'Fitness';
-    handles.param_2_text.Visible = 'off';
-    handles.param_2_box.Visible = 'off';
-end
     
  
 function population_box_Callback(hObject, eventdata, handles)
@@ -398,7 +382,7 @@ if parameter_manager.current_model == 1
     for i = 1:num
         str = [str, sprintf(' %02d    |    %04d                  %0.2f                             %0.2f',...                
             i,...
-            s.logistic.Ninit(i),...
+            parameter_manager.getField('logistic','Ninit(i)'),...
             s.logistic.birth_rate(i),...
             s.logistic.death_rate(i))];
     end
@@ -480,20 +464,28 @@ parameter_manager.updateMaxIterations();
 
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
-global grid_manager stepping evolving paused;
+global grid_manager stepping evolving paused plot_grid;
 if ~stepping && ~evolving
     if ~paused
         run(handles,1)
         pauseRunning(handles);
     else
         stepping = 1;
-        handles.step_button.BackgroundColor = [0 0 0];
+        handles.run_button.BackgroundColor = [.25 .25 .25];
+        handles.save_button.BackgroundColor = [.25 .25 .25];
+        handles.reset_button.BackgroundColor = [.25 .25 .25];
+        handles.step_button.BackgroundColor = [.25 .25 .25];
+        drawnow;
         [matrix, c, t, halt] = grid_manager.get_next();
         draw_iteration(matrix, c, t, halt, handles);
         stepping = 0;
-        handles.step_button.BackgroundColor = [0 0 1];
+        handles.save_button.BackgroundColor = [0 1 1];
+        handles.reset_button.BackgroundColor = [1 0 0];
+        handles.run_button.BackgroundColor = [0 1 0];
+        handles.step_button.BackgroundColor = [0 0 1];    
     end
 end
+    
 
 
 % --- Executes on button press in spatial_structure_check.
@@ -534,6 +526,45 @@ else
 end
 
 %VisibilityFunctions
+function adjust_text(handles)
+global parameter_manager;
+cla(handles.formula_axes);
+if parameter_manager.mutating && parameter_manager.num_loci > 1
+    handles.param_1_text.String = 'S:';
+    handles.param_2_text.String = 'E';
+    handles.param_2_text.Visible = 'on';
+    handles.param_2_box.Visible = 'on';
+    if parameter_manager.current_model <=2
+        str1 = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
+        str2 = 'Death Rate: 0.01';
+        text(0,0.5,str1,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+        text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+
+    elseif parameter_manager.current_model == 3
+        str = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
+        text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+    elseif parameter_manager.current_model == 4
+    	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
+        text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
+    end
+    
+elseif parameter_manager.current_model <= 2
+    handles.param_1_text.String = 'Birth Rate:';
+    handles.param_2_text.String = 'Death Rate:';
+    handles.param_2_text.Visible = 'on';
+    handles.param_2_box.Visible = 'on';
+elseif parameter_manager.current_model == 3
+    handles.param_1_text.String = 'Birth Rate:';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
+else
+    handles.param_1_text.String = 'Fitness:';
+    handles.param_2_text.Visible = 'off';
+    handles.param_2_box.Visible = 'off';
+end
+%annotation('arrow','X',[0.32,0.5],'Y',[0.6,0.4])
+
+
 function toggle_mutation_visible(handles)
 global parameter_manager;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
@@ -546,7 +577,6 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %handles.static_type_panel.Visible = 'on';
     handles.init_pop_box.Style = 'text';
     parameter_manager.updateBoxes();
-
 else
     %popup
     handles.types_popup.Visible = 'on';
@@ -557,12 +587,12 @@ else
     handles.init_pop_box.Style = 'edit';
     parameter_manager.updateBoxes();
 end
-
+adjust_text(handles);
 
 
 %Get the new matrix, mutat it 
 function run_loop(first_run, handles, runOnce)
-global evolving grid_manager plot_grid parameter_manager;
+global evolving grid_manager plot_grid parameter_manager stepping;
 warning('OFF','MATLAB:legend:PlotEmpty')
 legend_input = {};
 while evolving == 1
@@ -586,7 +616,7 @@ while evolving == 1
         break
     end
 end
-if ~plot_grid
+if ~plot_grid && ~stepping
     draw_iteration(matrix, c, t, halt, handles);
     legend(legend_input, 'Location', 'northwest')
 end
@@ -611,6 +641,7 @@ if plot_grid
                 'facecolor',grid_manager.get_color(matrix(i,j)));
         end
     end
+    drawnow;
 end
 %plot the graph
 switch grid_manager.plottingParams.plot_type
@@ -640,15 +671,14 @@ drawnow;
 
 %RunFunctions
 function run(handles, runOnce)
-1
 %Execute the simulation
 global grid_manager evolving save_data;
 handles.run_button.String = 'Calculating...';
 initializeGridManager(handles);
 evolving = 1;
-handles.save_button.BackgroundColor = [0 0 0];
-handles.reset_button.BackgroundColor = [0 0 0];
-handles.step_button.BackgroundColor = [0 0 0];
+handles.save_button.BackgroundColor = [.25 .25 .25];
+handles.reset_button.BackgroundColor = [.25 .25 .25];
+handles.step_button.BackgroundColor = [.25 .25 .25];
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
@@ -663,9 +693,9 @@ evolving = 1;
 paused = 0;
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
-handles.save_button.BackgroundColor = [0 0 0];
-handles.reset_button.BackgroundColor = [0 0 0];
-handles.step_button.BackgroundColor = [0 0 0];
+handles.save_button.BackgroundColor = [.25 .25 .25];
+handles.reset_button.BackgroundColor = [.25 .25 .25];
+handles.step_button.BackgroundColor = [.25 .25 .25];
 drawnow;
 run_loop(0, handles, 0);
 evolving = 0;
