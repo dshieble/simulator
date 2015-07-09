@@ -1,4 +1,5 @@
-
+%This class is an implementation of the GridManager class for the Logistic
+%model
 classdef GridManagerLogistic < GridManagerAbstract
     
     properties
@@ -18,11 +19,18 @@ classdef GridManagerLogistic < GridManagerAbstract
             obj.update_params();
         end
         
+        %See GridManagerAbstract
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
+            %The extinction case
+%             if sum(obj.total_count(:,obj.timestep)) == 0
+%                 [mat, changed, t] = obj.get_next_cleanup();
+%                 h = 1;
+%                 return;
+%             end
             if obj.plot_grid 
                 %kill
                 for i = 1:obj.num_types
@@ -51,6 +59,9 @@ classdef GridManagerLogistic < GridManagerAbstract
             else
                 gen_vec = obj.total_count(:, obj.timestep);
                 for i = 1:numel(obj.matrix)
+                    if sum(gen_vec) == 0
+                        break;
+                    end
                     tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
                     num = rand()*sum(tot_rates);
                     chosen_type = 0;
@@ -75,6 +86,7 @@ classdef GridManagerLogistic < GridManagerAbstract
             h = h && ~obj.mutation_manager.mutating;
         end
         
+        %See GridManagerAbstract
         function update_params(obj)
             for i = 1:obj.num_types
                 if obj.plot_grid

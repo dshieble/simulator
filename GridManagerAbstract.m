@@ -1,3 +1,12 @@
+%This class is the parent class of the 4 grid managers. It contains methods
+%that are used by all of its child classes, as well as the instance
+%variables used across all classes. 
+
+%The GridManager class stores the matrix/counts of each species, and
+%contains a method get_next that advances the matrix/counts to the next
+%generation, based on the model that the GridManager's implementation is based
+%on
+
 classdef GridManagerAbstract < handle
     properties
         output;
@@ -12,10 +21,13 @@ classdef GridManagerAbstract < handle
         plot_grid;
         generations;
         old_matrix;
-        mutation_manager;
+        mutation_manager; 
         plottingParams;
     end
     methods (Access = public)
+        %The constructor method. This function initializes the matrix and
+        %the plotting parameters, as well as other useful variables like
+        %the color variable
         function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
@@ -63,17 +75,20 @@ classdef GridManagerAbstract < handle
             obj.plottingParams = plottingParams;
         end
       
-         %mat - new updated matrix
+        %This function is called at the end of get_next by all of the child
+        %classes. It instantiates the output variables and increments the
+        %timestep. 
+        %
+        %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
-        %h - whether or not we should halt
         function [mat, changed, t] = get_next_cleanup(obj)
             obj.timestep = obj.timestep + 1;
-            obj.matrix = obj.mutation_manager.mutate(obj);
+            obj.mutation_manager.mutate(obj);
             if ~obj.plot_grid
                 changed = (1:numel(obj.matrix))';
             else
-                changed = find(obj.old_matrix ~= obj.matrix)
+                changed = find(obj.old_matrix ~= obj.matrix);
                 obj.output = [obj.output; obj.matrix(:)'];
                 obj.old_matrix = obj.matrix;
                 
@@ -84,7 +99,7 @@ classdef GridManagerAbstract < handle
             t = obj.timestep;
         end
 
-                
+        %Returns a free square in the matrix
         function ind = get_free(obj)
             free = find(obj.matrix == 0);
             if isempty(free)
@@ -94,6 +109,7 @@ classdef GridManagerAbstract < handle
             end
         end
 
+        %Returns the nearest free square in the matrix
         function ind = get_nearest_free(obj, i, j)
             free = find(obj.matrix == 0);
             [x, y] = ind2sub(size(obj.matrix, 1), free);
@@ -114,6 +130,7 @@ classdef GridManagerAbstract < handle
             end
         end
 
+        %Gets the ith color from the color matrix
         function c = get_color(obj,i)
             c = obj.colors(i,:);
         end
@@ -133,6 +150,9 @@ classdef GridManagerAbstract < handle
             end
         end
         
+        %A method implemented by all of the child GridManager class. It
+        %updates the total_count, the percent_count and the mean_fitness
+        %variables for plotting. 
         function update_params(obj)
         end
             

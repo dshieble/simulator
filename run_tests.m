@@ -88,27 +88,26 @@ plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingPar
 % end
 
 %% Test 5 -> Exponential
-% Ninit = [1 0];
-% N_tot = 900;
-% birth = [1 1];
-% death = [0.01 0.01];
-% counts = cell(1,100);
-% for i = 1:100
-%     exp_manager = GridManagerExp(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, birth, death);
-%     h = 0;
-%     counts{i} = [];
-%     t = 1;
-%     while ~h
-%         [~, ~, t, h] = exp_manager.get_next();
-%         counts{i} = [counts{i} mean(exp_manager.total_count(:,t))];
-%     end
-%     i
-% end
-% figure;
-% for j = 1:100
-%     plot(counts{j});
-%     hold on;
-% end
+Ninit = [1 0];
+N_tot = 900;
+birth = [.5 .5];
+death = [0.01 0.01];
+counts = cell(1,100);
+for i = 1:100
+    exp_manager = GridManagerExp(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, birth, death);
+    h = 0;
+    counts{i} = [];
+    t = 1;
+    while ~h
+        [~, ~, t, h] = exp_manager.get_next();
+        counts{i} = [counts{i} sum(exp_manager.total_count(:,t))];
+    end
+end
+figure;
+for j = 1:100
+    plot(counts{j});
+    hold on;
+end
 
 %% Test 6 -> Logistic
 % Ninit = [1 0];
@@ -123,8 +122,7 @@ plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingPar
 %     t = 1;
 %     while sum(log_manager.total_count(:,t)) < 0.85*N_tot
 %         [~, ~, t, h] = log_manager.get_next();
-%         counts{i} = [counts{i} mean(log_manager.total_count(:,t))];
-%         sum(log_manager.total_count(:,t))
+%         counts{i} = [counts{i} sum(log_manager.total_count(:,t))];
 %     end
 % end
 % figure;

@@ -1,3 +1,4 @@
+%This class is the GridManager implementation for the Moran model
 classdef GridManagerMoran < GridManagerAbstract
     
     properties
@@ -15,6 +16,7 @@ classdef GridManagerMoran < GridManagerAbstract
             obj.update_params();
         end
         
+        %See GridManagerAbstract
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
@@ -67,7 +69,7 @@ classdef GridManagerMoran < GridManagerAbstract
             h = h && ~obj.mutation_manager.mutating;
         end
         
-        %used tic and toc - this does not need any speed up
+        %See GridManagerAbstract
         function update_params(obj)
             for i = 1:obj.num_types
                 if obj.plot_grid
@@ -77,15 +79,6 @@ classdef GridManagerMoran < GridManagerAbstract
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
-            obj.proportion_vec = [];
-            if min(obj.total_count(:,obj.timestep)) < 100
-                multiplier = 100;
-            else 
-                multiplier = 1;
-            end
-            for i = 1:obj.num_types
-                obj.proportion_vec = [obj.proportion_vec repmat(i,1,round(obj.birth_rate(i)*multiplier*obj.total_count(i, obj.timestep)))];
-            end
         end
 
     end

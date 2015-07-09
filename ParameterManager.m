@@ -1,3 +1,7 @@
+%This powerhouse of a class stores the parameters for each of the different
+%models and updates the display based on these parameters. It serves as an
+%interface between the backend and frontend. 
+
 classdef ParameterManager < handle
     
     properties
@@ -14,9 +18,9 @@ classdef ParameterManager < handle
         mutating;
         mutation_matrix;
         num_loci;
-%         multiple_loci;
         s;
         e;
+        %function variables
         numOnes;
         lociBR;
         lociFitness;
@@ -24,6 +28,9 @@ classdef ParameterManager < handle
     
     methods (Access = public)
         
+        %Constructor method. This method initializes all of the instance
+        %variables, particularly the seperate structs that store the
+        %parameters for each model.
         function obj = ParameterManager(handles)
             obj.current_model = 1;
             obj.max_iterations = 10;
@@ -66,28 +73,16 @@ classdef ParameterManager < handle
             obj.mutating = 0;
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
-            %multipl loci params
-%             obj.multiple_loci = struct();
-%             obj.multiple_loci.logistic = struct();
-%             obj.multiple_loci.exp = struct();
-%             obj.multiple_loci.moran = struct();
-%             obj.multiple_loci.wright = struct();
-%             obj.multiple_loci.logistic.Ninit = obj.logistic.Ninit_default;
-% %             obj.multiple_loci.logistic.birth_rate = obj.logistic.birth_rate_default;
-% %             obj.multiple_loci.logistic.death_rate = obj.logistic.death_rate_default;
-%             obj.multiple_loci.exp.Ninit = obj.logistic.Ninit_default;
-% %             obj.multiple_loci.exp.birth_rate = obj.logistic.birth_rate_default;
-% %             obj.multiple_loci.exp.death_rate = obj.logistic.death_rate_default;
-%             obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
-% %             obj.multiple_loci.moran.birth_rate = obj.moran.birth_rate_default;
-%             obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
-% %             obj.multiple_loci.wright.fitness = obj.wright.fitness_default;
+            %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
-            obj.updateNumTypes();
+            %function variables
             obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
             obj.lociBR = @(num) 1 + obj.s*(obj.numOnes(num)^(1-obj.e));
             obj.lociFitness = @(num) exp(obj.s*(obj.numOnes(num)^(1-obj.e)));
+            %cleanup
+            obj.updateNumTypes();
+
         end
         
         %Updates the stored structs to the box values
@@ -191,8 +186,8 @@ classdef ParameterManager < handle
             obj.updateMultipleLoci();
         end
         
+        %Updates the mutation matrix and the num_loci box
         function updateMultipleLoci(obj) 
-            %set the num types in the case of more than 1 loci
             num_l = str2double(obj.handles.loci_box.String);
             if ~isnan(num_l)
                 obj.num_loci = max(1,num_l);
@@ -217,7 +212,8 @@ classdef ParameterManager < handle
 
         end
         
-        %Updates the num_loci == 1 boxes to the stored struct values
+        %Updates the boxes to the stored struct values (sister function of
+        %updateStructs)
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
             if obj.num_loci > 1 && obj.mutating
@@ -253,6 +249,8 @@ classdef ParameterManager < handle
                 
         end
         
+        %Updates the size of the matrix/population based on the input to the
+        %population box string
         function noerror = updateMatrixProperties(obj)
             size_temp = str2double(obj.handles.population_box.String);
             noerror = 0;
@@ -264,6 +262,8 @@ classdef ParameterManager < handle
             end
         end
         
+        %Updates the maximum number of iterations for the non-plotting case
+        %based on the input to the max_iterations box
         function updateMaxIterations(obj)
             num = str2double(obj.handles.max_iterations_box.String);
             if ~isnan(num)
@@ -273,6 +273,8 @@ classdef ParameterManager < handle
             end
         end
         
+        %Provides an interface for accessing parameters that does not
+        %require the user to know whether the num_loci > 1
         function out = getField(obj, model, param)
             if strcmp(param,'num_types')
                 if ~obj.mutating || obj.num_loci == 1

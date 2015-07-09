@@ -1,12 +1,6 @@
-%do plot_grid stuff
-
-
-
-
-
 %This class handles the mutations of elements in the matrix. When >1 loci
 %are selected, this class also converts types to their binary allele
-%strings via the converstion allele_n = nth bit of (num-1) (0 indexed)
+%strings via the conversion allele_n = nth bit of (num-1) (0 indexed)
 
 classdef MutationManager < handle
     
@@ -24,22 +18,23 @@ classdef MutationManager < handle
             obj.mutating = parameter_manager.mutating;
         end
         
-        %Elements in the matrix are represented as
-        function matrix = mutate(obj, grid_manager)
+        %Accepts a grid_manager, updates the matrix and total_count
+        %parameters of the grid_manager based on the mutation parameters
+        function mutate(obj, grid_manager)
             matrix = grid_manager.matrix;
             if obj.mutating
-                if grid_manager.plot_grid
+                if grid_manager.plot_grid %Mutate each cell individually
                     for i = 1:numel(matrix)
                         type = matrix(i)-1;
                         new_type = 0;
                         if type >= 0
-                            if obj.num_loci == 1
+                            if obj.num_loci == 1 %choose new type with weighted random selection
                                 num = rand();
                                 while num > 0
                                     new_type = new_type + 1;
                                     num = num - obj.mutation_matrix(new_type, matrix(i));
                                 end
-                            else
+                            else %mutate each allele seperately
                                 for j = 0:(obj.num_loci-1)
                                     allele = obj.get_nth_allele(type, j);
                                     num = rand();
@@ -55,6 +50,7 @@ classdef MutationManager < handle
                             matrix(i) = new_type;
                         end
                     end
+                    grid_manager.matrix = matrix;
                 else %non-plotting
                     gen_vec = zeros(1, grid_manager.num_types);
                     if obj.num_loci == 1
@@ -64,7 +60,6 @@ classdef MutationManager < handle
                         end
                         
                     elseif obj.num_loci > 1 %currently written with the assumption that 2^num_loci is close to numel(population)
-                        %TODO: 1 -> 0 and 2 -> 1 in the mutation matrix
                         gen_vec = grid_manager.total_count(:, grid_manager.timestep);
                         for i = 1:grid_manager.num_types
                             for j = 1:grid_manager.total_count(i, grid_manager.timestep)
@@ -91,7 +86,7 @@ classdef MutationManager < handle
             end
         end
         
-        
+        %get the nth allele in a type (whether nth bit of number is 0 or 1)
         function [val] = get_nth_allele(obj, x, n)
             val = bitand(bitshift(x,-n),1);
         end

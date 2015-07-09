@@ -89,17 +89,6 @@ function matrix = MutationMatrixDialog(current, num_loci)
         table.Data = num2cell(D);
     end
 
-    %Gets called whenever the user selects a cell. Changes which columns are
-    %editable in the row that the selected cell is in, so that the user
-    %cannot edit the diagonal (necessary because the only documented
-    %editable control is the ColumnEditable property.
-%     function changeEditable(~,x)
-%         if numel(x.Indices == 2)
-%             all = logical(ones(1,size(current,1)));
-%             all(x.Indices(1)) = 0;
-%             table.ColumnEditable = all;
-%         end
-%     end
     
 
 end
