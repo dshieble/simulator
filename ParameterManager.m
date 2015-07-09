@@ -18,6 +18,8 @@ classdef ParameterManager < handle
         s;
         e;
         numOnes;
+        lociBR;
+        lociFitness;
     end
     
     methods (Access = public)
@@ -84,7 +86,8 @@ classdef ParameterManager < handle
             obj.e = 0;
             obj.updateNumTypes();
             obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
-
+            obj.lociBR = @(num) 1 + obj.s*(obj.numOnes(num)^(1-obj.e));
+            obj.lociFitness = @(num) exp(obj.s*(obj.numOnes(num)^(1-obj.e)));
         end
         
         %Updates the stored structs to the box values
@@ -293,11 +296,10 @@ classdef ParameterManager < handle
                     else
                         out = zeros(1,2^obj.num_loci);
                         for i = 1:2^obj.num_loci
-                            k = obj.numOnes(i);
                             if obj.current_model <= 3
-                                out(i) = 1 + obj.s*(k^(1-obj.e));
+                                out(i) = obj.lociBR(i); 
                             else
-                                out(i) = exp(obj.s*(k^(1-obj.e)));
+                                out(i) = obj.lociFitness(i);
                             end
                         end
                     end
@@ -326,6 +328,12 @@ classdef ParameterManager < handle
                isnan(str2double(obj.handles.num_types_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)) || ...
                isnan(str2double(obj.handles.max_iterations_box.String)));
+        end
+        
+        %Returns the name of the current model
+        function out = getModelName(obj)
+            names = {'Logistic', 'Exponential', 'Moran', 'Wright-Fisher'};
+            out = names{obj.current_model};
         end
 
     end

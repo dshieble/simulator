@@ -371,8 +371,31 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
 else
     num = parameter_manager.getField('','num_types');
 end
-
-if parameter_manager.current_model == 1
+if parameter_manager.mutating && parameter_manager.num_loci > 1
+    str = [str sprintf('                       %s                         ', parameter_manager.getModelName())];
+    str = [str ' '];
+    %str = [str 'Type |         S                   E'];
+    str = [str '-------------------------------------------------------------------------' ];
+    if parameter_manager.current_model <= 2
+        for i = 1:num
+            str = [str, sprintf(' Type: %s    |    Birth Rate: %2.2f                  Death Rate: 0.01',...                
+                dec2bin(i - 1, parameter_manager.num_loci),...
+                parameter_manager.lociBR(i))];
+        end
+    elseif parameter_manager.current_model == 3
+        for i = 1:num
+            str = [str, sprintf(' Type: %s    |    Birth Rate: %2.2f',...                
+                dec2bin(i - 1, parameter_manager.num_loci),...
+                parameter_manager.lociBR(i))];
+        end
+    elseif parameter_manager.current_model == 4
+        for i = 1:num
+            str = [str, sprintf(' Type: %s    |    Fitness: %2.2f',...                
+                dec2bin(i - 1, parameter_manager.num_loci),...
+                parameter_manager.lociFitness(i))];
+        end
+    end
+elseif parameter_manager.current_model == 1
     str = [str '                                       Logistic                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Birth Rate                    Death Rate'];

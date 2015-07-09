@@ -371,8 +371,18 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
 else
     num = parameter_manager.getField('','num_types');
 end
-
-if parameter_manager.current_model == 1
+if parameter_manager.mutating && parameter_manager.num_loci > 1
+    str = [str '                                       %s                         ', parameter_manager.getModelName()];
+    str = [str ' '];
+    str = [str 'Type | S                    E'];
+    str = [str '         | ----------------------------------------------------------------------------------' ];
+    for i = 1:num
+        str = [str, sprintf(' %s    |    %2.2f                  %02d',...                
+            dec2bin(i - 1, parameter_manager.num_loci),...
+            parameter_manager.s,...
+            parameter_manager.e)];
+    end
+elseif parameter_manager.current_model == 1
     str = [str '                                       Logistic                         '];
     str = [str ' '];
     str = [str 'Type |  Size                    Birth Rate                    Death Rate'];
@@ -511,7 +521,7 @@ function recombination_box_Callback(hObject, eventdata, handles)
 
 
 
-function verify_parameters
+function verify_parameters(handles)
 global parameter_manager parameters_clear plot_grid;
 parameters_clear = 0;
 if ~parameter_manager.updateMatrixProperties()
@@ -520,8 +530,8 @@ elseif plot_grid && parameter_manager.num_loci > 4
     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
-    elseif ~parameter_manager.verifyAllBoxesClean();
-    warndlg('ERROR: All input must be numerical.');
+elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
+    warndlg('ERROR: S must be no less than -1!');
 else
     parameters_clear = 1;
 end

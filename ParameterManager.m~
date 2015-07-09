@@ -14,7 +14,10 @@ classdef ParameterManager < handle
         mutating;
         mutation_matrix;
         num_loci;
-        multiple_loci;
+%         multiple_loci;
+        s;
+        e;
+        numOnes;
     end
     
     methods (Access = public)
@@ -32,26 +35,26 @@ classdef ParameterManager < handle
             obj.matrix = struct();
             %logistic
             obj.logistic.Ninit_default = [5];
-            obj.logistic.birth_rate_default = [0.5];
+            obj.logistic.birth_rate_default = 1;
             obj.logistic.death_rate_default = [0.01];
             obj.logistic.Ninit = [obj.logistic.Ninit_default obj.logistic.Ninit_default];
             obj.logistic.birth_rate = [obj.logistic.birth_rate_default obj.logistic.birth_rate_default];
             obj.logistic.death_rate = [obj.logistic.death_rate_default obj.logistic.death_rate_default];
             %exp
             obj.exp.Ninit_default = [5];
-            obj.exp.birth_rate_default = [0.5];
+            obj.exp.birth_rate_default = 1;
             obj.exp.death_rate_default = [0.01];
             obj.exp.Ninit = [obj.exp.Ninit_default obj.exp.Ninit_default];
             obj.exp.birth_rate = [obj.exp.birth_rate_default obj.exp.birth_rate_default];
             obj.exp.death_rate = [obj.exp.death_rate_default obj.exp.death_rate_default];
             %moran
             obj.moran.Ninit_default = [1250];
-            obj.moran.birth_rate_default = [0.5];
+            obj.moran.birth_rate_default = 1;
             obj.moran.Ninit = [obj.moran.Ninit_default obj.moran.Ninit_default];
             obj.moran.birth_rate = [obj.moran.birth_rate_default obj.moran.birth_rate_default];
             %wright
             obj.wright.Ninit_default = [1250];
-            obj.wright.fitness_default = [0.5];
+            obj.wright.fitness_default = 1;
             obj.wright.Ninit = [obj.wright.Ninit_default obj.wright.Ninit_default];
             obj.wright.fitness = [obj.wright.fitness_default obj.wright.fitness_default];
             %matrix
@@ -62,22 +65,25 @@ classdef ParameterManager < handle
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
             %multipl loci params
-            obj.multiple_loci = struct();
-            obj.multiple_loci.logistic = struct();
-            obj.multiple_loci.exp = struct();
-            obj.multiple_loci.moran = struct();
-            obj.multiple_loci.wright = struct();
-            obj.multiple_loci.logistic.Ninit = obj.logistic.Ninit_default;
-            obj.multiple_loci.logistic.birth_rate = obj.logistic.birth_rate_default;
-            obj.multiple_loci.logistic.death_rate = obj.logistic.death_rate_default;
-            obj.multiple_loci.exp.Ninit = obj.logistic.Ninit_default;
-            obj.multiple_loci.exp.birth_rate = obj.logistic.birth_rate_default;
-            obj.multiple_loci.exp.death_rate = obj.logistic.death_rate_default;
-            obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
-            obj.multiple_loci.moran.birth_rate = obj.moran.birth_rate_default;
-            obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
-            obj.multiple_loci.wright.fitness = obj.wright.fitness_default;
+%             obj.multiple_loci = struct();
+%             obj.multiple_loci.logistic = struct();
+%             obj.multiple_loci.exp = struct();
+%             obj.multiple_loci.moran = struct();
+%             obj.multiple_loci.wright = struct();
+%             obj.multiple_loci.logistic.Ninit = obj.logistic.Ninit_default;
+% %             obj.multiple_loci.logistic.birth_rate = obj.logistic.birth_rate_default;
+% %             obj.multiple_loci.logistic.death_rate = obj.logistic.death_rate_default;
+%             obj.multiple_loci.exp.Ninit = obj.logistic.Ninit_default;
+% %             obj.multiple_loci.exp.birth_rate = obj.logistic.birth_rate_default;
+% %             obj.multiple_loci.exp.death_rate = obj.logistic.death_rate_default;
+%             obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
+% %             obj.multiple_loci.moran.birth_rate = obj.moran.birth_rate_default;
+%             obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
+% %             obj.multiple_loci.wright.fitness = obj.wright.fitness_default;
+            obj.s = -0.5;
+            obj.e = 0;
             obj.updateNumTypes();
+            obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
 
         end
         
@@ -88,7 +94,14 @@ classdef ParameterManager < handle
             ninit_temp = str2double(obj.handles.init_pop_box.String);
             param_1_temp = str2double(obj.handles.param_1_box.String);
             param_2_temp = str2double(obj.handles.param_2_box.String);
-            if obj.current_model == 1
+            if obj.mutating && obj.num_loci > 1
+                if ~isnan(param_1_temp)
+                    obj.s = param_1_temp;
+                end
+                if ~isnan(param_2_temp)
+                    obj.e = param_2_temp;
+                end
+            elseif obj.current_model == 1
                 if ~isnan(ninit_temp)
                     obj.logistic.Ninit(type) = round(ninit_temp);
                 end
@@ -207,12 +220,12 @@ classdef ParameterManager < handle
             if obj.num_loci > 1 && obj.mutating
                 type = 1;
                 obj.handles.num_types_box.String = 2;
-                obj.handles.param_1_box.String
-                obj.handles.param_2_box.String
+                obj.handles.param_1_box.String = obj.s;
+                obj.handles.param_2_box.String = obj.e;
                 if obj.current_model <= 2
                     obj.handles.init_pop_box.String = 5;
                 else
-                    obj.handles.init_pop_box.String = 0b;
+                    obj.handles.init_pop_box.String = obj.matrix.edge_size^2;
                 end
                 
             else
@@ -246,8 +259,6 @@ classdef ParameterManager < handle
                     noerror = 1;
                 end
             end
-            obj.multiple_loci.moran.Ninit = obj.matrix.edge_size.^2;
-            obj.multiple_loci.wright.Ninit = obj.matrix.edge_size.^2;
         end
         
         function updateMaxIterations(obj)
@@ -270,15 +281,26 @@ classdef ParameterManager < handle
                 end
             end
             if obj.num_loci > 1 && obj.mutating
-                if strcmp(param, 'Ninit') 
-                    out = [getfield(getfield(obj.multiple_loci,model),'Ninit') zeros(1, 2^obj.num_loci - 1)];
+                if strcmp(param, 'Ninit')
+                    if obj.current_model <= 2
+                        out = [5 zeros(1, 2^obj.num_loci - 1)];
+                    else
+                    	out = [obj.matrix.edge_size^2 zeros(1, 2^obj.num_loci - 1)];
+                    end
                 else
                     if strcmp(param, 'death_rate')
-                        out = obj.logistic.death_rate_default;
+                        out = repmat(obj.logistic.death_rate_default,1,2^obj.num_loci);
                     else
-                        out = repmat(getfield(getfield(obj.multiple_loci, model),param), 1, 2^obj.num_loci);
+                        out = zeros(1,2^obj.num_loci);
+                        for i = 1:2^obj.num_loci
+                            k = obj.numOnes(i);
+                            if obj.current_model <= 3
+                                out(i) = 1 + obj.s*(k^(1-obj.e));
+                            else
+                                out(i) = exp(obj.s*(k^(1-obj.e)));
+                            end
+                        end
                     end
-                            
                 end
             else
                 out = getfield(getfield(obj, model),param);
@@ -304,6 +326,11 @@ classdef ParameterManager < handle
                isnan(str2double(obj.handles.num_types_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)) || ...
                isnan(str2double(obj.handles.max_iterations_box.String)));
+        end
+        
+        %takes in a number 1-4 and returns that model's name
+        function getModelName(obj,i)
+            names = {'L'
         end
 
     end
