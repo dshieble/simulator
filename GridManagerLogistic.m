@@ -58,7 +58,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 end
             else
                 gen_vec = obj.total_count(:, obj.timestep);
-                for i = 1:numel(obj.matrix)
+                for i = 1:sum(gen_vec)
                     if sum(gen_vec) == 0
                         break;
                     end

@@ -59,10 +59,23 @@ classdef GridManagerExp < GridManagerAbstract
                 end
             else
                 gen_vec = obj.total_count(:, obj.timestep);
-                for i = 1:numel(obj.matrix)
-                    gen_vec = obj.get_next_reproduction(gen_vec);
+                for i = 1:sum(gen_vec)
                     if sum(gen_vec) == 0
-                        break
+                        break;
+                    end
+                    tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
+                    num = rand()*sum(tot_rates);
+                    chosen_type = 0;
+                    while num > 0
+                        chosen_type = chosen_type + 1;
+                        num = num - tot_rates(chosen_type);
+                    end
+                    if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
+                        if sum(gen_vec) < numel(obj.matrix)
+                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                        end
+                    else
+                        gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
                     end
                 end
                 obj.total_count(:, obj.timestep + 1) = gen_vec;
@@ -73,25 +86,6 @@ classdef GridManagerExp < GridManagerAbstract
             h = h && ~obj.mutation_manager.mutating;
         end
         
-        function gen_vec = get_next_reproduction(obj,gen_vec)
-            if sum(gen_vec) == 0
-                return;
-            end
-            tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
-            num = rand()*sum(tot_rates);
-            chosen_type = 0;
-            while num > 0
-                chosen_type = chosen_type + 1;
-                num = num - tot_rates(chosen_type);
-            end
-            if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
-                if sum(gen_vec) < numel(obj.matrix)
-                    gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
-                end
-            else
-                gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
-            end
-        end
             
         
         
