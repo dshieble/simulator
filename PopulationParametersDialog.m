@@ -14,8 +14,8 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
         data{3,1} = 'Death Rate';
         for i = 1:2^parameter_manager.num_loci
             data{1,i + 1} = dec2bin(i - 1, parameter_manager.num_loci);
-            data{2,i + 1} = parameter_manager.lociBR(i);
-            data{3,i + 1} = 0.01;
+            data{2,i + 1} = num2str(parameter_manager.lociBR(i));
+            data{3,i + 1} = num2str(0.01);
         end
     elseif parameter_manager.current_model == 3
         data = cell(2, 2^parameter_manager.num_loci + 1);
@@ -23,7 +23,7 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
         data{2,1} = 'Birth Rate';
         for i = 1:2^parameter_manager.num_loci
             data{1,i + 1} = dec2bin(i - 1, parameter_manager.num_loci);
-            data{2,i + 1} = parameter_manager.lociBR(i);
+            data{2,i + 1} = num2str(parameter_manager.lociBR(i));
         end
     elseif parameter_manager.current_model == 4
         data = cell(2, 2^parameter_manager.num_loci + 1);
@@ -31,7 +31,7 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
         data{2,1} = 'Fitness';
         for i = 1:2^parameter_manager.num_loci
             data{1,i + 1} = dec2bin(i - 1, parameter_manager.num_loci);
-            data{2,i + 1} = parameter_manager.lociFitness(i);
+            data{2,i + 1} = num2str(parameter_manager.lociFitness(i));
         end
     end
 else
@@ -41,9 +41,9 @@ else
         data{2,1} = 'Birth Rate';
         data{3,1} = 'Death Rate';
         for i = 1:parameter_manager.num_types
-            data{1,i + 1} = i;
-            data{2,i + 1} = parameter_manager.logistic.birth_rate(i);
-            data{3,i + 1} = parameter_manager.logistic.death_rate(i);
+            data{1,i + 1} = num2str(i);
+            data{2,i + 1} = num2str(parameter_manager.logistic.birth_rate(i));
+            data{3,i + 1} = num2str(parameter_manager.logistic.death_rate(i));
         end
     elseif parameter_manager.current_model == 2
         data = cell(3, parameter_manager.num_types + 1);
@@ -51,25 +51,25 @@ else
         data{2,1} = 'Birth Rate';
         data{3,1} = 'Death Rate';
         for i = 1:parameter_manager.num_types
-            data{1,i + 1} = i;
-            data{2,i + 1} = parameter_manager.exp.birth_rate(i);
-            data{3,i + 1} = parameter_manager.exp.death_rate(i);
+            data{1,i + 1} = num2str(i);
+            data{2,i + 1} = num2str(parameter_manager.exp.birth_rate(i));
+            data{3,i + 1} = num2str(parameter_manager.exp.death_rate(i));
         end
     elseif parameter_manager.current_model == 3
         data = cell(2, parameter_manager.num_types + 1);
         data{1,1} = 'Type';
         data{2,1} = 'Birth Rate';
         for i = 1:parameter_manager.num_types
-            data{1,i + 1} = i;
-            data{2,i + 1} = parameter_manager.moran.birth_rate(i);
+            data{1,i + 1} = num2str(i);
+            data{2,i + 1} = num2str(parameter_manager.moran.birth_rate(i));
         end
     elseif parameter_manager.current_model == 4
         data = cell(2, parameter_manager.num_types + 1);
         data{1,1} = 'Type';
         data{2,1} = 'Fitness';
         for i = 1:parameter_manager.num_types
-            data{1,i + 1} = i;
-            data{2,i + 1} = parameter_manager.wright.birth_rate(i);
+            data{1,i + 1} = num2str(i);
+            data{2,i + 1} = num2str(parameter_manager.wright.birth_rate(i));
         end
     end
 end
