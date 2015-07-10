@@ -3,7 +3,7 @@
 function matrix = MutationMatrixDialog(current, num_loci)
 
     %Start Script
-    d = dialog('Position',[100 100 1100 600],'Name','Population Parameters');
+    d = dialog('Position',[100 100 1100 600],'Name','Mutation Matrix');
     matrix = [];
     txt = uicontrol('Parent',d,...
                'Style','text',...
