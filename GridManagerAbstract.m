@@ -155,6 +155,12 @@ classdef GridManagerAbstract < handle
         %variables for plotting. 
         function update_params(obj)
         end
+        
+        %Returns a random cell of the chosen type
+        function out = getRandomOfType(obj, type)
+            ofType = find(obj.matrix == type);
+            out = ofType(randi(numel(ofType)));
+        end
             
     end
 end

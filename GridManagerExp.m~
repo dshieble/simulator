@@ -1,6 +1,6 @@
-%This class is an implementation of the GridManager class for the Logistic
-%model
-classdef GridManagerLogistic < GridManagerAbstract
+%this class is an implementation of the GridManager class for the
+%Exponential model
+classdef GridManagerExp < GridManagerAbstract
     
     properties
         birth_rate;
@@ -10,7 +10,7 @@ classdef GridManagerLogistic < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, b, d)
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, b, d)
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams);
             obj.birth_rate = b';
             obj.death_rate = d';
@@ -37,15 +37,13 @@ classdef GridManagerLogistic < GridManagerAbstract
                     chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
                 end
-                if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
+                
+                if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
                     if sum(gen_vec) < numel(obj.matrix)
-                        if obj.plot_grid
-                            %choose a cell of the chosen type, and fill the
-                            %nearest cell to it with the chosen type
-                            [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                            obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
-                        end
                         gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                        if obj.plot_grid
+                            obj.matrix(obj.getNe(0)) = chosen_type;
+                        end
                     end
                 else
                     gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
@@ -55,16 +53,21 @@ classdef GridManagerLogistic < GridManagerAbstract
                 end
             end
             obj.total_count(:, obj.timestep + 1) = gen_vec;
-
             %then, include all computation updates
             h = (~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix));
             [mat, changed, t] = obj.get_next_cleanup();
             h = h && ~obj.mutation_manager.mutating;
         end
         
+            
+        
+        
         %See GridManagerAbstract
         function update_params(obj)
             for i = 1:obj.num_types
+%                 if obj.plot_grid
+%                     obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
+%                 end
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i)-obj.death_rate(i))*obj.percent_count(i, obj.timestep); 
             end
@@ -73,3 +76,5 @@ classdef GridManagerLogistic < GridManagerAbstract
 
     end
 end
+
+

@@ -25,61 +25,37 @@ classdef GridManagerExp < GridManagerAbstract
         %t - the timestep
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
-            %The extinction case
-%             if sum(obj.total_count(:,obj.timestep)) == 0
-%                 [mat, changed, t] = obj.get_next_cleanup();
-%                 h = 1;
-%                 return;
-%             end
-            if obj.plot_grid 
-                %kill
-                for i = 1:obj.num_types
-                    ind = find(obj.matrix == i);
-                    for j = ind'
-                        if (rand() < obj.death_rate(i))
-                            obj.matrix(j) = 0;
+            gen_vec = obj.total_count(:, obj.timestep);
+            for i = 1:sum(gen_vec)
+                if sum(gen_vec) == 0
+                    break;
+                end
+                tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
+                num = rand()*sum(tot_rates);
+                chosen_type = 0;
+                while num > 0
+                    chosen_type = chosen_type + 1;
+                    num = num - tot_rates(chosen_type);
+                end
+                
+                if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
+                    if sum(gen_vec) < numel(obj.matrix)
+                        gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                        if obj.plot_grid
+                            %choose a cell of the chosen type, and fill the
+                            %nearest cell to it with the chosen type
+                            [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
+                            obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
                         end
                     end
-                end
-
-                %birth
-                new = [];
-                for i = 1:obj.num_types
-                    ind = find(obj.matrix == i);
-                    for j = ind'
-                        if rand() < obj.birth_rate(i) && isempty(find(new == j, 1))
-                            [a, b] = ind2sub(size(obj.matrix), j);
-                            f = obj.get_nearest_free(a, b);
-                            if (f > 0)
-                                obj.matrix(f) = i;
-                                new = [new f];
-                            end
-                        end
+                else
+                    gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
+                    if obj.plot_grid
+                        obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
                     end
                 end
-            else
-                gen_vec = obj.total_count(:, obj.timestep);
-                for i = 1:sum(gen_vec)
-                    if sum(gen_vec) == 0
-                        break;
-                    end
-                    tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
-                    num = rand()*sum(tot_rates);
-                    chosen_type = 0;
-                    while num > 0
-                        chosen_type = chosen_type + 1;
-                        num = num - tot_rates(chosen_type);
-                    end
-                    if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
-                        if sum(gen_vec) < numel(obj.matrix)
-                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
-                        end
-                    else
-                        gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
-                    end
-                end
-                obj.total_count(:, obj.timestep + 1) = gen_vec;
             end
+            obj.total_count(:, obj.timestep + 1) = gen_vec;
             %then, include all computation updates
             h = (~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix));
             [mat, changed, t] = obj.get_next_cleanup();
@@ -92,9 +68,6 @@ classdef GridManagerExp < GridManagerAbstract
         %See GridManagerAbstract
         function update_params(obj)
             for i = 1:obj.num_types
-                if obj.plot_grid
-                    obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
-                end
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i)-obj.death_rate(i))*obj.percent_count(i, obj.timestep); 
             end
