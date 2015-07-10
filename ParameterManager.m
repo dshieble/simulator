@@ -255,7 +255,7 @@ classdef ParameterManager < handle
             size_temp = str2double(obj.handles.population_box.String);
             noerror = 0;
             if ~isnan(size_temp)
-                if round(sqrt(size_temp))^2 == size_temp && size_temp <= 2500 && size_temp >= 16
+                if round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500) && (size_temp >= 16)
                     obj.matrix.edge_size = sqrt(size_temp);
                     noerror = 1;
                 end

@@ -91,8 +91,6 @@ function varargout = GUI_OutputFcn(hObject, eventdata, handles)
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
 varargout{1} = handles.output;
 
 % --- Executes on button press in run_button.
@@ -165,9 +163,6 @@ function types_popup_Callback(hObject, eventdata, handles)
 % hObject    handle to types_popup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns types_popup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from types_popup
 global parameter_manager;
 parameter_manager.updateBoxes();
 
@@ -177,9 +172,6 @@ function num_types_box_Callback(~, eventdata, handles)
 % hObject    handle to num_types_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of num_types_box as text
-%        str2double(get(hObject,'String')) returns contents of num_types_box as a double
 global parameter_manager;
 parameter_manager.updateNumTypes();
 
@@ -187,9 +179,6 @@ function param_1_box_Callback(hObject, eventdata, handles)
 % hObject    handle to param_1_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of param_1_box as text
-%        str2double(get(hObject,'String')) returns contents of param_1_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 verify_parameters(handles);
@@ -198,9 +187,6 @@ function init_pop_box_Callback(hObject, eventdata, handles)
 % hObject    handle to init_pop_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of init_pop_box as text
-%        str2double(get(hObject,'String')) returns contents of init_pop_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
@@ -209,9 +195,6 @@ function param_2_box_Callback(hObject, eventdata, handles)
 % hObject    handle to param_2_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of param_2_box as text
-%        str2double(get(hObject,'String')) returns contents of param_2_box as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
@@ -236,9 +219,6 @@ end
 
 % --- Executes on button press in reset_button.
 function reset_button_Callback(hObject, eventdata, handles)
-% hObject    handle to reset_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global paused evolving rects parameter_manager stepping;
 if ~evolving && ~stepping
     paused = 0;
@@ -257,9 +237,6 @@ function birth_rate_box_moran_Callback(hObject, eventdata, handles)
 % hObject    handle to birth_rate_box_moran (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of birth_rate_box_moran as text
-%        str2double(get(hObject,'String')) returns contents of birth_rate_box_moran as a double
 global parameter_manager;
 parameter_manager.updateStructs();
 
@@ -359,20 +336,27 @@ function preview_button_Callback(hObject, eventdata, handles)
 % hObject    handle to preview_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global parameter_manager;
+global parameter_manager evolving stepping;
 %Table Formatting in a dialog box is a pain in the butt
 %TODO: set a standard number of spaces for each and enforce it
-if ~parameter_manager.mutating || parameter_manager.num_loci <= 12
+if evolving || stepping
+    return
+end
+if (~parameter_manager.mutating || parameter_manager.num_loci <= 12)
     PopulationParametersDialog(parameter_manager);
 else
     warndlg('ERROR: Cannot display all parameters when number of loci is > 12');
 end
+
+
 % --- Executes on button press in mutation_matrix_button.
 function mutation_matrix_button_Callback(hObject, eventdata, handles)
-global parameter_manager;
-m = MutationMatrixDialog(parameter_manager.mutation_matrix, parameter_manager.num_loci);
-if ~isempty(m)
-    parameter_manager.mutation_matrix = m;
+global parameter_manager evolving stepping;
+if ~evolving && ~stepping
+    m = MutationMatrixDialog(parameter_manager.mutation_matrix, parameter_manager.num_loci);
+    if ~isempty(m) 
+        parameter_manager.mutation_matrix = m;
+    end
 end
 
 
@@ -434,12 +418,6 @@ end
 
 % --- Executes on button press in spatial_structure_check.
 function spatial_structure_check_Callback(hObject, eventdata, handles)
-% hObject    handle to spatial_structure_check (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of spatial_structure_check
-
 
 % --- Executes on button press in recombination_check.
 function recombination_check_Callback(hObject, eventdata, handles)
@@ -456,6 +434,7 @@ function recombination_box_Callback(hObject, eventdata, handles)
 
 
 
+
 function verify_parameters(handles)
 global parameter_manager parameters_clear plot_grid;
 parameters_clear = 0;
@@ -467,7 +446,9 @@ elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
     warndlg('ERROR: S must be no less than -1!');
-else
+elseif parameter_manager.current_model > 2 && ~parameter_manager.verifySizeOk('moran')
+	warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+else    
     parameters_clear = 1;
 end
 
@@ -519,8 +500,6 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.params_string.Visible=  'off';
     %num_types
     handles.num_types_box.Style = 'text';
-    
-    %handles.static_type_panel.Visible = 'on';
     handles.init_pop_box.Style = 'text';
     parameter_manager.updateBoxes();
 else
@@ -529,14 +508,13 @@ else
     handles.params_string.Visible= 'on';
     %num_types
     handles.num_types_box.Style = 'edit';
-    %handles.static_type_panel.Visible = 'off';
     handles.init_pop_box.Style = 'edit';
     parameter_manager.updateBoxes();
 end
 adjust_text(handles);
 
 
-%Get the new matrix, mutat it 
+%Get the new matrix, mutate it
 function run_loop(first_run, handles, runOnce)
 global evolving grid_manager plot_grid parameter_manager stepping;
 warning('OFF','MATLAB:legend:PlotEmpty')
@@ -546,7 +524,7 @@ while evolving == 1
    if plot_grid
        draw_iteration(matrix, c, t, halt, handles);
    end
-   if first_run 
+   if first_run
         first_run = 0;
         legend_input = {};
         for i = 1:min(16, grid_manager.num_types)
@@ -694,33 +672,21 @@ elseif parameter_manager.current_model == 2
         parameter_manager.getField('exp', 'birth_rate'), ...
         parameter_manager.getField('exp','death_rate'));
 elseif parameter_manager.current_model == 3
-        if ~parameter_manager.verifySizeOk('moran')
-            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-            handles.run_button.String = 'Run';
-            return;
-        else    
-            grid_manager = GridManagerMoran(...
-                parameter_manager.matrix.edge_size, ...
-                parameter_manager.getField('moran', 'Ninit'), ...
-                MutationManager(parameter_manager),...
-                plot_grid,...
-                plottingParams, ...
-                parameter_manager.getField('moran','birth_rate'));
-        end
-elseif parameter_manager.current_model == 4
-        if ~parameter_manager.verifySizeOk('wright') 
-            warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-            handles.run_button.String = 'Run';
-            return;
-        else    
-            grid_manager = GridManagerWright(...
-                parameter_manager.matrix.edge_size, ...
-                parameter_manager.getField('wright', 'Ninit'), ...
-                MutationManager(parameter_manager),...
-                plot_grid,...
-                plottingParams, ...
-                parameter_manager.getField('wright','fitness'));
-        end
+        grid_manager = GridManagerMoran(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('moran', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        parameter_manager.getField('moran','birth_rate'));
+elseif parameter_manager.current_model == 4  
+        grid_manager = GridManagerWright(...
+            parameter_manager.matrix.edge_size, ...
+            parameter_manager.getField('wright', 'Ninit'), ...
+            MutationManager(parameter_manager),...
+            plot_grid,...
+            plottingParams, ...
+            parameter_manager.getField('wright','fitness'));
 else
     warndlg('Radio button error');
     handles.run_button.String = 'Run';

@@ -36,12 +36,11 @@ classdef GridManagerWright < GridManagerAbstract
                     long_mat = [long_mat repmat(i,1,new_counts(i))];
                 end
                 long_mat = long_mat(randperm(length(long_mat)));
+                assert(numel(long_mat) == numel(obj.matrix));
                 obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
-                h = obj.isHomogenous();
-            else
-                obj.total_count(:, obj.timestep + 1) = new_counts;
-            	h = length(find(obj.total_count(:, obj.timestep + 1)>=numel(obj.matrix), 1));
             end
+            obj.total_count(:, obj.timestep + 1) = new_counts;
+            h = max(obj.total_count(:, obj.timestep + 1))>=numel(obj.matrix);
             [mat, changed, t] = obj.get_next_cleanup();
             h = h && ~obj.mutation_manager.mutating;
         end
@@ -49,9 +48,6 @@ classdef GridManagerWright < GridManagerAbstract
         %See GridManagerAbstract
         function update_params(obj)
             for i = 1:obj.num_types
-                if obj.plot_grid
-                    obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
-                end
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
                 obj.mean_fitness(i, obj.timestep) = (obj.fitness(i))*obj.percent_count(i, obj.timestep); 
             end

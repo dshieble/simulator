@@ -38,7 +38,7 @@ classdef GridManagerAbstract < handle
                 obj.matrix(r(i:n+i-1)) = type;
                 i = i + n;
             end
-            [x, y] = meshgrid(1:dim,1:dim);
+            %[x, y] = meshgrid(1:dim,1:dim);
             
             obj.output = obj.matrix(:)';
             obj.timestep = 1;
@@ -91,7 +91,6 @@ classdef GridManagerAbstract < handle
                 changed = find(obj.old_matrix ~= obj.matrix);
                 obj.output = [obj.output; obj.matrix(:)'];
                 obj.old_matrix = obj.matrix;
-                
             end
             obj.generations = [obj.generations obj.timestep];
             obj.update_params();
@@ -109,6 +108,28 @@ classdef GridManagerAbstract < handle
             end
         end
 
+        %Returns the nearest square in the matrix of type t
+        function ind = get_nearest_of_type(obj, i, j, t)
+            ofType = find(obj.matrix == t);
+            [x, y] = ind2sub(size(obj.matrix, 1), ofType);
+            m = inf;
+            a = 0; b = 0;
+            for k = 1:length(x)
+                d = abs(x(k)-i) + abs(y(k) - j);
+                if d < m
+                    m = d;
+                    a = x(k);
+                    b = y(k);
+                end
+            end 
+            if a == 0 || b == 0
+                ind = 0;
+            else
+                ind = sub2ind(size(obj.matrix),a,b);
+            end
+            assert(obj.matrix(ind) == t);
+        end
+        
         %Returns the nearest free square in the matrix
         function ind = get_nearest_free(obj, i, j)
             free = find(obj.matrix == 0);
