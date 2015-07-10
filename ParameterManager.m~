@@ -175,13 +175,11 @@ classdef ParameterManager < handle
                         %wright
                         obj.wright.fitness(i) = obj.wright.fitness_default;
                     end
-                    tot = obj.matrix.edge_size.^2;
-                    for i = 1:(num-1)
-                        obj.moran.Ninit(i) = floor(tot/num);
-                        obj.wright.Ninit(i) = floor(tot/num);
+                    for i = 1:num
+                        obj.moran.Ninit(i) = 1/num;
+                        obj.wright.Ninit(i) = 1/num;
                     end
-                    obj.moran.Ninit(num) = tot - sum(obj.moran.Ninit);
-                    obj.wright.Ninit(num) = tot - sum(obj.wright.Ninit);
+
                 end
                 obj.num_types = num;
                 obj.handles.types_popup.Value = 1;
