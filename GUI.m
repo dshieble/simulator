@@ -225,7 +225,7 @@ function save_button_Callback(hObject, eventdata, handles)
 global evolving parameter_manager save_data stepping;
 try
     if ~evolving && ~stepping
-        c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f',c(1),c(2),c(3),c(4),c(5),c(6));
+        c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f.mat',c(1),c(2),c(3),c(4),c(5),c(6));
         save(str, 'save_data');
     end
 catch 
