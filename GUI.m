@@ -342,11 +342,11 @@ global parameter_manager evolving stepping;
 %TODO: set a standard number of spaces for each and enforce it
 if evolving || stepping
     return
-end
-if (~parameter_manager.mutating || parameter_manager.num_loci <= 12)
-    PopulationParametersDialog(parameter_manager);
 else
-    warndlg('ERROR: Cannot display all parameters when number of loci is > 12');
+    handles.preview_button.String = 'Pulling up the Population Parameters...';
+    drawnow;
+    PopulationParametersDialog(parameter_manager);
+    handles.preview_button.String = 'See All Population Parameters';
 end
 
 
@@ -383,7 +383,8 @@ function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMultipleLoci();
 toggle_mutation_visible(handles);
-
+verify_parameters(handles);
+parameter_manager.updateBoxes();
 
 function max_iterations_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
@@ -471,16 +472,19 @@ end
 function verify_parameters(handles)
 global parameter_manager parameters_clear plot_grid;
 parameters_clear = 0;
-if ~parameter_manager.updateMatrixProperties()
+if parameter_manager.mutating && (parameter_manager.num_loci > parameter_manager.max_num_loci)
+    parameter_manager.num_loci = parameter_manager.max_num_loci;
+	warndlg(sprintf('ERROR: The number of loci must be no greater than %d.', parameter_manager.max_num_loci));
+elseif ~parameter_manager.updateMatrixProperties()
     warndlg('ERROR: Population size must be a perfect square and between 16 than 2500!');
-elseif plot_grid && parameter_manager.num_loci > 4
-    warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
     warndlg('ERROR: S must be no less than -1!');
 elseif parameter_manager.current_model > 2 && ~parameter_manager.verifySizeOk('moran')
-	warndlg(sprintf('Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+	warndlg(sprintf('ERROR: Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+elseif plot_grid && parameter_manager.num_loci > 4
+    warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 else    
     parameters_clear = 1;
 end
@@ -644,7 +648,6 @@ function run(handles, runOnce)
 global grid_manager evolving save_data group;
 group = 1;
 handles.run_button.String = 'Calculating...';
-initializeGridManager(handles);
 evolving = 1;
 handles.save_button.BackgroundColor = [.25 .25 .25];
 handles.reset_button.BackgroundColor = [.25 .25 .25];
@@ -652,6 +655,7 @@ handles.step_button.BackgroundColor = [.25 .25 .25];
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
+initializeGridManager(handles);
 run_loop(1, handles, runOnce);
 save_data = grid_manager.output;
 evolving = 0;

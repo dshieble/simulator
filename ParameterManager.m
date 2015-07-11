@@ -24,6 +24,7 @@ classdef ParameterManager < handle
         numOnes;
         lociBR;
         lociFitness;
+        max_num_loci;
     end
     
     methods (Access = public)
@@ -73,6 +74,7 @@ classdef ParameterManager < handle
             obj.mutating = 0;
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
+            obj.max_num_loci = 15;
             %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
@@ -231,6 +233,7 @@ classdef ParameterManager < handle
                 else
                     obj.handles.init_pop_box.String = obj.matrix.edge_size^2;
                 end
+                obj.handles.loci_box.String = obj.num_loci;
                 
             else
                 type = obj.handles.types_popup.Value;
