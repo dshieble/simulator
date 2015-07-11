@@ -15,6 +15,7 @@ classdef GridManagerWright < GridManagerAbstract
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.update_params();
+            obj.save_data.fitness = f;
         end
         
         %See GridManagerAbstract

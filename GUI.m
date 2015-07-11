@@ -59,12 +59,11 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear stepping;
+global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping;
 group = 1;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
-save_data = [];
 rects = [];
 paused = 0;
 grid_manager = [];
@@ -206,10 +205,11 @@ function save_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global evolving parameter_manager save_data stepping;
+global evolving grid_manager stepping;
 try
     if ~evolving && ~stepping
         c = clock; str = sprintf('Population Data: %d|%d|%d|%d|%d|%2.1f.mat',c(1),c(2),c(3),c(4),c(5),c(6));
+        save_data = grid_manager.save_data;
         save(str, 'save_data');
     end
 catch 
@@ -645,7 +645,7 @@ end
 %RunFunctions
 function run(handles, runOnce)
 %Execute the simulation
-global grid_manager evolving save_data group;
+global grid_manager evolving group;
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
@@ -657,7 +657,6 @@ handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
 initializeGridManager(handles);
 run_loop(1, handles, runOnce);
-save_data = grid_manager.output;
 evolving = 0;
 
 function continueRunning(handles)

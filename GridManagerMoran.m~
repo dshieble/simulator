@@ -14,7 +14,7 @@ classdef GridManagerMoran < GridManagerAbstract
             obj.birth_rate = b';
             obj.proportion_vec = [];
             obj.update_params();
-            obj.save_data.birth_rate = b;
+            obj.sav
         end
         
         %See GridManagerAbstract

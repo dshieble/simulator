@@ -17,6 +17,9 @@ classdef GridManagerLogistic < GridManagerAbstract
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.update_params();
+            obj.save_data.birth_rate = b;
+            obj.save_data.death_rate = d;
+
         end
         
         %See GridManagerAbstract

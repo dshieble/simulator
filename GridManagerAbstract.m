@@ -9,7 +9,7 @@
 
 classdef GridManagerAbstract < handle
     properties
-        output;
+        save_data;
         matrix;
         timestep;
         num_types;
@@ -40,7 +40,7 @@ classdef GridManagerAbstract < handle
             end
             %[x, y] = meshgrid(1:dim,1:dim);
             
-            obj.output = obj.matrix(:)';
+            
             obj.timestep = 1;
             
             obj.num_types = length(Ninit);
@@ -73,6 +73,8 @@ classdef GridManagerAbstract < handle
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.plottingParams = plottingParams;
+            
+            obj.save_data = struct();
         end
       
         %This function is called at the end of get_next by all of the child
@@ -89,11 +91,11 @@ classdef GridManagerAbstract < handle
                 changed = (1:numel(obj.matrix))';
             else
                 changed = find(obj.old_matrix ~= obj.matrix);
-                obj.output = [obj.output; obj.matrix(:)'];
                 obj.old_matrix = obj.matrix;
             end
             obj.generations = [obj.generations obj.timestep];
             obj.update_params();
+            obj.save_data.total_count = obj.total_count;
             mat = obj.matrix;
             t = obj.timestep;
         end
