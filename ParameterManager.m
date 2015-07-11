@@ -343,5 +343,15 @@ classdef ParameterManager < handle
             out = names{obj.current_model};
         end
 
+        %returns the current number of types, regardless of whether
+        %num_loci > 1 or not
+        function out = getNumTypes(obj)
+            if obj.mutating && obj.num_loci > 1
+                out = 2^obj.num_loci;
+            else
+                out = obj.num_types;
+            end
+        end
+        
     end
 end

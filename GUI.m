@@ -23,7 +23,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 06-Jul-2015 21:21:49
+% Last Modified by GUIDE v2.5 10-Jul-2015 21:33:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,8 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear stepping;
+global group evolving old_matrix parameter_manager save_data rects paused grid_manager plot_grid parameters_clear stepping;
+group = 1;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
@@ -405,7 +406,7 @@ if ~stepping && ~evolving
         handles.step_button.BackgroundColor = [.25 .25 .25];
         drawnow;
         [matrix, c, t, halt] = grid_manager.get_next();
-        draw_iteration(matrix, c, t, halt, handles);
+        draw_iteration(matrix, c, handles, 0);
         stepping = 0;
         handles.save_button.BackgroundColor = [0 1 1];
         handles.reset_button.BackgroundColor = [1 0 0];
@@ -430,6 +431,38 @@ end
 
 function recombination_box_Callback(hObject, eventdata, handles)
 %TODO: Fill this in
+
+
+
+
+% --- Executes on button press in page_button.
+function page_button_Callback(hObject, eventdata, handles)
+%Flip to the next page of the graph
+global evolving stepping group grid_manager;
+if ~evolving && ~stepping && grid_manager.num_types > 16
+    group = group + 16;
+    if group > grid_manager.num_types
+        group = 1;
+    end
+    draw_page(handles, 1);
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -516,38 +549,25 @@ adjust_text(handles);
 
 %Get the new matrix, mutate it
 function run_loop(first_run, handles, runOnce)
-global evolving grid_manager plot_grid parameter_manager stepping;
-warning('OFF','MATLAB:legend:PlotEmpty')
-legend_input = {};
+global evolving grid_manager plot_grid parameter_manager stepping group;
+warning('OFF','MATLAB:legend:PlotEmpty');
+group = 1;
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
    if plot_grid
-       draw_iteration(matrix, c, t, halt, handles);
+       draw_iteration(matrix, c,handles, first_run);
    end
-   if first_run
-        first_run = 0;
-        legend_input = {};
-        for i = 1:min(16, grid_manager.num_types)
-            if parameter_manager.num_loci > 1 && parameter_manager.mutating
-                legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1, log2(grid_manager.num_types)))];
-            else   
-                legend_input = [legend_input sprintf('Type %d', i)];
-            end
-        end
-        legend(legend_input, 'Location', 'northwest');
-    end
+   first_run = 0;
     if runOnce || halt || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
         break
     end
 end
 if ~plot_grid && ~stepping
-    draw_iteration(matrix, c, t, halt, handles);
-    legend(legend_input, 'Location', 'northwest')
+    draw_iteration(matrix, c, handles, 1);
 end
-
     
 %IterationFunctions
-function draw_iteration(matrix, c, t, halt, handles)
+function draw_iteration(matrix, c, handles, first_run)
 global parameter_manager rects grid_manager plot_grid;
 %represents a single iteration of the grid and graph
 if plot_grid 
@@ -567,16 +587,32 @@ if plot_grid
     end
     drawnow;
 end
+draw_page(handles, first_run);
+pause(0.01);
+drawnow;
+
+
+%Fills in the legend_input, draws the legend and parameter plots to the screen. Draws all
+%types in the interval [group, (group + 16)]
+function draw_page(handles, first_run)
+global grid_manager parameter_manager group;
+if first_run
+    cla(handles.axes_graph);
+end
+if group > grid_manager.num_types
+    group = 1;
+end
+range = group:min(group + 15, grid_manager.num_types);
 %plot the graph
 switch grid_manager.plottingParams.plot_type
     case 'total_count'
-    	vec = grid_manager.total_count;
+    	vec = grid_manager.total_count(range, :);
         y_axis_label = 'Population Size';
     case 'percent_count'
-        vec = grid_manager.percent_count;
+        vec = grid_manager.percent_count(range, :);
         y_axis_label = 'Percent Population Size';
     case 'overall_mean_fitness'
-        vec = grid_manager.overall_mean_fitness;
+        vec = grid_manager.overall_mean_fitness(range, :);
         y_axis_label = 'Mean Fitness';
 end
 if grid_manager.plottingParams.plot_log
@@ -589,14 +625,24 @@ for i = 1:size(vec,1)
 end
 xlabel('Generations', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
-pause(0.01);
-drawnow;
+if first_run
+    legend_input = {};
+    for i = range
+        if parameter_manager.num_loci > 1 && parameter_manager.mutating
+            legend_input = [legend_input sprintf('Type %s', dec2bin(i - 1, log2(grid_manager.num_types)))];
+        else
+            legend_input = [legend_input sprintf('Type %d', i)];
+        end
+    end
+    legend(legend_input, 'Location', 'northwest')
+end
 
 
 %RunFunctions
 function run(handles, runOnce)
 %Execute the simulation
-global grid_manager evolving save_data;
+global grid_manager evolving save_data group;
+group = 1;
 handles.run_button.String = 'Calculating...';
 initializeGridManager(handles);
 evolving = 1;
