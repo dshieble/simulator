@@ -158,10 +158,8 @@ classdef ParameterManager < handle
                     obj.exp.Ninit(num+1:end) = [];        
                     %moran
                     obj.moran.birth_rate(num+1:end) = [];
-                    obj.moran.Ninit(num+1:end) = [];
                     %wright
                     obj.wright.fitness(num+1:end) = [];
-                    obj.wright.Ninit(num+1:end) = [];
                 elseif num > obj.num_types
                     for i = obj.num_types+1:num
                         obj.handles.types_popup.String{i} = i;
@@ -178,7 +176,12 @@ classdef ParameterManager < handle
                         %wright
                         obj.wright.fitness(i) = obj.wright.fitness_default;
                     end
+                end
+                %adjust birth and death rates accordingly
+                if num ~= obj.num_types
                     tot = obj.matrix.edge_size.^2;
+                    obj.moran.Ninit = zeros(1,num);
+                    obj.wright.Ninit = zeros(1,num);
                     for i = 1:(num-1)
                         obj.moran.Ninit(i) = floor(tot/num);
                         obj.wright.Ninit(i) = floor(tot/num);
