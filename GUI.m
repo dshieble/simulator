@@ -461,7 +461,7 @@ global evolving stepping group grid_manager;
 if isempty(grid_manager)
     return
 end
-if ~evolving && ~stepping && grid_manager.num_types > 16
+if ~stepping && grid_manager.num_types > 16
     group = group + 16;
     if group > grid_manager.num_types
         group = 1;
@@ -805,14 +805,14 @@ if on
     handles.reset_button.Enable = 'on';
     handles.mutation_matrix_button.Enable = 'on';
     handles.preview_button.Enable = 'on';
-    handles.page_button.Enable = 'on';
+%     handles.page_button.Enable = 'on';
 else
     handles.save_button.Enable = 'off';
     handles.step_button.Enable = 'off';
     handles.reset_button.Enable = 'off';
     handles.mutation_matrix_button.Enable = 'off';
     handles.preview_button.Enable = 'off';
-    handles.page_button.Enable = 'off';
+%     handles.page_button.Enable = 'off';
 end
 
 
