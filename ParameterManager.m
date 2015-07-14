@@ -6,7 +6,7 @@ classdef ParameterManager < handle
     
     properties
         current_model;
-        max_iterations;
+        %max_iterations;
         max_types;
         num_types;
         handles;
@@ -25,6 +25,7 @@ classdef ParameterManager < handle
         lociBR;
         lociFitness;
         max_num_loci;
+        recombination;
     end
     
     methods (Access = public)
@@ -34,7 +35,7 @@ classdef ParameterManager < handle
         %parameters for each model.
         function obj = ParameterManager(handles)
             obj.current_model = 1;
-            obj.max_iterations = 10;
+            %obj.max_iterations = 10;
             obj.max_types = 16;
             obj.num_types = 2;
             obj.handles = handles;
@@ -75,6 +76,7 @@ classdef ParameterManager < handle
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.num_loci = 1;
             obj.max_num_loci = 15;
+            obj.recombination = 0;
             %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
@@ -84,7 +86,6 @@ classdef ParameterManager < handle
             obj.lociFitness = @(num) exp(obj.s*(obj.numOnes(num)^(1-obj.e)));
             %cleanup
             obj.updateNumTypes();
-
         end
         
         %Updates the stored structs to the box values
@@ -272,14 +273,14 @@ classdef ParameterManager < handle
         
         %Updates the maximum number of iterations for the non-plotting case
         %based on the input to the max_iterations box
-        function updateMaxIterations(obj)
-            num = str2double(obj.handles.max_iterations_box.String);
-            if ~isnan(num)
-                obj.max_iterations = num;
-            else
-                obj.handles.max_iterations_box.String = obj.max_iterations;
-            end
-        end
+%         function updateMaxIterations(obj)
+%             num = str2double(obj.handles.max_iterations_box.String);
+%             if ~isnan(num)
+%                 obj.max_iterations = num;
+%             else
+%                 obj.handles.max_iterations_box.String = obj.max_iterations;
+%             end
+%         end
         
         %Provides an interface for accessing parameters that does not
         %require the user to know whether the num_loci > 1
@@ -336,8 +337,8 @@ classdef ParameterManager < handle
                isnan(str2double(obj.handles.param_2_box.String)) || ...
                isnan(str2double(obj.handles.init_pop_box.String)) || ...
                isnan(str2double(obj.handles.num_types_box.String)) || ...
-               isnan(str2double(obj.handles.population_box.String)) || ...
-               isnan(str2double(obj.handles.max_iterations_box.String)));
+               isnan(str2double(obj.handles.population_box.String)));
+               %isnan(str2double(obj.handles.max_iterations_box.String)));
         end
         
         %Returns the name of the current model

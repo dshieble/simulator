@@ -8,6 +8,7 @@ classdef MutationManager < handle
         num_loci;
         mutation_matrix;
         mutating;
+        recombination;
     end
     
     methods (Access = public)
@@ -16,6 +17,7 @@ classdef MutationManager < handle
             obj.num_loci = parameter_manager.num_loci;
             obj.mutation_matrix = parameter_manager.mutation_matrix;
             obj.mutating = parameter_manager.mutating;
+            obj.recombination = parameter_manager.recombination;
         end
         
         %Accepts a grid_manager, updates the matrix and total_count

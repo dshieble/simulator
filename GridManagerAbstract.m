@@ -23,12 +23,13 @@ classdef GridManagerAbstract < handle
         old_matrix;
         mutation_manager; 
         plottingParams;
+        spatial_on;
     end
     methods (Access = public)
         %The constructor method. This function initializes the matrix and
         %the plotting parameters, as well as other useful variables like
         %the color variable
-        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams)
+        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
             r = randperm(numel(obj.matrix));
@@ -73,7 +74,7 @@ classdef GridManagerAbstract < handle
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.plottingParams = plottingParams;
-            
+            obj.spatial_on = spatial_on;
             obj.save_data = struct();
         end
       

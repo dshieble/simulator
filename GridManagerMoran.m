@@ -8,9 +8,9 @@ classdef GridManagerMoran < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, b)
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
             obj.birth_rate = b';
             obj.proportion_vec = [];
             obj.update_params();

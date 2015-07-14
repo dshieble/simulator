@@ -8,9 +8,9 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, f)
+        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
             obj.fitness = f;
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
