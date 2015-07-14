@@ -9,6 +9,7 @@ PM_fake = struct();
 PM_fake.mutating = 0;
 PM_fake.mutation_matrix = [0.99 0.01; 0.01 0.99];
 PM_fake.num_loci = 1;
+PM_fake.recombination = 0;
 MM = MutationManager(PM_fake);
 plot_grid = 0;
 plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingParams.plot_log = 0;
@@ -17,9 +18,10 @@ plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingPar
 birth_rate = [1 1];
 num_runs = 10*pop_size;
 moran_result = zeros(1, num_runs);
+spatial_on = 0;
 for plot_grid = 0:1
     for i = 1:num_runs
-        moran_manager = GridManagerMoran(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, birth_rate);
+        moran_manager = GridManagerMoran(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, birth_rate);
         h = 0;
         while ~h
             [~, ~, t, h] = moran_manager.get_next();
@@ -35,7 +37,7 @@ num_runs = 10*pop_size;
 wright_result = zeros(1,num_runs);
 for plot_grid = 0:1
     for i = 1:num_runs
-        wright_manager = GridManagerWright(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, fitness);
+        wright_manager = GridManagerWright(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, fitness);
         h = 0;
         while ~h
             [~, ~, ~, h] = wright_manager.get_next();
@@ -50,15 +52,15 @@ end
 N = [36];%100, 400, 625];
 s = [0.005, 0.01, 0.05, 0.1];
 fitness = [1.005 1; 1.01 1; 1.05 1; 1.1 1];
-wright_num_fix = [];
 for plot_grid = 0:1
+    wright_num_fix = [];
     for i = 1:length(s)
         f = fitness(i,:);
         for j = 1:length(N)
             pfix = (1-exp(-2.*s(i)))/(1-exp(-2.*N(j).*s(i)));
             count = 0;
             for k = 1:round(100/pfix)
-                wright_manager = GridManagerWright(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, f);
+                wright_manager = GridManagerWright(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, f);
                 h = 0;
                 while ~h
                     [~, ~, ~, h] = wright_manager.get_next();
@@ -77,15 +79,15 @@ end
 N = [36];%100, 400, 625];
 r = [1.005 1.01 1.05 1.1];
 br = [1.005 1; 1.01 1; 1.05 1; 1.1 1];
-moran_num_fix = [];
 for plot_grid = 0:1
+    moran_num_fix = [];
     for i = 1:length(br)
         b = br(i,:);
         for j = 1:length(N)
             pfix = (1-(1/r(i)))/(1-(1/(r(i)^N(j))));
             count = 0;
             for k = 1:round(100/pfix)
-                moran_manager = GridManagerMoran(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, b);
+                moran_manager = GridManagerMoran(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, b);
                 h = 0;
                 while ~h
                     [~, ~, ~, h] = moran_manager.get_next();
@@ -97,7 +99,7 @@ for plot_grid = 0:1
     end
 
     for j = 1:length(moran_num_fix)
-        fprintf('Moran (Probability of Beneficial Mutation Fixation): Fixation in %d out of pfix/100 runs for s = %d.\n', moran_num_fix(j), r(j));
+        fprintf('Moran (Probability of Beneficial Mutation Fixation): Fixation in %d out of pfix/100 runs for s = %d.\n', moran_num_fix(j), r(i));
     end
 end
 %% Test 5 -> Exponential
@@ -108,7 +110,7 @@ death = [0.01 0.01];
 counts = cell(1,100);
 for plot_grid = 0:1
     for i = 1:100
-        exp_manager = GridManagerExp(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, birth, death);
+        exp_manager = GridManagerExp(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, spatial_on, birth, death);
         h = 0;
         counts{i} = [];
         t = 1;
@@ -144,7 +146,7 @@ counts = cell(1,num_lines);
 num_iter = 10;
 for plot_grid = 0:1
     for i = 1:num_lines
-        log_manager = GridManagerLogistic(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, birth, death);
+        log_manager = GridManagerLogistic(sqrt(N_tot), Ninit, MM, plot_grid, plottingParams, spatial_on, birth, death);
         h = 0;
         counts{i} = [];
         t = 1;

@@ -40,15 +40,17 @@ classdef GridManagerLogistic < GridManagerAbstract
                     chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
                 end
-                if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
-                    if sum(gen_vec) < numel(obj.matrix)
-                        if obj.plot_grid
-                            %choose a cell of the chosen type, and fill the
-                            %nearest cell to it with the chosen type
-                            [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                            obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
+                if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
+                    if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
+                        if sum(gen_vec) < numel(obj.matrix)
+                            if obj.plot_grid
+                                %choose a cell of the chosen type, and fill the
+                                %nearest cell to it with the chosen type
+                                [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
+                                obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
+                            end
+                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
                         end
-                        gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
                     end
                 else
                     gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
