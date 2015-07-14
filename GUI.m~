@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping;
+global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping spatial_on;
 group = 1;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
@@ -70,6 +70,7 @@ grid_manager = [];
 parameters_clear = 1;
 stepping = 0;
 plot_grid = handles.plot_grid_button.Value;
+spatial_on = 0;
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
@@ -213,7 +214,7 @@ try
         save(str, 'save_data');
     end
 catch 
-    fprintf('ERROR: Save Error');
+    fprintf('ERROR: Save Error\n');
 end
 
 
@@ -224,9 +225,10 @@ global paused evolving rects parameter_manager stepping;
 if ~evolving && ~stepping
     paused = 0;
     evolving = 0;
+    enable_inputs(handles, 1);
+    enable_buttons(handles, 1);
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
-    handles.save_button.String = 'Save';
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
@@ -323,14 +325,15 @@ verify_parameters(handles);
 % --- Executes on button press in plot_grid_button.
 function plot_grid_button_Callback(hObject, eventdata, handles)
 global plot_grid;
-handles.max_iterations_panel.Visible
-if handles.plot_grid_button.Value
-    plot_grid = 1;
-    handles.max_iterations_panel.Visible = 'off';
-else 
-    plot_grid = 0;
-    handles.max_iterations_panel.Visible = 'on';
-end
+plot_grid = handles.plot_grid_button.Value;
+% handles.max_iterations_panel.Visible
+% if handles.plot_grid_button.Value
+%     plot_grid = 1;
+%     handles.max_iterations_panel.Visible = 'off';
+% else 
+%     plot_grid = 0;
+%     handles.max_iterations_panel.Visible = 'on';
+% end
 
 % --- Executes on button press in preview_button.
 function preview_button_Callback(hObject, eventdata, handles)
@@ -386,9 +389,9 @@ toggle_mutation_visible(handles);
 verify_parameters(handles);
 parameter_manager.updateBoxes();
 
-function max_iterations_box_Callback(hObject, eventdata, handles)
-global parameter_manager;
-parameter_manager.updateMaxIterations();
+% function max_iterations_box_Callback(hObject, eventdata, handles)
+% global parameter_manager;
+% parameter_manager.updateMaxIterations();
 
 
 
@@ -400,7 +403,13 @@ if ~stepping && ~evolving
         run(handles,1)
         pauseRunning(handles);
     else
+        if isempty(grid_manager)
+            fprintf('ERROR: Grid Manager Empty')
+            return
+        end
         stepping = 1;
+        enable_buttons(handles, 0)
+        handles.run_button.Enable = 'off';
         handles.run_button.BackgroundColor = [.25 .25 .25];
         handles.save_button.BackgroundColor = [.25 .25 .25];
         handles.reset_button.BackgroundColor = [.25 .25 .25];
@@ -409,20 +418,33 @@ if ~stepping && ~evolving
         [matrix, c, t, halt] = grid_manager.get_next();
         draw_iteration(matrix, c, handles, 0);
         stepping = 0;
+        handles.run_button.Enable = 'on';
+        handles.run_button.BackgroundColor = [0 1 0];
         handles.save_button.BackgroundColor = [0 1 1];
         handles.reset_button.BackgroundColor = [1 0 0];
-        handles.run_button.BackgroundColor = [0 1 0];
-        handles.step_button.BackgroundColor = [0 0 1];    
+        handles.step_button.BackgroundColor = [0 0 1]; 
+        enable_buttons(handles, 1)
+        if halt
+            continueRunning(handles)
+        end
     end
+    enable_inputs(handles, 0);
+    enable_buttons(handles, 1);
 end
     
 
 
 % --- Executes on button press in spatial_structure_check.
 function spatial_structure_check_Callback(hObject, eventdata, handles)
+global spatial_on;
+spatial_on = handles.spatial_structure_check.Value;
+
+
 
 % --- Executes on button press in recombination_check.
 function recombination_check_Callback(hObject, eventdata, handles)
+global parameter_manager;
+parameter_manager.recombination = handles.recombination_check.Value;
 if handles.recombination_check.Value == 1
     handles.recombination_panel.Visible = 'on';
 else
@@ -449,7 +471,6 @@ if ~evolving && ~stepping && grid_manager.num_types > 16
         group = 1;
     end
     draw_page(handles, 1);
-end
 end
 
 
@@ -558,27 +579,30 @@ adjust_text(handles);
 %Get the new matrix, mutate it
 function run_loop(first_run, handles, runOnce)
 global evolving grid_manager plot_grid parameter_manager stepping group;
+if isempty(grid_manager)
+    fprintf('ERROR: Grid Manager Empty')
+    return
+end
 warning('OFF','MATLAB:legend:PlotEmpty');
 group = 1;
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
-   if plot_grid
-       draw_iteration(matrix, c,handles, first_run);
-   end
+   draw_iteration(matrix, c,handles, first_run);
    first_run = 0;
-    if runOnce || halt || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
+    if runOnce || halt% || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
         break
     end
-end
-if ~plot_grid && ~stepping
-    draw_iteration(matrix, c, handles, 1);
 end
     
 %IterationFunctions
 function draw_iteration(matrix, c, handles, first_run)
 global parameter_manager rects grid_manager plot_grid;
 %represents a single iteration of the grid and graph
-if plot_grid 
+if isempty(grid_manager)
+    fprintf('ERROR: Grid Manager Empty')
+    return
+end
+if grid_manager.plot_grid 
     perm = c(randperm(length(c)))';
     for p = perm
         [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
@@ -604,6 +628,10 @@ drawnow;
 %types in the interval [group, (group + 16)]
 function draw_page(handles, first_run)
 global grid_manager parameter_manager group;
+if isempty(grid_manager)
+    fprintf('ERROR: Grid Manager Empty')
+    return
+end
 if first_run
     cla(handles.axes_graph);
 end
@@ -653,21 +681,26 @@ global grid_manager evolving group;
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
+enable_inputs(handles, 0)
+enable_buttons(handles, 0)
+handles.run_button.String = 'Pause';
+handles.run_button.BackgroundColor = [1 0 0];
 handles.save_button.BackgroundColor = [.25 .25 .25];
 handles.reset_button.BackgroundColor = [.25 .25 .25];
 handles.step_button.BackgroundColor = [.25 .25 .25];
-handles.run_button.String = 'Pause';
-handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
 initializeGridManager(handles);
 run_loop(1, handles, runOnce);
 evolving = 0;
+
 
 function continueRunning(handles)
 %Break the pause and continue running the simulation
 global evolving paused;
 evolving = 1;
 paused = 0;
+enable_inputs(handles, 0);
+enable_buttons(handles, 0)
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 handles.save_button.BackgroundColor = [.25 .25 .25];
@@ -676,21 +709,25 @@ handles.step_button.BackgroundColor = [.25 .25 .25];
 drawnow;
 run_loop(0, handles, 0);
 evolving = 0;
+enable_inputs(handles, 1)
+enable_buttons(handles, 1)
 
 function pauseRunning(handles)
 %Pause the simulation
 global evolving paused;
 evolving = 0;
 paused = 1;
-handles.save_button.BackgroundColor = [0 1 1];
-handles.reset_button.BackgroundColor = [1 0 0];
+enable_buttons(handles, 1);
+enable_inputs(handles, 0);
 handles.run_button.String = 'Continue';
 handles.run_button.BackgroundColor = [0 1 0];
 handles.step_button.BackgroundColor = [0 0 1];
+handles.save_button.BackgroundColor = [0 1 1];
+handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
-global grid_manager parameter_manager plot_grid rects
+global grid_manager parameter_manager plot_grid rects spatial_on;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
 plottingParams = struct();
@@ -713,6 +750,7 @@ if parameter_manager.current_model == 1
         MutationManager(parameter_manager),...
         plot_grid,...
         plottingParams, ...
+        spatial_on,...
         parameter_manager.getField('logistic', 'birth_rate'), ...
         parameter_manager.getField('logistic','death_rate'));
 elseif parameter_manager.current_model == 2
@@ -722,6 +760,7 @@ elseif parameter_manager.current_model == 2
         MutationManager(parameter_manager),...
         plot_grid,...
         plottingParams, ...
+        spatial_on,...
         parameter_manager.getField('exp', 'birth_rate'), ...
         parameter_manager.getField('exp','death_rate'));
 elseif parameter_manager.current_model == 3
@@ -731,6 +770,7 @@ elseif parameter_manager.current_model == 3
         MutationManager(parameter_manager),...
         plot_grid,...
         plottingParams, ...
+        spatial_on,...
         parameter_manager.getField('moran','birth_rate'));
 elseif parameter_manager.current_model == 4  
         grid_manager = GridManagerWright(...
@@ -739,6 +779,7 @@ elseif parameter_manager.current_model == 4
             MutationManager(parameter_manager),...
             plot_grid,...
             plottingParams, ...
+            spatial_on,...
             parameter_manager.getField('wright','fitness'));
 else
     warndlg('Radio button error');
@@ -749,7 +790,68 @@ cla(handles.axes_grid);
 cla(handles.axes_graph);
 rects = cell(parameter_manager.matrix.edge_size);
 
+function enable_buttons(handles, on)
+if on
+    handles.save_button.Enable = 'on';
+    handles.step_button.Enable = 'on';
+    handles.reset_button.Enable = 'on';
+else
+    handles.save_button.Enable = 'off';
+    handles.step_button.Enable = 'off';
+    handles.reset_button.Enable = 'off';
+end
 
+
+function enable_inputs(handles, on)
+if on
+    handles.plot_grid_button.Enable = 'on';
+    handles.population_box.Enable = 'on';
+    handles.genetics_button.Enable = 'on';
+    handles.demography_button.Enable = 'on';
+    handles.spatial_structure_check.Enable = 'on';
+    handles.recombination_check.Enable = 'on';
+    handles.logistic_button.Enable = 'on';
+    handles.exp_button.Enable = 'on';
+    handles.moran_button.Enable = 'on';
+    handles.wright_button.Enable = 'on';
+    handles.num_types_box.Enable = 'on';
+    handles.types_popup.Enable = 'on';
+    handles.init_pop_box.Enable = 'on';
+    handles.param_1_box.Enable = 'on';
+    handles.param_2_box.Enable = 'on';
+    handles.plot_button_count.Enable = 'on';
+    handles.plot_button_percent.Enable = 'on';
+    handles.plot_button_fitness.Enable = 'on';
+    handles.plot_button_linear.Enable = 'on';
+    handles.plot_button_log.Enable = 'on';
+%     handles.save_button.Enable = 'on';
+%     handles.step_button.Enable = 'on';
+%     handles.reset_button.Enable = 'on';
+else
+    handles.plot_grid_button.Enable = 'off';
+    handles.population_box.Enable = 'off';
+    handles.genetics_button.Enable = 'off';
+    handles.demography_button.Enable = 'off';
+    handles.spatial_structure_check.Enable = 'off';
+    handles.recombination_check.Enable = 'off';
+    handles.logistic_button.Enable = 'off';
+    handles.exp_button.Enable = 'off';
+    handles.moran_button.Enable = 'off';
+    handles.wright_button.Enable = 'off';
+    handles.num_types_box.Enable = 'off';
+    handles.types_popup.Enable = 'off';
+    handles.init_pop_box.Enable = 'off';
+    handles.param_1_box.Enable = 'off';
+    handles.param_2_box.Enable = 'off';
+    handles.plot_button_count.Enable = 'off';
+    handles.plot_button_percent.Enable = 'off';
+    handles.plot_button_fitness.Enable = 'off';
+    handles.plot_button_linear.Enable = 'off';
+    handles.plot_button_log.Enable = 'off';
+%     handles.save_button.Enable = 'off';
+%     handles.step_button.Enable = 'off';
+%     handles.reset_button.Enable = 'off';
+end
 
 
 
@@ -943,17 +1045,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes during object creation, after setting all properties.
-function max_iterations_box_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to max_iterations_box (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% % --- Executes during object creation, after setting all properties.
+% function max_iterations_box_CreateFcn(hObject, eventdata, handles)
+% % hObject    handle to max_iterations_box (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    empty - handles not created until after all CreateFcns called
+% 
+% % Hint: edit controls usually have a white background on Windows.
+% %       See ISPC and COMPUTER.
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
 
 
 % --- Executes during object creation, after setting all properties.

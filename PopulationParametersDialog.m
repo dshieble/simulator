@@ -69,7 +69,7 @@ else
         data{2,1} = 'Fitness';
         for i = 1:parameter_manager.num_types
             data{1,i + 1} = num2str(i);
-            data{2,i + 1} = num2str(parameter_manager.wright.birth_rate(i));
+            data{2,i + 1} = num2str(parameter_manager.wright.fitness(i));
         end
     end
 end

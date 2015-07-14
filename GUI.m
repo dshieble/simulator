@@ -214,21 +214,16 @@ try
         save(str, 'save_data');
     end
 catch 
-    fprintf('ERROR: Save Error');
+    fprintf('ERROR: Save Error\n');
 end
 
 
 
 % --- Executes on button press in reset_button.
 function reset_button_Callback(hObject, eventdata, handles)
-global paused evolving rects parameter_manager stepping;
+global evolving stepping rects parameter_manager;
 if ~evolving && ~stepping
-    paused = 0;
-    evolving = 0;
-    enable_inputs(handles, 1);
-    enable_buttons(handles, 1);
-    handles.run_button.String = 'Run';
-    handles.run_button.BackgroundColor = [0 1 0];
+    cleanup(handles)
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
@@ -386,8 +381,9 @@ function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMultipleLoci();
 toggle_mutation_visible(handles);
-verify_parameters(handles);
 parameter_manager.updateBoxes();
+verify_parameters(handles);
+
 
 % function max_iterations_box_Callback(hObject, eventdata, handles)
 % global parameter_manager;
@@ -424,8 +420,12 @@ if ~stepping && ~evolving
         handles.reset_button.BackgroundColor = [1 0 0];
         handles.step_button.BackgroundColor = [0 0 1]; 
         enable_buttons(handles, 1)
-
+        if halt
+            cleanup(handles)
+        end
     end
+    enable_inputs(handles, 0);
+    enable_buttons(handles, 1);
 end
     
 
@@ -504,8 +504,8 @@ elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter
     warndlg('ERROR: S must be no less than -1!');
 elseif parameter_manager.current_model > 2 && ~parameter_manager.verifySizeOk('moran')
 	warndlg(sprintf('ERROR: Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
-elseif plot_grid && parameter_manager.num_loci > 4
-    warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
+% elseif plot_grid && parameter_manager.num_loci > 4
+%     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 else    
     parameters_clear = 1;
 end
@@ -551,7 +551,7 @@ end
 
 
 function toggle_mutation_visible(handles)
-global parameter_manager;
+global parameter_manager plot_grid;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %popup
     handles.types_popup.Visible = 'off';
@@ -559,6 +559,10 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %num_types
     handles.num_types_box.Style = 'text';
     handles.init_pop_box.Style = 'text';
+    %plot_grid
+    plot_grid = 0;
+    handles.plot_grid_button.Value = 0;
+    handles.plot_grid_button.Enable = 'off';  
     parameter_manager.updateBoxes();
 else
     %popup
@@ -567,6 +571,8 @@ else
     %num_types
     handles.num_types_box.Style = 'edit';
     handles.init_pop_box.Style = 'edit';
+    %plot_grid
+    handles.plot_grid_button.Enable = 'on';
     parameter_manager.updateBoxes();
 end
 adjust_text(handles);
@@ -580,7 +586,9 @@ if isempty(grid_manager)
     return
 end
 warning('OFF','MATLAB:legend:PlotEmpty');
-group = 1;
+if group > grid_manager.num_types
+    group = 1;
+end
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
    draw_iteration(matrix, c,handles, first_run);
@@ -673,7 +681,8 @@ end
 %RunFunctions
 function run(handles, runOnce)
 %Execute the simulation
-global grid_manager evolving group;
+global grid_manager evolving group paused;
+toggle_mutation_visible(handles)
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
@@ -688,8 +697,9 @@ drawnow;
 initializeGridManager(handles);
 run_loop(1, handles, runOnce);
 evolving = 0;
-enable_inputs(handles, 1)
-enable_buttons(handles, 1)
+if ~paused
+    cleanup(handles)
+end
 
 function continueRunning(handles)
 %Break the pause and continue running the simulation
@@ -706,6 +716,9 @@ handles.step_button.BackgroundColor = [.25 .25 .25];
 drawnow;
 run_loop(0, handles, 0);
 evolving = 0;
+if ~paused
+    cleanup(handles)
+end
 
 function pauseRunning(handles)
 %Pause the simulation
@@ -790,10 +803,16 @@ if on
     handles.save_button.Enable = 'on';
     handles.step_button.Enable = 'on';
     handles.reset_button.Enable = 'on';
+    handles.mutation_matrix_button.Enable = 'on';
+    handles.preview_button.Enable = 'on';
+    handles.page_button.Enable = 'on';
 else
     handles.save_button.Enable = 'off';
     handles.step_button.Enable = 'off';
     handles.reset_button.Enable = 'off';
+    handles.mutation_matrix_button.Enable = 'off';
+    handles.preview_button.Enable = 'off';
+    handles.page_button.Enable = 'off';
 end
 
 
@@ -812,6 +831,7 @@ if on
     handles.num_types_box.Enable = 'on';
     handles.types_popup.Enable = 'on';
     handles.init_pop_box.Enable = 'on';
+    handles.loci_box.Enable = 'on';
     handles.param_1_box.Enable = 'on';
     handles.param_2_box.Enable = 'on';
     handles.plot_button_count.Enable = 'on';
@@ -819,9 +839,6 @@ if on
     handles.plot_button_fitness.Enable = 'on';
     handles.plot_button_linear.Enable = 'on';
     handles.plot_button_log.Enable = 'on';
-%     handles.save_button.Enable = 'on';
-%     handles.step_button.Enable = 'on';
-%     handles.reset_button.Enable = 'on';
 else
     handles.plot_grid_button.Enable = 'off';
     handles.population_box.Enable = 'off';
@@ -836,6 +853,7 @@ else
     handles.num_types_box.Enable = 'off';
     handles.types_popup.Enable = 'off';
     handles.init_pop_box.Enable = 'off';
+    handles.loci_box.Enable = 'off';
     handles.param_1_box.Enable = 'off';
     handles.param_2_box.Enable = 'off';
     handles.plot_button_count.Enable = 'off';
@@ -843,12 +861,22 @@ else
     handles.plot_button_fitness.Enable = 'off';
     handles.plot_button_linear.Enable = 'off';
     handles.plot_button_log.Enable = 'off';
-%     handles.save_button.Enable = 'off';
-%     handles.step_button.Enable = 'off';
-%     handles.reset_button.Enable = 'off';
 end
 
-
+%Responsible for resetting all of the things on the screen to their
+%defaults
+function cleanup(handles)
+global paused evolving stepping;
+enable_inputs(handles, 1)
+enable_buttons(handles, 1)
+paused = 0;
+evolving = 0;
+stepping = 0;
+handles.run_button.String = 'Run';
+handles.run_button.BackgroundColor = [0 1 0];
+handles.step_button.BackgroundColor = [0 0 1];
+handles.save_button.BackgroundColor = [0 1 1];
+handles.reset_button.BackgroundColor = [1 0 0];
 
 
 %

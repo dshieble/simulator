@@ -33,13 +33,15 @@ classdef GridManagerExp < GridManagerAbstract
                     break;
                 end
                 tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
+                if min(tot_rates) < 0
+                    tot_rates = tot_rates + abs(min(tot_rates));
+                end
                 num = rand()*sum(tot_rates);
                 chosen_type = 0;
                 while num > 0
                     chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
                 end
-                
                 if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
                     if sum(gen_vec) < numel(obj.matrix)
                         gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
@@ -51,8 +53,8 @@ classdef GridManagerExp < GridManagerAbstract
                         end
                     end
                 else
-                    gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
-                    if obj.plot_grid
+                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
+                    if obj.plot_grid && gen_vec(chosen_type) > 0
                         obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
                     end
                 end

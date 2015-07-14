@@ -82,8 +82,8 @@ classdef ParameterManager < handle
             obj.e = 0;
             %function variables
             obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
-            obj.lociBR = @(num) 1 + obj.s*(obj.numOnes(num)^(1-obj.e));
-            obj.lociFitness = @(num) exp(obj.s*(obj.numOnes(num)^(1-obj.e)));
+            obj.lociBR = @(num) 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
+            obj.lociFitness = @(num) exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
             %cleanup
             obj.updateNumTypes();
         end

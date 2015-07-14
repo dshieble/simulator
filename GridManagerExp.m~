@@ -1,6 +1,6 @@
-%This class is an implementation of the GridManager class for the Logistic
-%model
-classdef GridManagerLogistic < GridManagerAbstract
+%this class is an implementation of the GridManager class for the
+%Exponential model
+classdef GridManagerExp < GridManagerAbstract
     
     properties
         birth_rate;
@@ -10,7 +10,7 @@ classdef GridManagerLogistic < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
             obj.birth_rate = b';
             obj.death_rate = d';
@@ -19,7 +19,6 @@ classdef GridManagerLogistic < GridManagerAbstract
             obj.update_params();
             obj.save_data.birth_rate = b;
             obj.save_data.death_rate = d;
-
         end
         
         %See GridManagerAbstract
@@ -30,46 +29,46 @@ classdef GridManagerLogistic < GridManagerAbstract
         function [mat, changed, t, h] = get_next(obj)
             gen_vec = obj.total_count(:, obj.timestep);
             for i = 1:sum(gen_vec)
-                if sum(gen_vec) <= 0
+                if sum(gen_vec) == 0
                     break;
                 end
                 tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
-                if min(tot_rates) < 0
-                    tot_rates = tot_rates + abs(min(tot_rates));
-                end
                 num = rand()*sum(tot_rates);
+                while (num == 0) && (sum(tot_rates) > 0
+                	num = rand()*sum(tot_rates);
+                end
                 chosen_type = 0;
                 while num > 0
                     chosen_type = chosen_type + 1;
                     num = num - tot_rates(chosen_type);
                 end
-
+                chosen_type
                 if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
-                    if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
-                        if sum(gen_vec) < numel(obj.matrix)
-                            if obj.plot_grid
-                                %choose a cell of the chosen type, and fill the
-                                %nearest cell to it with the chosen type
-                                [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                                obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
-                            end
-                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                    if sum(gen_vec) < numel(obj.matrix)
+                        gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                        if obj.plot_grid
+                            %choose a cell of the chosen type, and fill the
+                            %nearest cell to it with the chosen type
+                            [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
+                            obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
                         end
                     end
                 else
-                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
-                    if obj.plot_grid && gen_vec(chosen_type) > 0
+                    gen_vec(chosen_type) = gen_vec(chosen_type) - 1;
+                    if obj.plot_grid
                         obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
                     end
                 end
             end
             obj.total_count(:, obj.timestep + 1) = gen_vec;
-
             %then, include all computation updates
             h = (~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix));
             [mat, changed, t] = obj.get_next_cleanup();
             h = h && ~obj.mutation_manager.mutating;
         end
+        
+            
+        
         
         %See GridManagerAbstract
         function update_params(obj)
@@ -82,3 +81,5 @@ classdef GridManagerLogistic < GridManagerAbstract
 
     end
 end
+
+
