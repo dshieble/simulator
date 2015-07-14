@@ -228,6 +228,7 @@ if ~evolving && ~stepping
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
     drawnow;
+    handles.page_button.Visible = 'off';
 end
 
 
@@ -695,6 +696,9 @@ handles.reset_button.BackgroundColor = [.25 .25 .25];
 handles.step_button.BackgroundColor = [.25 .25 .25];
 drawnow;
 initializeGridManager(handles);
+if grid_manager.num_types > 16
+    handles.page_button.Visible = 'on';
+end
 run_loop(1, handles, runOnce);
 evolving = 0;
 if ~paused
