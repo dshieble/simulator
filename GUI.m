@@ -225,9 +225,10 @@ global paused evolving rects parameter_manager stepping;
 if ~evolving && ~stepping
     paused = 0;
     evolving = 0;
+    enable_inputs(handles, 1);
+    enable_buttons(handles, 1);
     handles.run_button.String = 'Run';
     handles.run_button.BackgroundColor = [0 1 0];
-    handles.save_button.String = 'Save';
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
@@ -407,6 +408,8 @@ if ~stepping && ~evolving
             return
         end
         stepping = 1;
+        enable_buttons(handles, 0)
+        handles.run_button.Enable = 'off';
         handles.run_button.BackgroundColor = [.25 .25 .25];
         handles.save_button.BackgroundColor = [.25 .25 .25];
         handles.reset_button.BackgroundColor = [.25 .25 .25];
@@ -415,10 +418,13 @@ if ~stepping && ~evolving
         [matrix, c, t, halt] = grid_manager.get_next();
         draw_iteration(matrix, c, handles, 0);
         stepping = 0;
+        handles.run_button.Enable = 'on';
+        handles.run_button.BackgroundColor = [0 1 0];
         handles.save_button.BackgroundColor = [0 1 1];
         handles.reset_button.BackgroundColor = [1 0 0];
-        handles.run_button.BackgroundColor = [0 1 0];
-        handles.step_button.BackgroundColor = [0 0 1];    
+        handles.step_button.BackgroundColor = [0 0 1]; 
+        enable_buttons(handles, 1)
+
     end
 end
     
@@ -592,7 +598,7 @@ if isempty(grid_manager)
     fprintf('ERROR: Grid Manager Empty')
     return
 end
-if plot_grid 
+if grid_manager.plot_grid 
     perm = c(randperm(length(c)))';
     for p = perm
         [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
@@ -671,21 +677,27 @@ global grid_manager evolving group;
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
+enable_inputs(handles, 0)
+enable_buttons(handles, 0)
+handles.run_button.String = 'Pause';
+handles.run_button.BackgroundColor = [1 0 0];
 handles.save_button.BackgroundColor = [.25 .25 .25];
 handles.reset_button.BackgroundColor = [.25 .25 .25];
 handles.step_button.BackgroundColor = [.25 .25 .25];
-handles.run_button.String = 'Pause';
-handles.run_button.BackgroundColor = [1 0 0];
 drawnow;
 initializeGridManager(handles);
 run_loop(1, handles, runOnce);
 evolving = 0;
+enable_inputs(handles, 1)
+enable_buttons(handles, 1)
 
 function continueRunning(handles)
 %Break the pause and continue running the simulation
 global evolving paused;
 evolving = 1;
 paused = 0;
+enable_inputs(handles, 0);
+enable_buttons(handles, 0)
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 handles.save_button.BackgroundColor = [.25 .25 .25];
@@ -700,11 +712,13 @@ function pauseRunning(handles)
 global evolving paused;
 evolving = 0;
 paused = 1;
-handles.save_button.BackgroundColor = [0 1 1];
-handles.reset_button.BackgroundColor = [1 0 0];
+enable_buttons(handles, 1);
+enable_inputs(handles, 0);
 handles.run_button.String = 'Continue';
 handles.run_button.BackgroundColor = [0 1 0];
 handles.step_button.BackgroundColor = [0 0 1];
+handles.save_button.BackgroundColor = [0 1 1];
+handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
@@ -771,7 +785,68 @@ cla(handles.axes_grid);
 cla(handles.axes_graph);
 rects = cell(parameter_manager.matrix.edge_size);
 
+function enable_buttons(handles, on)
+if on
+    handles.save_button.Enable = 'on';
+    handles.step_button.Enable = 'on';
+    handles.reset_button.Enable = 'on';
+else
+    handles.save_button.Enable = 'off';
+    handles.step_button.Enable = 'off';
+    handles.reset_button.Enable = 'off';
+end
 
+
+function enable_inputs(handles, on)
+if on
+    handles.plot_grid_button.Enable = 'on';
+    handles.population_box.Enable = 'on';
+    handles.genetics_button.Enable = 'on';
+    handles.demography_button.Enable = 'on';
+    handles.spatial_structure_check.Enable = 'on';
+    handles.recombination_check.Enable = 'on';
+    handles.logistic_button.Enable = 'on';
+    handles.exp_button.Enable = 'on';
+    handles.moran_button.Enable = 'on';
+    handles.wright_button.Enable = 'on';
+    handles.num_types_box.Enable = 'on';
+    handles.types_popup.Enable = 'on';
+    handles.init_pop_box.Enable = 'on';
+    handles.param_1_box.Enable = 'on';
+    handles.param_2_box.Enable = 'on';
+    handles.plot_button_count.Enable = 'on';
+    handles.plot_button_percent.Enable = 'on';
+    handles.plot_button_fitness.Enable = 'on';
+    handles.plot_button_linear.Enable = 'on';
+    handles.plot_button_log.Enable = 'on';
+%     handles.save_button.Enable = 'on';
+%     handles.step_button.Enable = 'on';
+%     handles.reset_button.Enable = 'on';
+else
+    handles.plot_grid_button.Enable = 'off';
+    handles.population_box.Enable = 'off';
+    handles.genetics_button.Enable = 'off';
+    handles.demography_button.Enable = 'off';
+    handles.spatial_structure_check.Enable = 'off';
+    handles.recombination_check.Enable = 'off';
+    handles.logistic_button.Enable = 'off';
+    handles.exp_button.Enable = 'off';
+    handles.moran_button.Enable = 'off';
+    handles.wright_button.Enable = 'off';
+    handles.num_types_box.Enable = 'off';
+    handles.types_popup.Enable = 'off';
+    handles.init_pop_box.Enable = 'off';
+    handles.param_1_box.Enable = 'off';
+    handles.param_2_box.Enable = 'off';
+    handles.plot_button_count.Enable = 'off';
+    handles.plot_button_percent.Enable = 'off';
+    handles.plot_button_fitness.Enable = 'off';
+    handles.plot_button_linear.Enable = 'off';
+    handles.plot_button_log.Enable = 'off';
+%     handles.save_button.Enable = 'off';
+%     handles.step_button.Enable = 'off';
+%     handles.reset_button.Enable = 'off';
+end
 
 
 
