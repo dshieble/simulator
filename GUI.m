@@ -83,7 +83,7 @@ handles.axes_grid.YLim = [1 parameter_manager.matrix.edge_size];
 %fill the boxes properly
 parameter_manager.updateBoxes();
 parameter_manager.updateStructs();
-
+toggle_visible(handles)
 
 
 % --- Outputs from this function are returned to the command line.
@@ -446,16 +446,13 @@ spatial_on = handles.spatial_structure_check.Value;
 function recombination_check_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.recombination = handles.recombination_check.Value;
-if handles.recombination_check.Value == 1
-    handles.recombination_panel.Visible = 'on';
-else
-    handles.recombination_panel.Visible = 'off';
-end
+toggle_visible(handles);
+
 
 
 function recombination_box_Callback(hObject, eventdata, handles)
-%TODO: Fill this in
-
+global parameter_manager;
+parameter_manager.recombination_number = handles.recombination_box.Value;
 
 
 
@@ -565,6 +562,7 @@ end
 
 function toggle_visible(handles)
 global parameter_manager plot_grid;
+handles.recombination_panel.Visible = 'off';
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %popup
     handles.types_popup.Visible = 'off';
@@ -574,6 +572,10 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.init_pop_box.Style = 'text';
     %plot_grid
     parameter_manager.updateBoxes();
+    handles.recombination_check.Enable = 'on';
+    if parameter_manager.recombination == 1
+        handles.recombination_panel.Visible = 'on';
+    end
 else
     %popup
     handles.types_popup.Visible = 'on';
@@ -581,6 +583,7 @@ else
     %num_types
     handles.num_types_box.Style = 'edit';
     handles.init_pop_box.Style = 'edit';
+    handles.recombination_check.Enable = 'off';
     %plot_grid
     parameter_manager.updateBoxes();
 end

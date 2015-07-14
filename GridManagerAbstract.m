@@ -85,6 +85,7 @@ classdef GridManagerAbstract < handle
         function [mat, changed, t, h] = get_next_cleanup(obj)
             obj.timestep = obj.timestep + 1;
             obj.mutation_manager.mutate(obj);
+            obj.mutation_manager.generational_recombination(obj);
             if ~obj.plot_grid
                 changed = (1:numel(obj.matrix))';
             else

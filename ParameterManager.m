@@ -26,6 +26,7 @@ classdef ParameterManager < handle
         lociFitness;
         max_num_loci;
         recombination;
+        recombination_number;
     end
     
     methods (Access = public)
@@ -77,6 +78,8 @@ classdef ParameterManager < handle
             obj.num_loci = 1;
             obj.max_num_loci = 15;
             obj.recombination = 0;
+            obj.recombination_number = 0;
+
             %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
