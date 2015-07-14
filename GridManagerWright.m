@@ -41,9 +41,7 @@ classdef GridManagerWright < GridManagerAbstract
                 obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
             end
             obj.total_count(:, obj.timestep + 1) = new_counts;
-            h = max(obj.total_count(:, obj.timestep + 1))>=numel(obj.matrix);
-            [mat, changed, t] = obj.get_next_cleanup();
-            h = h && ~obj.mutation_manager.mutating;
+            [mat, changed, t, h] = obj.get_next_cleanup();
         end
         
         %See GridManagerAbstract

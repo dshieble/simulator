@@ -70,9 +70,7 @@ classdef GridManagerLogistic < GridManagerAbstract
             obj.total_count(:, obj.timestep + 1) = gen_vec;
 
             %then, include all computation updates
-            h = (~sum(obj.total_count(:,obj.timestep)) || sum(obj.total_count(:,obj.timestep)) == numel(obj.matrix));
-            [mat, changed, t] = obj.get_next_cleanup();
-            h = h && ~obj.mutation_manager.mutating;
+            [mat, changed, t, h] = obj.get_next_cleanup();
         end
         
         %See GridManagerAbstract

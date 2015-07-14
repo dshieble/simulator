@@ -70,7 +70,7 @@ grid_manager = [];
 parameters_clear = 1;
 stepping = 0;
 plot_grid = handles.plot_grid_button.Value;
-spatial_on = 0;
+spatial_on = 1;
 
 % remove tickmarks from axes
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);

@@ -82,7 +82,7 @@ classdef GridManagerAbstract < handle
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
-        function [mat, changed, t] = get_next_cleanup(obj)
+        function [mat, changed, t, h] = get_next_cleanup(obj)
             obj.timestep = obj.timestep + 1;
             obj.mutation_manager.mutate(obj);
             if ~obj.plot_grid
@@ -96,6 +96,8 @@ classdef GridManagerAbstract < handle
             obj.save_data.total_count = obj.total_count;
             mat = obj.matrix;
             t = obj.timestep;
+            h = max(obj.total_count(:, obj.timestep))>=numel(obj.matrix);
+            h = h && ~obj.mutation_manager.mutating;
         end
 
         %Returns a square in the matrix of type t
