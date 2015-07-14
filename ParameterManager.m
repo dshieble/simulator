@@ -36,7 +36,7 @@ classdef ParameterManager < handle
         function obj = ParameterManager(handles)
             obj.current_model = 1;
             %obj.max_iterations = 10;
-            obj.max_types = 16;
+            obj.max_types = 1024;
             obj.num_types = 2;
             obj.handles = handles;
             obj.logistic = struct();
@@ -325,11 +325,25 @@ classdef ParameterManager < handle
 
         %For the num_loci<1 case, verifies that the sum of the Ninits for 
         % all species is the original populaiton size 
-        function out = verifySizeOk(obj, model)
+        function out = verifySizeOk(obj)
             out = 1;
-            if obj.num_loci == 1 || ~obj.mutating
-                if sum(getfield(getfield(obj, model), 'Ninit')) ~= (obj.matrix.edge_size^2)
-                    out = 0;
+            if (obj.num_loci == 1 || ~obj.mutating)
+                if obj.current_model == 1
+                    if sum(obj.logistic.Ninit) > (obj.matrix.edge_size^2)
+                        out = 0;
+                    end
+                elseif obj.current_model == 2
+                    if sum(obj.exponential.Ninit) > (obj.matrix.edge_size^2)
+                        out = 0;
+                    end
+                elseif obj.current_model == 3
+                    if sum(obj.moran.Ninit) ~= (obj.matrix.edge_size^2)
+                        out = 0;
+                    end
+                elseif obj.current_model == 4
+                    if sum(obj.wright.Ninit) ~= (obj.matrix.edge_size^2)
+                        out = 0;
+                    end
                 end
             end
         end

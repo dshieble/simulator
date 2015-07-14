@@ -503,8 +503,8 @@ elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
     warndlg('ERROR: S must be no less than -1!');
-elseif parameter_manager.current_model > 2 && ~parameter_manager.verifySizeOk('moran')
-	warndlg(sprintf('ERROR: Initial Populations must sum to %d', parameter_manager.matrix.edge_size.^2));
+elseif ~parameter_manager.verifySizeOk
+	warndlg(sprintf('ERROR: Initial Populations must sum to %d for Moran and Wright-Fisher, and must be no greater than %d for Exponential and Logistic', parameter_manager.matrix.edge_size.^2, parameter_manager.matrix.edge_size.^2));
 % elseif plot_grid && parameter_manager.num_loci > 4
 %     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 else    
@@ -552,7 +552,7 @@ end
 
 
 function toggle_mutation_visible(handles)
-global parameter_manager plot_grid;
+global parameter_manager;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %popup
     handles.types_popup.Visible = 'off';
@@ -561,9 +561,6 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.num_types_box.Style = 'text';
     handles.init_pop_box.Style = 'text';
     %plot_grid
-    plot_grid = 0;
-    handles.plot_grid_button.Value = 0;
-    handles.plot_grid_button.Enable = 'off';  
     parameter_manager.updateBoxes();
 else
     %popup
@@ -573,7 +570,6 @@ else
     handles.num_types_box.Style = 'edit';
     handles.init_pop_box.Style = 'edit';
     %plot_grid
-    handles.plot_grid_button.Enable = 'on';
     parameter_manager.updateBoxes();
 end
 adjust_text(handles);
@@ -682,25 +678,32 @@ end
 %RunFunctions
 function run(handles, runOnce)
 %Execute the simulation
-global grid_manager evolving group paused;
+global grid_manager evolving group paused plot_grid parameter_manager;
 toggle_mutation_visible(handles)
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
-enable_inputs(handles, 0)
-enable_buttons(handles, 0)
+%If the number of types is greater than 16, remove plot_grid
+if parameter_manager.getNumTypes() > 16
+    handles.page_button.Visible = 'on';
+    plot_grid = 0;
+    handles.plot_grid_button.Value = 0;
+end
+%Turn off the boxes on the screens and recolor the buttons
+enable_inputs(handles, 0);
+enable_buttons(handles, 0);
 handles.run_button.String = 'Pause';
 handles.run_button.BackgroundColor = [1 0 0];
 handles.save_button.BackgroundColor = [.25 .25 .25];
 handles.reset_button.BackgroundColor = [.25 .25 .25];
 handles.step_button.BackgroundColor = [.25 .25 .25];
 drawnow;
+%make the grid_manager and run the simulation
 initializeGridManager(handles);
-if grid_manager.num_types > 16
-    handles.page_button.Visible = 'on';
-end
 run_loop(1, handles, runOnce);
+%when the simulation terminates
 evolving = 0;
+%if the termination is not a pause
 if ~paused
     cleanup(handles)
 end
