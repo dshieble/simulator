@@ -49,8 +49,12 @@ classdef GridManagerMoran < GridManagerAbstract
                     %choose a cell of the birthed type, and find the
                     %nearest cell to it of the kill type and fill that cell
                     %with the birthed type
-                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                    obj.matrix(obj.get_nearest_of_type(a, b, dead_type)) = chosen_type;
+                    if obj.spatial_on
+                        [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
+                        obj.matrix(obj.get_nearest_of_type(a, b, dead_type)) = chosen_type;
+                    else
+                        obj.matrix(obj.get_of_type(dead_type)) = chosen_type;
+                    end
                 end
             end
             obj.total_count(:, obj.timestep + 1) = gen_vec;

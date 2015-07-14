@@ -192,6 +192,7 @@ global parameter_manager;
 parameter_manager.updateStructs();
 
 
+
 function param_2_box_Callback(hObject, eventdata, handles)
 % hObject    handle to param_2_box (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -228,7 +229,7 @@ if ~evolving && ~stepping
     cla(handles.axes_graph);
     rects = cell(parameter_manager.matrix.edge_size);
     drawnow;
-    handles.page_button.Visible = 'off';
+    handles.page_button.Enable = 'off';
 end
 
 
@@ -277,7 +278,7 @@ global parameter_manager;
 parameter_manager.current_model = 1;
 handles.log_exp_banner.String = 'Logistic Model';
 parameter_manager.updateBoxes();
-adjust_text(handles);
+toggle_visible(handles);
 
 
 % --- Executes on button press in exp_button.
@@ -286,7 +287,7 @@ global parameter_manager;
 parameter_manager.current_model = 2;
 handles.log_exp_banner.String = 'Exponential Model';
 parameter_manager.updateBoxes();
-adjust_text(handles);
+toggle_visible(handles);
 
 % --- Executes on button press in moran_button.
 function moran_button_Callback(hObject, eventdata, handles)
@@ -294,7 +295,7 @@ global parameter_manager;
 parameter_manager.current_model = 3;
 handles.log_exp_banner.String = 'Moran Model';
 parameter_manager.updateBoxes();
-adjust_text(handles);
+toggle_visible(handles);
 
 % --- Executes on button press in wright_button.
 function wright_button_Callback(hObject, eventdata, handles)
@@ -302,7 +303,7 @@ global parameter_manager;
 parameter_manager.current_model = 4;
 handles.log_exp_banner.String = 'Wright-Fisher Model';
 parameter_manager.updateBoxes();
-adjust_text(handles);
+toggle_visible(handles);
 
     
  
@@ -313,6 +314,8 @@ function population_box_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of population_box as text
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
+global parameter_manager;
+parameter_manager.updateMatrixProperties();
 verify_parameters(handles);
 
 
@@ -322,6 +325,7 @@ verify_parameters(handles);
 function plot_grid_button_Callback(hObject, eventdata, handles)
 global plot_grid;
 plot_grid = handles.plot_grid_button.Value;
+toggle_visible(handles);
 % handles.max_iterations_panel.Visible
 % if handles.plot_grid_button.Value
 %     plot_grid = 1;
@@ -364,7 +368,7 @@ end
 function demography_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 0;
-toggle_mutation_visible(handles);
+toggle_visible(handles);
 handles.mutation_panel.Visible = 'off';
 handles.num_types_string.String = 'Number of Types:';
 handles.params_string.String =  'Parameters For Type:';
@@ -373,7 +377,7 @@ handles.params_string.String =  'Parameters For Type:';
 function genetics_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.mutating = 1;
-toggle_mutation_visible(handles);
+toggle_visible(handles);
 handles.mutation_panel.Visible = 'on';
 handles.num_types_string.String = 'Number of Alleles:';
 handles.params_string.String =  'Parameters For Allele:';
@@ -381,7 +385,7 @@ handles.params_string.String =  'Parameters For Allele:';
 function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMultipleLoci();
-toggle_mutation_visible(handles);
+toggle_visible(handles);
 parameter_manager.updateBoxes();
 verify_parameters(handles);
 
@@ -503,7 +507,7 @@ elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
     warndlg('ERROR: S must be no less than -1!');
-elseif ~parameter_manager.verifySizeOk
+elseif ~parameter_manager.verifySizeOk()
 	warndlg(sprintf('ERROR: Initial Populations must sum to %d for Moran and Wright-Fisher, and must be no greater than %d for Exponential and Logistic', parameter_manager.matrix.edge_size.^2, parameter_manager.matrix.edge_size.^2));
 % elseif plot_grid && parameter_manager.num_loci > 4
 %     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
@@ -511,7 +515,15 @@ else
     parameters_clear = 1;
 end
 
-%VisibilityFunctions
+% VisibilityFunctions
+%
+%
+%
+%
+%
+%
+
+
 function adjust_text(handles)
 global parameter_manager;
 cla(handles.formula_axes);
@@ -533,7 +545,6 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
     	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
         text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
-    
 elseif parameter_manager.current_model <= 2
     handles.param_1_text.String = 'Birth Rate:';
     handles.param_2_text.String = 'Death Rate:';
@@ -548,11 +559,12 @@ else
     handles.param_2_text.Visible = 'off';
     handles.param_2_box.Visible = 'off';
 end
-%annotation('arrow','X',[0.32,0.5],'Y',[0.6,0.4])
 
 
-function toggle_mutation_visible(handles)
-global parameter_manager;
+
+
+function toggle_visible(handles)
+global parameter_manager plot_grid;
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %popup
     handles.types_popup.Visible = 'off';
@@ -572,10 +584,88 @@ else
     %plot_grid
     parameter_manager.updateBoxes();
 end
+if plot_grid && parameter_manager.current_model ~= 4
+    handles.spatial_structure_check.Enable = 'on';
+else
+    handles.spatial_structure_check.Enable = 'off';
+end
 adjust_text(handles);
 
 
-%Get the new matrix, mutate it
+
+
+function enable_inputs(handles, on)
+if on
+    handles.plot_grid_button.Enable = 'on';
+    handles.population_box.Enable = 'on';
+    handles.genetics_button.Enable = 'on';
+    handles.demography_button.Enable = 'on';
+    handles.spatial_structure_check.Enable = 'on';
+    handles.recombination_check.Enable = 'on';
+    handles.logistic_button.Enable = 'on';
+    handles.exp_button.Enable = 'on';
+    handles.moran_button.Enable = 'on';
+    handles.wright_button.Enable = 'on';
+    handles.num_types_box.Enable = 'on';
+    handles.types_popup.Enable = 'on';
+    handles.init_pop_box.Enable = 'on';
+    handles.loci_box.Enable = 'on';
+    handles.param_1_box.Enable = 'on';
+    handles.param_2_box.Enable = 'on';
+    handles.plot_button_count.Enable = 'on';
+    handles.plot_button_percent.Enable = 'on';
+    handles.plot_button_fitness.Enable = 'on';
+    handles.plot_button_linear.Enable = 'on';
+    handles.plot_button_log.Enable = 'on';
+else
+    handles.plot_grid_button.Enable = 'off';
+    handles.population_box.Enable = 'off';
+    handles.genetics_button.Enable = 'off';
+    handles.demography_button.Enable = 'off';
+    handles.spatial_structure_check.Enable = 'off';
+    handles.recombination_check.Enable = 'off';
+    handles.logistic_button.Enable = 'off';
+    handles.exp_button.Enable = 'off';
+    handles.moran_button.Enable = 'off';
+    handles.wright_button.Enable = 'off';
+    handles.num_types_box.Enable = 'off';
+    handles.types_popup.Enable = 'off';
+    handles.init_pop_box.Enable = 'off';
+    handles.loci_box.Enable = 'off';
+    handles.param_1_box.Enable = 'off';
+    handles.param_2_box.Enable = 'off';
+    handles.plot_button_count.Enable = 'off';
+    handles.plot_button_percent.Enable = 'off';
+    handles.plot_button_fitness.Enable = 'off';
+    handles.plot_button_linear.Enable = 'off';
+    handles.plot_button_log.Enable = 'off';
+end
+
+%Responsible for resetting all of the things on the screen to their
+%defaults
+function cleanup(handles)
+global paused evolving stepping;
+enable_inputs(handles, 1)
+enable_buttons(handles, 1)
+paused = 0;
+evolving = 0;
+stepping = 0;
+handles.run_button.String = 'Run';
+handles.run_button.BackgroundColor = [0 1 0];
+handles.step_button.BackgroundColor = [0 0 1];
+handles.save_button.BackgroundColor = [0 1 1];
+handles.reset_button.BackgroundColor = [1 0 0];
+
+
+
+
+
+% Iteration Functions
+%
+%
+%
+%
+%
 function run_loop(first_run, handles, runOnce)
 global evolving grid_manager plot_grid parameter_manager stepping group;
 if isempty(grid_manager)
@@ -594,8 +684,7 @@ while evolving == 1
         break
     end
 end
-    
-%IterationFunctions
+
 function draw_iteration(matrix, c, handles, first_run)
 global parameter_manager rects grid_manager plot_grid;
 %represents a single iteration of the grid and graph
@@ -674,18 +763,21 @@ if first_run
     legend(legend_input, 'Location', 'northwest')
 end
 
-
-%RunFunctions
+%   RunFunctions
+% 
+%
+%
+%
 function run(handles, runOnce)
 %Execute the simulation
 global grid_manager evolving group paused plot_grid parameter_manager;
-toggle_mutation_visible(handles)
+toggle_visible(handles)
 group = 1;
 handles.run_button.String = 'Calculating...';
 evolving = 1;
 %If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
-    handles.page_button.Visible = 'on';
+    handles.page_button.Enable = 'on';
     plot_grid = 0;
     handles.plot_grid_button.Value = 0;
 end
@@ -821,70 +913,6 @@ else
     handles.preview_button.Enable = 'off';
 %     handles.page_button.Enable = 'off';
 end
-
-
-function enable_inputs(handles, on)
-if on
-    handles.plot_grid_button.Enable = 'on';
-    handles.population_box.Enable = 'on';
-    handles.genetics_button.Enable = 'on';
-    handles.demography_button.Enable = 'on';
-    handles.spatial_structure_check.Enable = 'on';
-    handles.recombination_check.Enable = 'on';
-    handles.logistic_button.Enable = 'on';
-    handles.exp_button.Enable = 'on';
-    handles.moran_button.Enable = 'on';
-    handles.wright_button.Enable = 'on';
-    handles.num_types_box.Enable = 'on';
-    handles.types_popup.Enable = 'on';
-    handles.init_pop_box.Enable = 'on';
-    handles.loci_box.Enable = 'on';
-    handles.param_1_box.Enable = 'on';
-    handles.param_2_box.Enable = 'on';
-    handles.plot_button_count.Enable = 'on';
-    handles.plot_button_percent.Enable = 'on';
-    handles.plot_button_fitness.Enable = 'on';
-    handles.plot_button_linear.Enable = 'on';
-    handles.plot_button_log.Enable = 'on';
-else
-    handles.plot_grid_button.Enable = 'off';
-    handles.population_box.Enable = 'off';
-    handles.genetics_button.Enable = 'off';
-    handles.demography_button.Enable = 'off';
-    handles.spatial_structure_check.Enable = 'off';
-    handles.recombination_check.Enable = 'off';
-    handles.logistic_button.Enable = 'off';
-    handles.exp_button.Enable = 'off';
-    handles.moran_button.Enable = 'off';
-    handles.wright_button.Enable = 'off';
-    handles.num_types_box.Enable = 'off';
-    handles.types_popup.Enable = 'off';
-    handles.init_pop_box.Enable = 'off';
-    handles.loci_box.Enable = 'off';
-    handles.param_1_box.Enable = 'off';
-    handles.param_2_box.Enable = 'off';
-    handles.plot_button_count.Enable = 'off';
-    handles.plot_button_percent.Enable = 'off';
-    handles.plot_button_fitness.Enable = 'off';
-    handles.plot_button_linear.Enable = 'off';
-    handles.plot_button_log.Enable = 'off';
-end
-
-%Responsible for resetting all of the things on the screen to their
-%defaults
-function cleanup(handles)
-global paused evolving stepping;
-enable_inputs(handles, 1)
-enable_buttons(handles, 1)
-paused = 0;
-evolving = 0;
-stepping = 0;
-handles.run_button.String = 'Run';
-handles.run_button.BackgroundColor = [0 1 0];
-handles.step_button.BackgroundColor = [0 0 1];
-handles.save_button.BackgroundColor = [0 1 1];
-handles.reset_button.BackgroundColor = [1 0 0];
-
 
 %
 %

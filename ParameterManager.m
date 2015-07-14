@@ -36,7 +36,7 @@ classdef ParameterManager < handle
         function obj = ParameterManager(handles)
             obj.current_model = 1;
             %obj.max_iterations = 10;
-            obj.max_types = 1024;
+            obj.max_types = 500;
             obj.num_types = 2;
             obj.handles = handles;
             obj.logistic = struct();
@@ -139,6 +139,7 @@ classdef ParameterManager < handle
                     obj.wright.fitness(type) = param_1_temp;
                 end
             end
+            obj.updateMatrixProperties();
         end
         
         
@@ -266,12 +267,28 @@ classdef ParameterManager < handle
         function noerror = updateMatrixProperties(obj)
             size_temp = str2double(obj.handles.population_box.String);
             noerror = 0;
+            changed = 0;
             if ~isnan(size_temp)
                 if round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500) && (size_temp >= 16)
+                    if sqrt(size_temp) ~= obj.matrix.edge_size
+                        changed = 1;
+                    end
                     obj.matrix.edge_size = sqrt(size_temp);
                     noerror = 1;
                 end
             end
+            if changed
+                tot = obj.matrix.edge_size.^2;
+                obj.moran.Ninit = zeros(1,obj.num_types);
+                obj.wright.Ninit = zeros(1,obj.num_types);
+                for i = 1:(obj.num_types-1)
+                    obj.moran.Ninit(i) = floor(tot/obj.num_types);
+                    obj.wright.Ninit(i) = floor(tot/obj.num_types);
+                end
+                obj.moran.Ninit(obj.num_types) = tot - sum(obj.moran.Ninit);
+                obj.wright.Ninit(obj.num_types) = tot - sum(obj.wright.Ninit);
+            end
+            obj.updateBoxes();
         end
         
         %Updates the maximum number of iterations for the non-plotting case
@@ -333,7 +350,7 @@ classdef ParameterManager < handle
                         out = 0;
                     end
                 elseif obj.current_model == 2
-                    if sum(obj.exponential.Ninit) > (obj.matrix.edge_size^2)
+                    if sum(obj.exp.Ninit) > (obj.matrix.edge_size^2)
                         out = 0;
                     end
                 elseif obj.current_model == 3

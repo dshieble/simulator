@@ -98,11 +98,21 @@ classdef GridManagerAbstract < handle
             t = obj.timestep;
         end
 
+        %Returns a square in the matrix of type t
+        function ind = get_of_type(obj, t)
+            typed = find(obj.matrix == t);
+            if isempty(typed)
+                ind = randi(numel(obj.matrix));
+            else       
+                ind = typed(randi(length(typed)));
+            end
+        end
+        
         %Returns a free square in the matrix
         function ind = get_free(obj)
             free = find(obj.matrix == 0);
             if isempty(free)
-                ind = 0;
+                ind = randi(numel(obj.matrix));
             else       
                 ind = free(randi(length(free)));
             end

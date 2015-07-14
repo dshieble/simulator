@@ -50,8 +50,12 @@ classdef GridManagerLogistic < GridManagerAbstract
                             if obj.plot_grid
                                 %choose a cell of the chosen type, and fill the
                                 %nearest cell to it with the chosen type
-                                [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                                obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
+                                if obj.spatial_on
+                                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
+                                    obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
+                                else
+                                	obj.matrix(obj.get_free()) = chosen_type;
+                                end
                             end
                             gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
                         end
