@@ -81,6 +81,7 @@ classdef MutationManager < handle
                                     end
                                 end
                                 assert(organism<=grid_manager.num_types);
+                                
                                 gen_vec(i) = gen_vec(i) - 1;
                                 gen_vec(organism + 1) = gen_vec(organism + 1) + 1;
                             end
@@ -105,32 +106,37 @@ classdef MutationManager < handle
                 end
                 
                 indices = 1:numel(matrix);
-                indices = 
-                indices = randperm(numel(indices));
-                indices = 
-                if mod(numel(matrix),2) == 1
+                indices = indices(matrix(:) > 0);
+                indices = indices(randperm(numel(indices)));
+                if mod(numel(indices),2) == 1
                     indices(end) = [];
                 end
                 for i = 1:2:numel(indices)
                     ind_1 = indices(i); ind_2 = indices(i+1);
+                    
+                    assert((matrix(ind_1)>0) && (matrix(ind_2)>0))
+                    
                     num_1 = matrix(ind_1) - 1; num_2 = matrix(ind_2) - 1;
-                    new_num_1 = 0; new_num_2 = 0;
-                    crossover = randi(obj.num_loci);
-                    for bit = 1:obj.num_loci
-                        if bit < crossover
-                            num_2
-                            bit
-                            new_num_1 = bitset(new_num_1, bit, bitget(num_2, bit));
-                            new_num_2 = bitset(new_num_2, bit, bitget(num_1, bit));
-                        else
-                            new_num_1 = bitset(new_num_1, bit, bitget(num_1, bit));
-                            new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
+                    if num_1 ~= num_2
+                        
+                        new_num_1 = 0; new_num_2 = 0;
+                        crossover = randi(obj.num_loci);
+                        for bit = 1:obj.num_loci
+                            if bit < crossover
+                                new_num_1 = bitset(new_num_1, bit, bitget(num_2, bit));
+                                new_num_2 = bitset(new_num_2, bit, bitget(num_1, bit));
+                            else
+                                new_num_1 = bitset(new_num_1, bit, bitget(num_1, bit));
+                                new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
+                            end
                         end
+                        %fprintf('1 - %s 2 - %s 1_new - %s 2_new - %s\n', dec2bin(num_1), dec2bin(num_2), dec2bin(new_num_1), dec2bin(new_num_2));
+                    else
+                        new_num_1 = num_1; new_num_2 = num_2;
                     end
                     matrix(ind_1) = new_num_1 + 1;
                     matrix(ind_2) = new_num_2 + 1;
                 end
-  
                 if grid_manager.plot_grid
                     grid_manager.matrix = matrix;
                 end
