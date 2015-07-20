@@ -23,7 +23,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 19-Jul-2015 13:55:05
+% Last Modified by GUIDE v2.5 19-Jul-2015 22:29:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping spatial_on;
+global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping spatial_on temp_axes;
 group = 1;
 evolving = 0;
 parameter_manager = ParameterManager(handles);
@@ -71,8 +71,10 @@ parameters_clear = 1;
 stepping = 0;
 plot_grid = handles.plot_grid_button.Value;
 spatial_on = 1;
+temp_axes = axes('Parent',handles.params_panel, 'Units', 'characters', 'Position', handles.param_2_text.Position);
 
 % remove tickmarks from axes
+temp_axes.Visible = 'off';
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
 set(handles.axes_grid,'XTick',[]);
 set(handles.axes_grid,'YTick',[]);
@@ -522,12 +524,19 @@ end
 
 
 function adjust_text(handles)
-global parameter_manager;
+global parameter_manager temp_axes;
 cla(handles.formula_axes);
+cla(temp_axes);
+temp_axes.Visible = 'off';
 if parameter_manager.mutating && parameter_manager.num_loci > 1
     handles.param_1_text.String = 'S:';
-    handles.param_2_text.String = 'E';
-    handles.param_2_text.Visible = 'on';
+    text(handles.param_2_text.Position(3) - 1.75, 0.5,'$$\epsilon$$:','FontSize',15,...
+        'Interpreter','latex', 'Parent', temp_axes, 'Units', 'characters');
+    set(temp_axes,...
+        'XGrid', 'off', 'YGrid', 'off', 'ZGrid', 'off', ...
+        'Color', 'none', 'Visible', 'on', ...
+        'XColor','none','YColor','none')
+    handles.param_2_text.Visible = 'off';
     handles.param_2_box.Visible = 'on';
     if parameter_manager.current_model <=2
         str1 = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
@@ -721,6 +730,7 @@ drawnow;
 %types in the interval [group, (group + 16)]
 function draw_page(handles, first_run)
 global grid_manager parameter_manager group;
+axes(handles.axes_graph); %make the axes_graph the active axes
 if isempty(grid_manager)
     fprintf('ERROR: Grid Manager Empty')
     return
@@ -736,12 +746,12 @@ range = group:min(group + 15, grid_manager.num_types);
 switch grid_manager.plottingParams.plot_type
     case 'total_count'
     	vec = grid_manager.total_count(range, :);
-        y_axis_label = 'Population Size';
+        y_axis_label = 'Population Count';
     case 'percent_count'
         vec = grid_manager.percent_count(range, :);
         y_axis_label = 'Percent Population Size';
     case 'overall_mean_fitness'
-        vec = grid_manager.overall_mean_fitness(range, :);
+        vec = grid_manager.overall_mean_fitness(:)';
         y_axis_label = 'Mean Fitness';
 end
 if grid_manager.plottingParams.plot_log
@@ -754,7 +764,9 @@ for i = 1:size(vec,1)
 end
 xlabel('Generations', 'Parent', handles.axes_graph);
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
-if first_run
+%If the plot type is overall mean fitness, there is only one line and no
+%need for a legend
+if first_run && ~strcmp(grid_manager.plottingParams.plot_type, 'overall_mean_fitness')
     legend_input = {};
     for i = range
         if parameter_manager.num_loci > 1 && parameter_manager.mutating
