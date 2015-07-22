@@ -9,6 +9,7 @@ classdef MutationManager < handle
         mutation_matrix;
         mutating;
         recombining;
+        recombination_number;
     end
     
     methods (Access = public)
@@ -18,6 +19,7 @@ classdef MutationManager < handle
             obj.mutation_matrix = parameter_manager.mutation_matrix;
             obj.mutating = parameter_manager.mutating;
             obj.recombining = parameter_manager.recombination;
+            obj.recombination_number = parameter_manager.recombination_number;
         end
         
         %Accepts a grid_manager, updates the matrix and total_count
@@ -115,30 +117,29 @@ classdef MutationManager < handle
                     indices(end) = [];
                 end
                 for i = 1:2:numel(indices)
-                    ind_1 = indices(i); ind_2 = indices(i+1);
-                    
-                    assert((matrix(ind_1)>0) && (matrix(ind_2)>0))
-                    
-                    num_1 = matrix(ind_1) - 1; num_2 = matrix(ind_2) - 1;
-                    if num_1 ~= num_2
-                        
-                        new_num_1 = 0; new_num_2 = 0;
-                        crossover = randi(obj.num_loci);
-                        for bit = 1:obj.num_loci
-                            if bit < crossover
-                                new_num_1 = bitset(new_num_1, bit, bitget(num_2, bit));
-                                new_num_2 = bitset(new_num_2, bit, bitget(num_1, bit));
-                            else
-                                new_num_1 = bitset(new_num_1, bit, bitget(num_1, bit));
-                                new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
+                    if rand() < obj.recombination_number
+                        ind_1 = indices(i); ind_2 = indices(i+1);
+                        assert((matrix(ind_1)>0) && (matrix(ind_2)>0))
+                        num_1 = matrix(ind_1) - 1; num_2 = matrix(ind_2) - 1;
+                        if num_1 ~= num_2
+                            new_num_1 = 0; new_num_2 = 0;
+                            crossover = randi(obj.num_loci);
+                            for bit = 1:obj.num_loci
+                                if bit < crossover
+                                    new_num_1 = bitset(new_num_1, bit, bitget(num_2, bit));
+                                    new_num_2 = bitset(new_num_2, bit, bitget(num_1, bit));
+                                else
+                                    new_num_1 = bitset(new_num_1, bit, bitget(num_1, bit));
+                                    new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
+                                end
                             end
+                            %fprintf('1 - %s 2 - %s 1_new - %s 2_new - %s\n', dec2bin(num_1), dec2bin(num_2), dec2bin(new_num_1), dec2bin(new_num_2));
+                        else
+                            new_num_1 = num_1; new_num_2 = num_2;
                         end
-                        %fprintf('1 - %s 2 - %s 1_new - %s 2_new - %s\n', dec2bin(num_1), dec2bin(num_2), dec2bin(new_num_1), dec2bin(new_num_2));
-                    else
-                        new_num_1 = num_1; new_num_2 = num_2;
+                        matrix(ind_1) = new_num_1 + 1;
+                        matrix(ind_2) = new_num_2 + 1;
                     end
-                    matrix(ind_1) = new_num_1 + 1;
-                    matrix(ind_2) = new_num_2 + 1;
                 end
                 if grid_manager.plot_grid
                     grid_manager.matrix = matrix;
