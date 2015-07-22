@@ -32,14 +32,23 @@ classdef GridManagerAbstract < handle
         function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
-            r = randperm(numel(obj.matrix));
-            i = 1;
-            for type = 1:length(Ninit)
-                n = Ninit(type);
-                obj.matrix(r(i:n+i-1)) = type;
-                i = i + n;
+            if (sum(Ninit) == numel(obj.matrix)) || ~spatial_on
+                r = randperm(numel(obj.matrix));
+                i = 1;
+                for type = 1:length(Ninit)
+                    n = Ninit(type);
+                    obj.matrix(r(i:n+i-1)) = type;
+                    i = i + n;
+                end
+            else
+                for type = 1:length(Ninit)
+                    ind = obj.get_free();
+                    obj.matrix(ind) = type;
+                    for j = 2:length(Ninit(type))
+                        obj.matrix(obj.get_nearest_free(ind)) = type;
+                    end
+                end
             end
-            %[x, y] = meshgrid(1:dim,1:dim);
             
             
             obj.timestep = 1;

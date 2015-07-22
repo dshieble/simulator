@@ -46,14 +46,14 @@ classdef ParameterManager < handle
             obj.wright = struct();
             obj.matrix = struct();
             %logistic
-            obj.logistic.Ninit_default = [5];
+            obj.logistic.Ninit_default = [1];
             obj.logistic.birth_rate_default = 1;
             obj.logistic.death_rate_default = [0.01];
             obj.logistic.Ninit = [obj.logistic.Ninit_default obj.logistic.Ninit_default];
             obj.logistic.birth_rate = [obj.logistic.birth_rate_default obj.logistic.birth_rate_default];
             obj.logistic.death_rate = [obj.logistic.death_rate_default obj.logistic.death_rate_default];
             %exp
-            obj.exp.Ninit_default = [5];
+            obj.exp.Ninit_default = [1];
             obj.exp.birth_rate_default = 1;
             obj.exp.death_rate_default = [0.01];
             obj.exp.Ninit = [obj.exp.Ninit_default obj.exp.Ninit_default];
@@ -320,7 +320,7 @@ classdef ParameterManager < handle
             if obj.num_loci > 1 && obj.mutating
                 if strcmp(param, 'Ninit')
                     if obj.current_model <= 2
-                        out = [5 zeros(1, 2^obj.num_loci - 1)];
+                        out = [obj.logistic.Ninit_default zeros(1, 2^obj.num_loci - 1)];
                     else
                     	out = [obj.matrix.edge_size^2 zeros(1, 2^obj.num_loci - 1)];
                     end
