@@ -7,7 +7,9 @@
 %generation, based on the model that the GridManager's implementation is based
 %on
 
-classdef GridManagerAbstract < handle
+classdef (Abstract) GridManagerAbstract < handle
+    
+    
     properties
         save_data;
         matrix;
@@ -28,8 +30,9 @@ classdef GridManagerAbstract < handle
     methods (Access = public)
         %The constructor method. This function initializes the matrix and
         %the plotting parameters, as well as other useful variables like
-        %the color variable
-        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on)
+        %the color variable. The final 2 inputs are the Param1 and the
+        %Param2 inputs
+        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, ~, ~)
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
             if (sum(Ninit) == numel(obj.matrix)) || ~spatial_on
@@ -193,12 +196,6 @@ classdef GridManagerAbstract < handle
             end
         end
         
-        %A method implemented by all of the child GridManager class. It
-        %updates the total_count, the percent_count and the mean_fitness
-        %variables for plotting. 
-        function update_params(obj)
-        end
-        
         %Returns a random cell of the chosen type
         function out = getRandomOfType(obj, type)
             ofType = find(obj.matrix == type);
@@ -206,4 +203,20 @@ classdef GridManagerAbstract < handle
         end
             
     end
+    
+    methods (Abstract)
+        %A method implemented by all of the child GridManager class. It
+        %updates the total_count, the percent_count and the mean_fitness
+        %variables for plotting. 
+        update_params(obj)
+        
+        %A method implemented by all of the child GridManager class.
+        %mat - new updated matrix
+        %changed - entries in matrix that have changed
+        %t - the timestep
+        %h - whether or not we should halt
+        [mat, changed, t, h] = get_next(obj)
+    end
+    
+    
 end

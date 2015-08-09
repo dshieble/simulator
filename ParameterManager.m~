@@ -26,8 +26,8 @@ classdef ParameterManager < handle
         e;
         %function variables
         numOnes;
-        lociParam1Generational;
-        lociParam1NonGenerational;
+        lociBR;
+        lociFitness;
         max_num_loci;
         recombination;
         recombination_number;
@@ -39,7 +39,7 @@ classdef ParameterManager < handle
         %variables, particularly the seperate structs that store the
         %parameters for each model.
         function obj = ParameterManager(handles, getClassConstant)
-            obj.getClassConstant = getClassConstant;
+            obj.getClassConstant;
             obj.current_model = 1;
             %obj.max_iterations = 10;
             obj.max_types = 500;
@@ -302,7 +302,7 @@ classdef ParameterManager < handle
         %require the user to know whether the num_loci > 1, or what the
         %current model is
         function out = getField(obj, param)
-            model = obj.current_model;
+            model = obj.currentModel;
             if strcmp(param,'num_types')
                 if ~obj.mutating || obj.num_loci == 1
                     out = obj.num_types;
@@ -344,11 +344,11 @@ classdef ParameterManager < handle
             out = 1;
             if (obj.num_loci == 1 || ~obj.mutating)
                 if obj.getClassConstant('atCapacity', obj.current_model)
-                    if sum(obj.model_parameters(obj.current_model).Ninit) ~= (obj.matrix.edge_size^2)
+                    if sum(obj.model_parameters(obj.currentodel).Ninit) ~= (obj.matrix.edge_size^2)
                         out = 0;
                     end
                 else
-                    if sum(obj.model_parameters(obj.current_model).Ninit) > (obj.matrix.edge_size^2)
+                    if sum(obj.model_parameters(obj.currentModel).Ninit) ~= (obj.matrix.edge_size^2)
                         out = 0;
                     end
                 end
@@ -363,6 +363,12 @@ classdef ParameterManager < handle
                isnan(str2double(obj.handles.num_types_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)));
                %isnan(str2double(obj.handles.max_iterations_box.String)));
+        end
+        
+        %Returns the name of the current model
+        function out = getModelName(obj)
+            names = {'Logistic', 'Exponential', 'Moran', 'Wright-Fisher'};
+            out = names{obj.current_model};
         end
 
         %returns the current number of types, regardless of whether

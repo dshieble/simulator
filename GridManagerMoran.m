@@ -1,5 +1,14 @@
-%This class is the GridManager implementation for the Moran model
 classdef GridManagerMoran < GridManagerAbstract
+    %This class is the GridManager implementation for the Moran model
+
+    properties (Constant)
+        %The tag properties, these characterize the class itself
+        Name = 'Moran'
+        Generational = 1;
+        Param1 = 'Birth Rate';
+        Param2 = '';
+        atCapacity = 1;
+    end
     
     properties
         proportion_vec;
@@ -8,9 +17,9 @@ classdef GridManagerMoran < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b)
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n);
             obj.birth_rate = b';
             obj.proportion_vec = [];
             obj.update_params();
@@ -74,4 +83,6 @@ classdef GridManagerMoran < GridManagerAbstract
         end
 
     end
+  
+
 end

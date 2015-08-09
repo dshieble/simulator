@@ -1,6 +1,15 @@
 %This class is the GridManager implementation for the Wright-Fisher model
 classdef GridManagerWright < GridManagerAbstract
     
+   properties (Constant)
+        %The tag properties, these characterize the class itself
+        Name = 'Wright-Fisher';
+        Generational = 0;
+        Param1 = 'Fitness';
+        Param2 = '';
+        atCapacity = 1;
+    end
+    
     properties
         proportion_vec;
         fitness;
@@ -8,9 +17,9 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f)
+        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n)
             assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n);
             obj.fitness = f;
             obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;

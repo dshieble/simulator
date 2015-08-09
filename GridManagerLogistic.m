@@ -2,6 +2,17 @@
 %model
 classdef GridManagerLogistic < GridManagerAbstract
     
+    
+    properties (Constant)
+        %The tag properties, these characterize the class itself
+        Name = 'Logistic';
+        Generational = 1;
+        Param1 = 'Birth Rate';
+        Param2 = 'Death Rate';
+        atCapacity = 0;
+
+    end
+    
     properties
         birth_rate;
         death_rate;
@@ -11,7 +22,7 @@ classdef GridManagerLogistic < GridManagerAbstract
     methods (Access = public)
         
         function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on);
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
             obj.birth_rate = b';
             obj.death_rate = d';
             obj.plot_grid = plot_grid;

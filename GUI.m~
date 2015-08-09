@@ -23,7 +23,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 09-Aug-2015 14:49:25
+% Last Modified by GUIDE v2.5 09-Aug-2015 14:47:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,6 +62,7 @@ guidata(hObject, handles);
 global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping spatial_on temp_axes classNames;
 group = 1;
 evolving = 0;
+parameter_manager = ParameterManager(handles);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
 rects = [];
 paused = 0;
@@ -76,10 +77,10 @@ if length(varargin) == 4
     e = [];
     for i = 1:length(varargin)
         try 
-            eval([varargin{i}, '.Generational;' ]);
-            eval([varargin{i}, '.Name;' ]);
-            eval([varargin{i}, '.Param1;' ]);
-            eval([varargin{i}, '.Param2;' ]);
+            eval(strcat(varargin{i}, '.Generational;'));
+            eval(strcat(varargin{i}, '.Name;'));
+            eval(strcat(varargin{i}, '.Param1;'));
+            eval(strcat(varargin{i}, '.Param2;'));
         catch e
             break
         end
@@ -89,14 +90,6 @@ if length(varargin) == 4
         classNames = varargin;
     end
 end
-parameter_manager = ParameterManager(handles, @getClassConstant);
-handles.model1_button.String = eval([classNames{1}, '.Name;' ]);
-handles.model2_button.String = eval([classNames{2}, '.Name;' ]);
-handles.model3_button.String = eval([classNames{3}, '.Name;' ]);
-handles.model4_button.String = eval([classNames{4}, '.Name;' ]);
-handles.model_name_banner.String = eval([classNames{1}, '.Name;' ]);
-
-
 
 % remove tickmarks from axes
 temp_axes.Visible = 'off';
@@ -303,7 +296,7 @@ parameter_manager.updateStructs();
 function model1_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 1;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+getClassConstants()
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -312,7 +305,7 @@ toggle_visible(handles);
 function model2_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 2;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.log_exp_banner.String = 'Exponential Model';
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -320,7 +313,7 @@ toggle_visible(handles);
 function model3_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 3;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.log_exp_banner.String = 'Moran Model';
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -328,7 +321,7 @@ toggle_visible(handles);
 function model4_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 4;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.log_exp_banner.String = 'Wright-Fisher Model';
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -515,11 +508,11 @@ end
 
 
 %Class Management Functions
-function out = getClassConstant(attribute, model)
+function out = getClassConstant(attribute)
 %this function returns a struct that stores the constants for the current
 %class
-global classNames;
-out = eval([classNames{model} '.' attribute]);
+global parameter_manager classNames;
+out = eval([classNames{parameter_manager.current_model} '.' attribute]);
 
 
 
@@ -569,21 +562,21 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
         'XColor','none','YColor','none')
     handles.param_2_text.Visible = 'off';
     handles.param_2_box.Visible = 'on';
-    if getClassConstant('Generational', parameter_manager.current_model)
+    if getClassConstant('Generational')
         str = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
         text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
     else
     	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
         text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
-    if ~isempty(getClassConstant('Param2', parameter_manager.current_model)) == 2
+    if ~isempty(getClassConstant('Param2')) == 2
         str2 = 'Death Rate: 0.01';
         text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
 else
-    handles.param_1_text.String = [getClassConstant('Param1', parameter_manager.current_model) ':'];        
-    if ~isempty(getClassConstant('Param2',  parameter_manager.current_model))
-    	handles.param_2_text.String = [getClassConstant('Param2', parameter_manager.current_model) ':'];
+    handles.param_1_text.String = [getClassConstant('Param1') ':'];        
+    if ~isempty(getClassConstant('Param2'))
+    	handles.param_2_text.String = [getClassConstant('Param2') ':'];
         handles.param_2_text.Visible = 'on';
         handles.param_2_box.Visible = 'on';
     else 
@@ -622,7 +615,7 @@ else
     %plot_grid
     parameter_manager.updateBoxes();
 end
-if plot_grid && ~strcmp(getClassConstant('Name', parameter_manager.current_model), 'Wright')
+if plot_grid && ~strcmp(getClassConstant('Name'), 'Wright')
     handles.spatial_structure_check.Enable = 'on';
 else
     handles.spatial_structure_check.Enable = 'off';
@@ -875,7 +868,7 @@ handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
-global grid_manager parameter_manager plot_grid rects spatial_on classNames;
+global grid_manager parameter_manager plot_grid rects spatial_on;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
 plottingParams = struct();
@@ -891,17 +884,50 @@ if handles.plot_button_log.Value
 else
     plottingParams.plot_log = 0;
 end
-constructor_arguements = {...
-    parameter_manager.matrix.edge_size,...
-    parameter_manager.getField('Ninit'), ...
-    MutationManager(parameter_manager),...
-    plot_grid,...
-    plottingParams, ...
-    spatial_on,...
-    parameter_manager.getField('Param1'), ...
-    parameter_manager.getField('Param2')};
-constructor = str2func(classNames{parameter_manager.current_model});
-grid_manager = constructor(constructor_arguements{:});
+
+if parameter_manager.current_model == 1
+    grid_manager = GridManagerLogistic(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('logistic', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        spatial_on,...
+        parameter_manager.getField('logistic', 'birth_rate'), ...
+        parameter_manager.getField('logistic','death_rate'));
+elseif parameter_manager.current_model == 2
+    grid_manager = GridManagerExp(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('exp', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        spatial_on,...
+        parameter_manager.getField('exp', 'birth_rate'), ...
+        parameter_manager.getField('exp','death_rate'));
+elseif parameter_manager.current_model == 3
+        grid_manager = GridManagerMoran(...
+        parameter_manager.matrix.edge_size, ...
+        parameter_manager.getField('moran', 'Ninit'), ...
+        MutationManager(parameter_manager),...
+        plot_grid,...
+        plottingParams, ...
+        spatial_on,...
+        parameter_manager.getField('moran','birth_rate'));
+elseif parameter_manager.current_model == 4  
+        grid_manager = GridManagerWright(...
+            parameter_manager.matrix.edge_size, ...
+            parameter_manager.getField('wright', 'Ninit'), ...
+            MutationManager(parameter_manager),...
+            plot_grid,...
+            plottingParams, ...
+            spatial_on,...
+            parameter_manager.getField('wright','fitness'));
+else
+    warndlg('Radio button error');
+    handles.run_button.String = 'Run';
+    return;        
+end
 cla(handles.axes_grid);
 cla(handles.axes_graph);
 rects = cell(parameter_manager.matrix.edge_size);
