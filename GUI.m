@@ -258,7 +258,7 @@ if ~evolving && ~stepping
     rects = cell(parameter_manager.matrix.edge_size);
     drawnow;
     handles.page_button.Enable = 'off';
-    toggle_visible();
+    toggle_visible(handles);
 end
 
 
@@ -590,6 +590,7 @@ end
 
 
 function toggle_visible(handles)
+assert(nargin > 0);
 global parameter_manager;
 handles.recombination_panel.Visible = 'off';
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
