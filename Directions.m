@@ -1,4 +1,4 @@
-%% Directions For Making Models!
+%% Directions For Making and Running a Custom Model
 
 %% Step 1: Create the directory 
 
@@ -11,10 +11,6 @@
 
 %% Step 2: Decide whether to implement a matrix model or a vector model.
 
-% Navigate to the directory you just created by selecting it though matlab or running the
-% command cd('@GridManager<ModelName>') where <ModelName> is the name of
-% the model
-
 
 %% Vector Models:
 % The vector in the model has n entries, where n is the number of different
@@ -22,7 +18,8 @@
 % i.
 
 % If you would like to implement a vector model, open the file
-% get_next_vector and follow the instructions
+% get_next_vector and follow the instructions. To open this file, you can
+% run the command edit('@GridManager<ModelName>/get_next_vector')
 
 %%  Matrix Models: 
 
@@ -38,7 +35,13 @@
 % to
 % plottingEnabled = 1;
 
-% Then open the file get_next_matrix and follow the instructions
+% Then open the file get_next_matrix and follow the instructions. To open 
+% this file, you can run the command edit('@GridManager<ModelName>/get_next_vector')
+
+%% Step 3: Run Your Model
+
+% From the main project directory, run the command GUI('<ModelName>') to
+% open up the simulation GUI.
 
 
 

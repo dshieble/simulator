@@ -13,7 +13,8 @@ classdef ParameterManager < handle
         handles;
         
         model_parameters;
-        getClassConstant;
+        classConstants;
+        
         matrix;
         mutating;
         mutation_matrix;
@@ -34,8 +35,8 @@ classdef ParameterManager < handle
         %Constructor method. This method initializes all of the instance
         %variables, particularly the seperate structs that store the
         %parameters for each model.
-        function obj = ParameterManager(handles, getClassConstant)
-            obj.getClassConstant = getClassConstant;
+        function obj = ParameterManager(handles, classConstants)
+            obj.classConstants = classConstants;
             obj.current_model = 1;
             obj.set_plot_grid(handles.plot_grid_button.Value);
             %obj.max_iterations = 10;
@@ -44,12 +45,12 @@ classdef ParameterManager < handle
             obj.handles = handles;
             obj.matrix = struct();
             obj.model_parameters = struct(...
-                'Ninit_default', {[],[],[],[]},...
-                'Param1_default', {[],[],[],[]},...
-                'Param2_default', {[],[],[],[]},...
-                'Ninit', {[],[],[],[]});
-            for i = 1:4
-                if getClassConstant('atCapacity', i)
+                'Ninit_default', repmat({[]},1,length(obj.classConstants)),...
+                'Param1_default', repmat({[]},1,length(obj.classConstants)),...
+                'Param2_default', repmat({[]},1,length(obj.classConstants)),...
+                'Ninit', repmat({[]},1,length(obj.classConstants)));
+            for i = 1:length(obj.classConstants)
+                if obj.classConstants(i).atCapacity
                     obj.model_parameters(i).Ninit_default = 1250;
                 else
                     obj.model_parameters(i).Ninit_default = 1;
@@ -117,25 +118,26 @@ classdef ParameterManager < handle
             if ~isnan(num)
                 if num < obj.num_types
                     obj.handles.types_popup.String(num+1:end) = [];
-                    %logistic
-                    obj.model_parameters(obj.current_model).Ninit(num+1:end) = [];
-                    obj.model_parameters(obj.current_model).Param1(num+1:end) = [];
-                    obj.model_parameters(obj.current_model).Param2(num+1:end) = [];
+                    for model = 1:length(obj.classConstants)
+                        obj.model_parameters(model).Ninit(num+1:end) = [];
+                        obj.model_parameters(model).Param1(num+1:end) = [];
+                        obj.model_parameters(model).Param2(num+1:end) = [];
+                    end
                 elseif num > obj.num_types
                     for i = obj.num_types+1:num
                         obj.handles.types_popup.String{i} = i;
-                        %logistic
-                        obj.model_parameters(obj.current_model).Ninit(i) = obj.model_parameters(obj.current_model).Ninit_default;
-                        obj.model_parameters(obj.current_model).Param1(i) = obj.model_parameters(obj.current_model).Param1_default;
-                        obj.model_parameters(obj.current_model).Param2(i) = obj.model_parameters(obj.current_model).Param2_default;
-
+                        for model = 1:length(obj.classConstants)
+                            obj.model_parameters(model).Ninit(i) = obj.model_parameters(model).Ninit_default;
+                            obj.model_parameters(model).Param1(i) = obj.model_parameters(model).Param1_default;
+                            obj.model_parameters(model).Param2(i) = obj.model_parameters(model).Param2_default;
+                        end
                     end
                 end
                 %adjust birth and death rates accordingly
                 if num ~= obj.num_types
                     tot = obj.matrix.edge_size.^2;
-                    for i = 1:4
-                        if obj.getClassConstant('atCapacity', i)
+                    for i = 1:length(obj.classConstants)
+                        if obj.classConstants(1).atCapacity
                         	obj.model_parameters(i).Ninit = zeros(1,num);
                             for j = 1:(num-1)
                                 obj.model_parameters(i).Ninit(j) = floor(tot/num);
@@ -184,18 +186,16 @@ classdef ParameterManager < handle
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
             if obj.num_loci > 1 && obj.mutating
-                type = 1;
                 obj.handles.num_types_box.String = 2;
                 obj.handles.param_1_box.String = obj.s;
                 obj.handles.param_2_box.String = obj.e;
-                if obj.current_model <= 2
-                    obj.handles.init_pop_box.String = 5;
+                if ~obj.classConstants(obj.current_model).atCapacity
+                    obj.handles.init_pop_box.String = 1;
                 else
                     obj.handles.init_pop_box.String = obj.matrix.edge_size^2;
                 end
                 obj.handles.loci_box.String = obj.num_loci;
             else
-                type = obj.handles.types_popup.Value;
                 obj.handles.num_types_box.String = obj.num_types;
                 obj.handles.param_1_box.String = obj.model_parameters(obj.current_model).Param1(type);
                 obj.handles.param_2_box.String = obj.model_parameters(obj.current_model).Param2(type);
@@ -221,8 +221,8 @@ classdef ParameterManager < handle
             end
             if changed
                 tot = obj.matrix.edge_size.^2;
-                for i = 1:4
-                    if obj.getClassConstant('atCapacity', i)
+                for i = 1:length(obj.classConstants)
+                    if obj.classConstants(i).atCapacity
                         obj.model_parameters(i).Ninit = zeros(1,obj.num_types);
                         for j = 1:(obj.num_types-1)
                             obj.model_parameters(i).Ninit(j) = floor(tot/obj.num_types);
@@ -252,7 +252,7 @@ classdef ParameterManager < handle
             end
             if obj.num_loci > 1 && obj.mutating
                 if strcmp(param, 'Ninit')
-                    if ~obj.getClassConstant('atCapacity', model)
+                    if ~obj.classConstants(model).atCapacity
                         out = [obj.model_parameters(model).Ninit_default zeros(1, 2^obj.num_loci - 1)];
                     else
                     	out = [obj.matrix.edge_size^2 zeros(1, 2^obj.num_loci - 1)];
@@ -262,7 +262,7 @@ classdef ParameterManager < handle
                 elseif strcmp(param, 'Param1')
                     out = zeros(1,2^obj.num_loci);
                     for i = 1:2^obj.num_loci
-                        if obj.getClassConstant('Generational', model)
+                        if obj.classConstants(model).Generational
                             out(i) = obj.lociParam1Generational(i); 
                         else
                             out(i) = obj.lociParam1NonGenerational(i);
@@ -281,7 +281,7 @@ classdef ParameterManager < handle
         function out = verifySizeOk(obj)
             out = 1;
             if (obj.num_loci == 1 || ~obj.mutating)
-                if obj.getClassConstant('atCapacity', obj.current_model)
+                if obj.classConstants(obj.current_model).atCapacity
                     if sum(obj.model_parameters(obj.current_model).Ninit) ~= (obj.matrix.edge_size^2)
                         out = 0;
                     end

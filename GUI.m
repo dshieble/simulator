@@ -1,29 +1,19 @@
 function varargout = GUI(varargin)
-% GUI MATLAB code for GUI.fig
-%      GUI, by itself, creates a new GUI or raises the existing
-%      singleton*.
-%
-%      H = GUI returns the handle to a new GUI or the handle to
-%      the existing singleton*.
-%
-%      GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in GUI.M with the given input arguments.
-%
-%      GUI('Property','Value',...) creates a new GUI or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before GUI_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to GUI_OpeningFcn via varargin.
+% This is the main function for the Population Dynamics Simulater Project.
+% This is a guide-generated file, and it contains all of the GUI Callbacks.
+% The main purpose of this function is interfacing with the
+% ParameterManager class, which stores the parameters that the user inputs,
+% and instantiating the GridManager classes, which run the simulation using
+% the variables in ParameterManager. This function also handles the button
+% presses and what components of the GUI are presented to the user.
 
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
+% Caveats on the Programming Style: 
+% Many of the variables in the file are global and there are a few calls to
+% eval. In general, global and eval are evil, but I personally find global
+% both easier to read and more intuitive than getappdata/setappdata. If you have any
+% suggestions, email me at Dan.Shiebler@mathworks.com
 
-% Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 09-Aug-2015 14:49:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,33 +49,56 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes classNames;
+global group evolving old_matrix parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes;
 classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
-if length(varargin) == 4 
+if ~isempty(varargin)
     e = [];
     for i = 1:length(varargin)
         try 
-            eval([varargin{i}, '.Generational;' ]);
-            eval([varargin{i}, '.Name;' ]);
-            eval([varargin{i}, '.Param_1_Name;' ]);
-            eval([varargin{i}, '.Param_2_Name;' ]);
-            eval([varargin{i}, '.atCapacity;' ]);
-            eval([varargin{i}, '.plottingEnabled;' ]);
+            getConstantProperty(varargin{i}, 'Name');
+            getConstantProperty(varargin{i}, 'Generational');
+            getConstantProperty(varargin{i}, 'Param_1_Name');
+            getConstantProperty(varargin{i}, 'Param_2_Name');
+            getConstantProperty(varargin{i}, 'atCapacity');
+            getConstantProperty(varargin{i}, 'plottingEnabled');
         catch e
             break
         end
     end
     if isempty(e)
         disp('Names Registered Successfully!');
-        classNames = varargin;
+        classNames = varargin(1:min(4, length(varargin)));
     end
 end
-handles.model1_button.String = eval([classNames{1}, '.Name;' ]);
-handles.model2_button.String = eval([classNames{2}, '.Name;' ]);
-handles.model3_button.String = eval([classNames{3}, '.Name;' ]);
-handles.model4_button.String = eval([classNames{4}, '.Name;' ]);
-handles.model_name_banner.String = eval([classNames{1}, '.Name;' ]);
-parameter_manager = ParameterManager(handles, @getClassConstant);
+classConstants = struct(...
+    'className', repmat({[]}, 1, length(classNames)),...
+    'Name', repmat({[]}, 1, length(classNames)),...
+    'Generational', repmat({[]}, 1, length(classNames)),...
+    'Param_1_Name', repmat({[]}, 1, length(classNames)),...
+    'Param_2_Name', repmat({[]}, 1, length(classNames)),...
+    'atCapacity', repmat({[]}, 1, length(classNames)),...
+    'plottingEnabled', repmat({[]}, 1, length(classNames))...
+);
+for i = 1:length(classNames)
+    classConstants(i).className = classNames{i};
+    classConstants(i).Name = getConstantProperty(classNames{i}, 'Name');
+    classConstants(i).Generational = getConstantProperty(classNames{i}, 'Generational');
+    classConstants(i).Param_1_Name = getConstantProperty(classNames{i}, 'Param_1_Name');
+    classConstants(i).Param_2_Name = getConstantProperty(classNames{i}, 'Param_2_Name');
+    classConstants(i).atCapacity = getConstantProperty(classNames{i}, 'atCapacity');
+    classConstants(i).plottingEnabled = getConstantProperty(classNames{i}, 'plottingEnabled');
+end
+for i = 1:4
+    if i <= length(classNames)
+        %Set the text on the button to be the model name
+        eval(sprintf('handles.model%s_button.String = ''%s'';',num2str(i), classConstants(i).Name));
+    else
+        %Otherwise, hide the button
+        eval(['handles.model' num2str(i) '_button.Visible = ''off'';']);        
+    end
+end
+handles.model_name_banner.String = classConstants(i).Name;
+parameter_manager = ParameterManager(handles, classConstants);
 old_matrix = zeros(parameter_manager.matrix.edge_size);
 group = 1;
 evolving = 0;
@@ -305,7 +318,7 @@ parameter_manager.updateStructs();
 function model1_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 1;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -314,7 +327,7 @@ toggle_visible(handles);
 function model2_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 2;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -322,7 +335,7 @@ toggle_visible(handles);
 function model3_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 3;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -330,7 +343,7 @@ toggle_visible(handles);
 function model4_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.current_model = 4;
-handles.model_name_banner.String = getClassConstant('Name', parameter_manager.current_model);
+handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
@@ -510,13 +523,6 @@ end
 
 
 
-%Class Management Functions
-function out = getClassConstant(attribute, model)
-%this function returns a struct that stores the constants for the current
-%class
-global classNames;
-out = eval([classNames{model} '.' attribute]);
-
 
 
 function verify_parameters(handles)
@@ -563,21 +569,21 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
         'XColor','none','YColor','none')
     handles.param_2_text.Visible = 'off';
     handles.param_2_box.Visible = 'on';
-    if getClassConstant('Generational', parameter_manager.current_model)
+    if parameter_manager.classConstants(parameter_manager.current_model).Generational
         str = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
         text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
     else
     	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
         text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
-    if ~isempty(getClassConstant('Param_2_Name', parameter_manager.current_model)) == 2
+    if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name)
         str2 = 'Death Rate: 0.01';
         text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
 else
-    handles.param_1_text.String = [getClassConstant('Param_1_Name', parameter_manager.current_model) ':'];        
-    if ~isempty(getClassConstant('Param_2_Name',  parameter_manager.current_model))
-    	handles.param_2_text.String = [getClassConstant('Param_2_Name', parameter_manager.current_model) ':'];
+    handles.param_1_text.String = [parameter_manager.classConstants(parameter_manager.current_model).Param_1_Name ':'];        
+    if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name)
+    	handles.param_2_text.String = [parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name ':'];  
         handles.param_2_text.Visible = 'on';
         handles.param_2_box.Visible = 'on';
     else 
@@ -617,7 +623,7 @@ else
     %plot_grid
     parameter_manager.updateBoxes();
 end
-if getClassConstant('plottingEnabled', parameter_manager.current_model)
+if parameter_manager.classConstants(parameter_manager.current_model).plottingEnabled
     handles.plot_grid_button.Enable = 'on';
 else
     parameter_manager.plot_grid = 0;
@@ -625,7 +631,7 @@ else
     handles.plot_grid_button.Enable = 'off';
 end
 
-if parameter_manager.plot_grid && ~strcmp(getClassConstant('Name', parameter_manager.current_model), 'Wright')
+if parameter_manager.plot_grid && ~strcmp(parameter_manager.classConstants(parameter_manager.current_model).Name, 'Wright-Fisher')
     handles.spatial_structure_check.Enable = 'on';
 else
     handles.spatial_structure_check.Enable = 'off';
@@ -888,7 +894,7 @@ handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
-global grid_manager parameter_manager rects spatial_on classNames;
+global grid_manager parameter_manager rects spatial_on;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
 plottingParams = struct();
@@ -913,7 +919,7 @@ constructor_arguements = {...
     spatial_on,...
     parameter_manager.getField('Param1'), ...
     parameter_manager.getField('Param2')};
-constructor = str2func(classNames{parameter_manager.current_model});
+constructor = str2func(parameter_manager.classConstants(parameter_manager.current_model).className);
 grid_manager = constructor(constructor_arguements{:});
 cla(handles.axes_grid);
 cla(handles.axes_graph);
@@ -934,6 +940,12 @@ else
 %     handles.page_button.Enable = 'off';
 end
 
+function prop = getConstantProperty(name, propName)
+% Gets a constant property of a class, given that class's name as a string
+mc=meta.class.fromName(name);
+mp=mc.PropertyList;
+[~,loc]=ismember(propName,{mp.Name});
+prop = mp(loc).DefaultValue;
 %
 %
 %
@@ -1160,3 +1172,30 @@ function recombination_box_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% GUI MATLAB code for GUI.fig
+%      GUI, by itself, creates a new GUI or raises the existing
+%      singleton*.
+%
+%      H = GUI returns the handle to a new GUI or the handle to
+%      the existing singleton*.
+%
+%      GUI('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GUI.M with the given input arguments.
+%
+%      GUI('Property','Value',...) creates a new GUI or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before GUI_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to GUI_OpeningFcn via varargin.
+
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help GUI
+
+% Last Modified by GUIDE v2.5 09-Aug-2015 14:49:25
