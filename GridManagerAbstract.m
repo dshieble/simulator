@@ -1,3 +1,4 @@
+classdef (Abstract) GridManagerAbstract < handle
 %This class is the parent class of the 4 grid managers. It contains methods
 %that are used by all of its child classes, as well as the instance
 %variables used across all classes. 
@@ -6,9 +7,7 @@
 %contains a method get_next that advances the matrix/counts to the next
 %generation, based on the model that the GridManager's implementation is based
 %on
-
-classdef (Abstract) GridManagerAbstract < handle
-    
+   
     
     properties
         save_data;
@@ -26,13 +25,17 @@ classdef (Abstract) GridManagerAbstract < handle
         mutation_manager; 
         plottingParams;
         spatial_on;
+        Param1;
+        Param2;
     end
     methods (Access = public)
         %The constructor method. This function initializes the matrix and
         %the plotting parameters, as well as other useful variables like
         %the color variable. The final 2 inputs are the Param1 and the
         %Param2 inputs
-        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, ~, ~)
+        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, p1, p2)
+            obj.Param1 = p1';
+            obj.Param2 = p2';
             obj.matrix = zeros(dim);
             obj.old_matrix = obj.matrix;
             if (sum(Ninit) == numel(obj.matrix)) || ~spatial_on
@@ -84,7 +87,8 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.mutation_manager = mutation_manager;
             obj.plottingParams = plottingParams;
             obj.spatial_on = spatial_on;
-            obj.save_data = struct();
+            obj.save_data = struct('Param1', p1, 'Param2', p2);
+            obj.update_params();
         end
       
         %This function is called at the end of get_next by all of the child
@@ -202,15 +206,23 @@ classdef (Abstract) GridManagerAbstract < handle
             out = ofType(randi(numel(ofType)));
         end
             
+        %Updates the total_count, the percent_count and the mean_fitness
+        %variables for plotting. 
+        function update_params(obj)
+            for i = 1:obj.num_types
+                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
+                obj.mean_fitness(i, obj.timestep) = (obj.Param1(i))*obj.percent_count(i, obj.timestep); 
+            end
+            obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
+        end
+        
+        
     end
     
-    methods (Abstract)
-        %A method implemented by all of the child GridManager class. It
-        %updates the total_count, the percent_count and the mean_fitness
-        %variables for plotting. 
-        update_params(obj)
-        
+    methods (Abstract)        
         %A method implemented by all of the child GridManager class.
+        %This method updates obj.total_count for the new timestep, and, if
+        %plot_grid is enabled, also updates the GridManager's petri dish
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep

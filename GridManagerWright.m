@@ -1,18 +1,19 @@
-%This class is the GridManager implementation for the Wright-Fisher model
 classdef GridManagerWright < GridManagerAbstract
-    
+%This class is the GridManager implementation for the Wright-Fisher model
+
    properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Wright-Fisher';
         Generational = 0;
-        Param1 = 'Fitness';
-        Param2 = '';
+        Param_1_Name = 'Fitness';
+        Param_2_Name = '';
         atCapacity = 1;
+        plottingEnabled = 1;
+
     end
     
     properties
         proportion_vec;
-        fitness;
     end
     
     methods (Access = public)
@@ -20,11 +21,6 @@ classdef GridManagerWright < GridManagerAbstract
         function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n)
             assert(sum(Ninit)==dim.^2);
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n);
-            obj.fitness = f;
-            obj.plot_grid = plot_grid;
-            obj.mutation_manager = mutation_manager;
-            obj.update_params();
-            obj.save_data.fitness = f;
         end
         
         %See GridManagerAbstract
@@ -34,10 +30,10 @@ classdef GridManagerWright < GridManagerAbstract
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
             %For each cell, replace it with a multinomially chosen type where 
-            %probabilities are determined based on fitness and current count.
+            %probabilities are determined based on Param1 and current count.
             %Updates are based on the obj.total_count parameter
-            counts = obj.total_count(:, obj.timestep)';
-            v = (obj.fitness.*counts);
+            counts = obj.total_count(:, obj.timestep);
+            v = (obj.Param1.*counts);
             probs = v./sum(v);
             new_counts = mnrnd(numel(obj.matrix), probs);
             if obj.plot_grid 
@@ -52,15 +48,7 @@ classdef GridManagerWright < GridManagerAbstract
             obj.total_count(:, obj.timestep + 1) = new_counts;
             [mat, changed, t, h] = obj.get_next_cleanup();
         end
-        
-        %See GridManagerAbstract
-        function update_params(obj)
-            for i = 1:obj.num_types
-                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
-                obj.mean_fitness(i, obj.timestep) = (obj.fitness(i))*obj.percent_count(i, obj.timestep); 
-            end
-            obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
-        end
+       
 
     end
 end

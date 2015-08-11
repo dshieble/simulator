@@ -1,39 +1,27 @@
+classdef GridManagerLogistic < GridManagerAbstract
 %This class is an implementation of the GridManager class for the Logistic
 %model
-classdef GridManagerLogistic < GridManagerAbstract
-    
     
     properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Logistic';
         Generational = 1;
-        Param1 = 'Birth Rate';
-        Param2 = 'Death Rate';
+        Param_1_Name = 'Birth Rate';
+        Param_2_Name = 'Death Rate';
         atCapacity = 0;
-
+        plottingEnabled = 1;
     end
     
     properties
-        birth_rate;
-        death_rate;
-        use_exp; %if 1, use exponential model instead of logistic
     end
     
     methods (Access = public)
         
         function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
-            obj.birth_rate = b';
-            obj.death_rate = d';
-            obj.plot_grid = plot_grid;
-            obj.mutation_manager = mutation_manager;
-            obj.update_params();
-            obj.save_data.birth_rate = b;
-            obj.save_data.death_rate = d;
-
         end
         
-        %See GridManagerAbstract
+        %See GridManagerAbstract'
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
@@ -44,7 +32,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 if sum(gen_vec) <= 0
                     break;
                 end
-                tot_rates = gen_vec.*(obj.birth_rate + obj.death_rate);
+                tot_rates = gen_vec.*(obj.Param1 + obj.Param2);
                 if min(tot_rates) < 0
                     tot_rates = tot_rates + abs(min(tot_rates));
                 end
@@ -55,7 +43,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                     num = num - tot_rates(chosen_type);
                 end
 
-                if num + obj.birth_rate(chosen_type)*gen_vec(chosen_type) > 0
+                if num + obj.Param1(chosen_type)*gen_vec(chosen_type) > 0
                     if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
                         if sum(gen_vec) < numel(obj.matrix)
                             if obj.plot_grid
@@ -78,17 +66,17 @@ classdef GridManagerLogistic < GridManagerAbstract
                     end
                 end
             end
-            obj.total_count(:, obj.timestep + 1) = gen_vec;
-
             %then, include all computation updates
+            obj.total_count(:, obj.timestep + 1) = gen_vec;
             [mat, changed, t, h] = obj.get_next_cleanup();
         end
         
-        %See GridManagerAbstract
+        %Overriden method to account for fact that fitness is determined by
+        %difference between birth and death rates here
         function update_params(obj)
             for i = 1:obj.num_types
                 obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
-                obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i)-obj.death_rate(i))*obj.percent_count(i, obj.timestep); 
+                obj.mean_fitness(i, obj.timestep) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
         end

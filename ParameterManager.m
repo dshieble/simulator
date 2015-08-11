@@ -1,20 +1,16 @@
+
+classdef ParameterManager < handle
 %This powerhouse of a class stores the parameters for each of the different
 %models and updates the display based on these parameters. It serves as an
 %interface between the backend and frontend. 
 
-classdef ParameterManager < handle
-    
     properties
+        
         current_model;
-        %max_iterations;
+        plot_grid;
         max_types;
         num_types;
         handles;
-        
-%         logistic;
-%         moran;
-%         wright;
-%         exp;
         
         model_parameters;
         getClassConstant;
@@ -41,16 +37,12 @@ classdef ParameterManager < handle
         function obj = ParameterManager(handles, getClassConstant)
             obj.getClassConstant = getClassConstant;
             obj.current_model = 1;
+            obj.set_plot_grid(handles.plot_grid_button.Value);
             %obj.max_iterations = 10;
             obj.max_types = 500;
             obj.num_types = 2;
             obj.handles = handles;
-%             obj.logistic = struct();
-%             obj.exp = struct();
-%             obj.moran = struct();
-%             obj.wright = struct();
             obj.matrix = struct();
-            %logistic
             obj.model_parameters = struct(...
                 'Ninit_default', {[],[],[],[]},...
                 'Param1_default', {[],[],[],[]},...
@@ -68,30 +60,6 @@ classdef ParameterManager < handle
                 obj.model_parameters(i).Param1 = repmat(obj.model_parameters(i).Param1_default,1, 2);
                 obj.model_parameters(i).Param2 = repmat(obj.model_parameters(i).Param2_default,1, 2);
             end
-                                                
-%             obj.logistic.Ninit_default = [1];
-%             obj.logistic.birth_rate_default = 1;
-%             obj.logistic.death_rate_default = [0.01];
-%             obj.logistic.Ninit = [obj.logistic.Ninit_default obj.logistic.Ninit_default];
-%             obj.logistic.birth_rate = [obj.logistic.birth_rate_default obj.logistic.birth_rate_default];
-%             obj.logistic.death_rate = [obj.logistic.death_rate_default obj.logistic.death_rate_default];
-%             %exp
-%             obj.exp.Ninit_default = [1];
-%             obj.exp.birth_rate_default = 1;
-%             obj.exp.death_rate_default = [0.01];
-%             obj.exp.Ninit = [obj.exp.Ninit_default obj.exp.Ninit_default];
-%             obj.exp.birth_rate = [obj.exp.birth_rate_default obj.exp.birth_rate_default];
-%             obj.exp.death_rate = [obj.exp.death_rate_default obj.exp.death_rate_default];
-%             %moran
-%             obj.moran.Ninit_default = [1250];
-%             obj.moran.birth_rate_default = 1;
-%             obj.moran.Ninit = [obj.moran.Ninit_default obj.moran.Ninit_default];
-%             obj.moran.birth_rate = [obj.moran.birth_rate_default obj.moran.birth_rate_default];
-%             %wright
-%             obj.wright.Ninit_default = [1250];
-%             obj.wright.fitness_default = 1;
-%             obj.wright.Ninit = [obj.wright.Ninit_default obj.wright.Ninit_default];
-%             obj.wright.fitness = [obj.wright.fitness_default obj.wright.fitness_default];
             %matrix
             obj.matrix.plotting = 1;
             obj.matrix.edge_size = 50;
@@ -133,42 +101,12 @@ classdef ParameterManager < handle
                     obj.model_parameters(obj.current_model).Ninit(type) = round(ninit_temp);
                 end
                 if ~isnan(param_1_temp)
-                    obj.model_parameters(obj.current_model).Param1(type) = round(param_1_temp);
+                    obj.model_parameters(obj.current_model).Param1(type) = param_1_temp;
                 end
                 if ~isnan(param_2_temp)
-                    obj.model_parameters(obj.current_model).Param2(type) = round(param_2_temp);
+                    obj.model_parameters(obj.current_model).Param2(type) = param_2_temp;
                 end
             end
-
-%                 if obj.current_model == 1
-
-%             elseif obj.current_model == 2
-%                 if ~isnan(ninit_temp)
-%                     obj.exp.Ninit(type) = round(ninit_temp);
-%                 end
-%                 if ~isnan(param_1_temp)
-%                     obj.exp.birth_rate(type) = param_1_temp;
-%                 end
-%                 if ~isnan(param_2_temp)
-%                     obj.exp.death_rate(type) = param_2_temp;
-%                 end
-%             %moran
-%             elseif obj.current_model == 3         
-%                 if ~isnan(ninit_temp)
-%                     obj.moran.Ninit(type) = round(ninit_temp);
-%                 end
-%                 if ~isnan(param_1_temp)
-%                     obj.moran.birth_rate(type) = param_1_temp;
-%                 end
-%             elseif obj.current_model == 4       
-%                 %wright
-%                 if ~isnan(ninit_temp)
-%                     obj.wright.Ninit(type) = round(ninit_temp);
-%                 end
-%                 if ~isnan(param_1_temp)
-%                     obj.wright.fitness(type) = param_1_temp;
-%                 end
-%             end
             obj.updateMatrixProperties();
         end
         
@@ -373,6 +311,12 @@ classdef ParameterManager < handle
             else
                 out = obj.num_types;
             end
+        end
+        
+        %sets the plot_grid variable. I might add some interesting logic
+        %here...
+        function set_plot_grid(obj, input)
+            obj.plot_grid = input;
         end
         
         %Updates the maximum number of iterations for the non-plotting case

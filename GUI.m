@@ -59,18 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager rects paused grid_manager plot_grid parameters_clear stepping spatial_on temp_axes classNames;
-group = 1;
-evolving = 0;
-old_matrix = zeros(parameter_manager.matrix.edge_size);
-rects = [];
-paused = 0;
-grid_manager = [];
-parameters_clear = 1;
-stepping = 0;
-plot_grid = handles.plot_grid_button.Value;
-spatial_on = 1;
-temp_axes = axes('Parent',handles.params_panel, 'Units', 'characters', 'Position', handles.param_2_text.Position);
+global group evolving old_matrix parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes classNames;
 classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
 if length(varargin) == 4 
     e = [];
@@ -78,8 +67,10 @@ if length(varargin) == 4
         try 
             eval([varargin{i}, '.Generational;' ]);
             eval([varargin{i}, '.Name;' ]);
-            eval([varargin{i}, '.Param1;' ]);
-            eval([varargin{i}, '.Param2;' ]);
+            eval([varargin{i}, '.Param_1_Name;' ]);
+            eval([varargin{i}, '.Param_2_Name;' ]);
+            eval([varargin{i}, '.atCapacity;' ]);
+            eval([varargin{i}, '.plottingEnabled;' ]);
         catch e
             break
         end
@@ -89,12 +80,22 @@ if length(varargin) == 4
         classNames = varargin;
     end
 end
-parameter_manager = ParameterManager(handles, @getClassConstant);
 handles.model1_button.String = eval([classNames{1}, '.Name;' ]);
 handles.model2_button.String = eval([classNames{2}, '.Name;' ]);
 handles.model3_button.String = eval([classNames{3}, '.Name;' ]);
 handles.model4_button.String = eval([classNames{4}, '.Name;' ]);
 handles.model_name_banner.String = eval([classNames{1}, '.Name;' ]);
+parameter_manager = ParameterManager(handles, @getClassConstant);
+old_matrix = zeros(parameter_manager.matrix.edge_size);
+group = 1;
+evolving = 0;
+rects = [];
+paused = 0;
+grid_manager = [];
+parameters_clear = 1;
+stepping = 0;
+spatial_on = 1;
+temp_axes = axes('Parent',handles.params_panel, 'Units', 'characters', 'Position', handles.param_2_text.Position);
 
 
 
@@ -257,6 +258,7 @@ if ~evolving && ~stepping
     rects = cell(parameter_manager.matrix.edge_size);
     drawnow;
     handles.page_button.Enable = 'off';
+    toggle_visible();
 end
 
 
@@ -350,17 +352,11 @@ verify_parameters(handles);
 
 % --- Executes on button press in plot_grid_button.
 function plot_grid_button_Callback(hObject, eventdata, handles)
-global plot_grid;
-plot_grid = handles.plot_grid_button.Value;
+
+global parameter_manager;
+parameter_manager.set_plot_grid(handles.plot_grid_button.Value);
 toggle_visible(handles);
-% handles.max_iterations_panel.Visible
-% if handles.plot_grid_button.Value
-%     plot_grid = 1;
-%     handles.max_iterations_panel.Visible = 'off';
-% else 
-%     plot_grid = 0;
-%     handles.max_iterations_panel.Visible = 'on';
-% end
+
 
 % --- Executes on button press in preview_button.
 function preview_button_Callback(hObject, eventdata, handles)
@@ -425,7 +421,7 @@ verify_parameters(handles);
 
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
-global grid_manager stepping evolving paused plot_grid;
+global grid_manager stepping evolving paused;
 if ~stepping && ~evolving
     if ~paused
         run(handles,1)
@@ -539,8 +535,6 @@ elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter
     warndlg('ERROR: S must be no less than -1!');
 elseif ~parameter_manager.verifySizeOk()
 	warndlg(sprintf('ERROR: Initial Populations must sum to %d for Moran and Wright-Fisher, and must be no greater than %d for Exponential and Logistic', parameter_manager.matrix.edge_size.^2, parameter_manager.matrix.edge_size.^2));
-% elseif plot_grid && parameter_manager.num_loci > 4
-%     warndlg('ERROR: Uncheck the "Show Petri Dish" box to simulate more than 4 Loci.');
 else    
     parameters_clear = 1;
 end
@@ -576,14 +570,14 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
     	str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
         text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
-    if ~isempty(getClassConstant('Param2', parameter_manager.current_model)) == 2
+    if ~isempty(getClassConstant('Param_2_Name', parameter_manager.current_model)) == 2
         str2 = 'Death Rate: 0.01';
         text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
     end
 else
-    handles.param_1_text.String = [getClassConstant('Param1', parameter_manager.current_model) ':'];        
-    if ~isempty(getClassConstant('Param2',  parameter_manager.current_model))
-    	handles.param_2_text.String = [getClassConstant('Param2', parameter_manager.current_model) ':'];
+    handles.param_1_text.String = [getClassConstant('Param_1_Name', parameter_manager.current_model) ':'];        
+    if ~isempty(getClassConstant('Param_2_Name',  parameter_manager.current_model))
+    	handles.param_2_text.String = [getClassConstant('Param_2_Name', parameter_manager.current_model) ':'];
         handles.param_2_text.Visible = 'on';
         handles.param_2_box.Visible = 'on';
     else 
@@ -596,7 +590,7 @@ end
 
 
 function toggle_visible(handles)
-global parameter_manager plot_grid;
+global parameter_manager;
 handles.recombination_panel.Visible = 'off';
 if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %popup
@@ -622,11 +616,21 @@ else
     %plot_grid
     parameter_manager.updateBoxes();
 end
-if plot_grid && ~strcmp(getClassConstant('Name', parameter_manager.current_model), 'Wright')
+if getClassConstant('plottingEnabled', parameter_manager.current_model)
+    handles.plot_grid_button.Enable = 'on';
+else
+    parameter_manager.plot_grid = 0;
+    handles.plot_grid_button.Value = 0;
+    handles.plot_grid_button.Enable = 'off';
+end
+
+if parameter_manager.plot_grid && ~strcmp(getClassConstant('Name', parameter_manager.current_model), 'Wright')
     handles.spatial_structure_check.Enable = 'on';
 else
     handles.spatial_structure_check.Enable = 'off';
 end
+
+
 adjust_text(handles);
 
 
@@ -655,6 +659,7 @@ if on
     handles.plot_button_fitness.Enable = 'on';
     handles.plot_button_linear.Enable = 'on';
     handles.plot_button_log.Enable = 'on';
+    handles.mutation_matrix_button.Enable = 'on';
 else
     handles.plot_grid_button.Enable = 'off';
     handles.population_box.Enable = 'off';
@@ -677,6 +682,8 @@ else
     handles.plot_button_fitness.Enable = 'off';
     handles.plot_button_linear.Enable = 'off';
     handles.plot_button_log.Enable = 'off';
+    handles.mutation_matrix_button.Enable = 'off';
+
 end
 
 %Responsible for resetting all of the things on the screen to their
@@ -705,7 +712,7 @@ handles.reset_button.BackgroundColor = [1 0 0];
 %
 %
 function run_loop(first_run, handles, runOnce)
-global evolving grid_manager plot_grid parameter_manager stepping group;
+global evolving grid_manager group;
 if isempty(grid_manager)
     fprintf('ERROR: Grid Manager Empty')
     return
@@ -715,7 +722,12 @@ if group > grid_manager.num_types
     group = 1;
 end
 while evolving == 1
-   [matrix, c, t, halt] = grid_manager.get_next();
+   try
+       [matrix, c, t, halt] = grid_manager.get_next();
+   catch e
+       disp(e.message);
+       break;
+   end
    draw_iteration(matrix, c,handles, first_run);
    first_run = 0;
     if runOnce || halt% || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
@@ -724,7 +736,7 @@ while evolving == 1
 end
 
 function draw_iteration(matrix, c, handles, first_run)
-global parameter_manager rects grid_manager plot_grid;
+global parameter_manager rects grid_manager;
 %represents a single iteration of the grid and graph
 if isempty(grid_manager)
     fprintf('ERROR: Grid Manager Empty')
@@ -811,7 +823,7 @@ end
 %
 function run(handles, runOnce)
 %Execute the simulation
-global grid_manager evolving group paused plot_grid parameter_manager;
+global evolving group paused parameter_manager;
 toggle_visible(handles)
 group = 1;
 handles.run_button.String = 'Calculating...';
@@ -819,7 +831,7 @@ evolving = 1;
 %If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';
-    plot_grid = 0;
+    parameter_manager.plot_grid = 0;
     handles.plot_grid_button.Value = 0;
 end
 %Turn off the boxes on the screens and recolor the buttons
@@ -875,7 +887,7 @@ handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
-global grid_manager parameter_manager plot_grid rects spatial_on classNames;
+global grid_manager parameter_manager rects spatial_on classNames;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
 plottingParams = struct();
@@ -895,7 +907,7 @@ constructor_arguements = {...
     parameter_manager.matrix.edge_size,...
     parameter_manager.getField('Ninit'), ...
     MutationManager(parameter_manager),...
-    plot_grid,...
+    parameter_manager.plot_grid,...
     plottingParams, ...
     spatial_on,...
     parameter_manager.getField('Param1'), ...
@@ -911,14 +923,12 @@ if on
     handles.save_button.Enable = 'on';
     handles.step_button.Enable = 'on';
     handles.reset_button.Enable = 'on';
-    handles.mutation_matrix_button.Enable = 'on';
     handles.preview_button.Enable = 'on';
 %     handles.page_button.Enable = 'on';
 else
     handles.save_button.Enable = 'off';
     handles.step_button.Enable = 'off';
     handles.reset_button.Enable = 'off';
-    handles.mutation_matrix_button.Enable = 'off';
     handles.preview_button.Enable = 'off';
 %     handles.page_button.Enable = 'off';
 end

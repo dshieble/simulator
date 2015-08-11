@@ -10,6 +10,7 @@ PM_fake.mutating = 0;
 PM_fake.mutation_matrix = [0.99 0.01; 0.01 0.99];
 PM_fake.num_loci = 1;
 PM_fake.recombination = 0;
+PM_fake.recombination_number = 0;
 MM = MutationManager(PM_fake);
 plot_grid = 0;
 plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingParams.plot_log = 0;
@@ -21,7 +22,7 @@ moran_result = zeros(1, num_runs);
 spatial_on = 0;
 for plot_grid = 0:1
     for i = 1:num_runs
-        moran_manager = GridManagerMoran(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, birth_rate);
+        moran_manager = GridManagerMoran(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, birth_rate, 0);
         h = 0;
         while ~h
             [~, ~, t, h] = moran_manager.get_next();
@@ -37,7 +38,7 @@ num_runs = 10*pop_size;
 wright_result = zeros(1,num_runs);
 for plot_grid = 0:1
     for i = 1:num_runs
-        wright_manager = GridManagerWright(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, fitness);
+        wright_manager = GridManagerWright(sqrt(pop_size), [(1) (pop_size - 1)], MM, plot_grid, plottingParams, spatial_on, fitness, 0);
         h = 0;
         while ~h
             [~, ~, ~, h] = wright_manager.get_next();
@@ -60,7 +61,7 @@ for plot_grid = 0:1
             pfix = (1-exp(-2.*s(i)))/(1-exp(-2.*N(j).*s(i)));
             count = 0;
             for k = 1:round(100/pfix)
-                wright_manager = GridManagerWright(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, f);
+                wright_manager = GridManagerWright(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, f, 0);
                 h = 0;
                 while ~h
                     [~, ~, ~, h] = wright_manager.get_next();
@@ -87,7 +88,7 @@ for plot_grid = 0:1
             pfix = (1-(1/r(i)))/(1-(1/(r(i)^N(j))));
             count = 0;
             for k = 1:round(100/pfix)
-                moran_manager = GridManagerMoran(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, b);
+                moran_manager = GridManagerMoran(sqrt(N(j)), [(1) (N(j) - 1)], MM, plot_grid, plottingParams, spatial_on, b, 0);
                 h = 0;
                 while ~h
                     [~, ~, ~, h] = moran_manager.get_next();

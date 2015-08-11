@@ -1,0 +1,24 @@
+function New_Model(name)
+
+className = ['GridManager' name];
+folderName = ['@' className];
+copyfile('@GridManagerCustom', folderName);
+cd(folderName);
+movefile('GridManagerCustom.m', [className '.m']);
+
+fin = fopen('input.txt');
+fout = fopen('output.txt');
+
+while ~feof(fin)
+   s = fgetl(fin);
+   s = strrep(s, '118520', '118521');
+   fprintf(fout,'%s',s);
+   disp(s)
+end
+
+fclose(fin)
+fclose(fout)
+
+
+
+cd('..');

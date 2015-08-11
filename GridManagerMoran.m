@@ -1,18 +1,18 @@
 classdef GridManagerMoran < GridManagerAbstract
-    %This class is the GridManager implementation for the Moran model
+%This class is the GridManager implementation for the Moran model
 
     properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Moran'
         Generational = 1;
-        Param1 = 'Birth Rate';
-        Param2 = '';
+        Param_1_Name = 'Birth Rate';
+        Param_2_Name = '';
         atCapacity = 1;
+        plottingEnabled = 1;
+
     end
     
     properties
-        proportion_vec;
-        birth_rate;
     end
     
     methods (Access = public)
@@ -20,10 +20,6 @@ classdef GridManagerMoran < GridManagerAbstract
         function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n)
             assert(sum(Ninit)==dim.^2);
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n);
-            obj.birth_rate = b';
-            obj.proportion_vec = [];
-            obj.update_params();
-            obj.save_data.birth_rate = b;
         end
         
         %See GridManagerAbstract
@@ -36,7 +32,7 @@ classdef GridManagerMoran < GridManagerAbstract
             %to birth rate and replace killed cell with that type
             gen_vec = obj.total_count(:, obj.timestep);
             for i = 1:numel(obj.matrix)
-                tot_rates = gen_vec.*(obj.birth_rate);
+                tot_rates = gen_vec.*(obj.Param1);
                 %choose a type to birth
                 num = rand()*sum(tot_rates);
                 chosen_type = 0;
@@ -70,17 +66,6 @@ classdef GridManagerMoran < GridManagerAbstract
             [mat, changed, t, h] = obj.get_next_cleanup();
         end
         
-        %See GridManagerAbstract
-        function update_params(obj)
-            for i = 1:obj.num_types
-                if obj.plot_grid
-                    obj.total_count(i, obj.timestep) = length(find(obj.matrix == i));
-                end
-                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
-                obj.mean_fitness(i, obj.timestep) = (obj.birth_rate(i))*obj.percent_count(i, obj.timestep); 
-            end
-            obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
-        end
 
     end
   
