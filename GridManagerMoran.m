@@ -9,7 +9,6 @@ classdef GridManagerMoran < GridManagerAbstract
         Param_2_Name = '';
         atCapacity = 1;
         plottingEnabled = 1;
-
     end
     
     properties
@@ -18,8 +17,8 @@ classdef GridManagerMoran < GridManagerAbstract
     methods (Access = public)
         
                 
-        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
         end
         
         

@@ -10,12 +10,15 @@ classdef ParameterManager < handle
     
     properties
         
+        spatial_on;
+        edges_on;
         current_model;
         max_types;
         num_types;
         handles;
         pop_size;
         max_pop_size;
+        max_plotting_pop_size;
         
         model_parameters;
         classConstants;
@@ -43,9 +46,13 @@ classdef ParameterManager < handle
             obj.classConstants = classConstants;
             obj.current_model = 1;
             obj.set_plot_grid(handles.plot_grid_button.Value);
+            obj.spatial_on = 1;
+            obj.edges_on = 1;
             %numerical parameters
             obj.pop_size = 2500;
             obj.max_pop_size = 25000;
+            obj.max_plotting_pop_size = 2500;
+
             obj.max_types = 500;
             obj.num_types = 2;
             

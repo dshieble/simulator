@@ -1,4 +1,3 @@
-
 classdef GridManagerExp < GridManagerAbstract
 %This class is an implementation of the GridManager class for the
 %Exponential model
@@ -10,8 +9,6 @@ classdef GridManagerExp < GridManagerAbstract
         Param_2_Name = 'Death Rate';
         atCapacity = 0;
         plottingEnabled = 1;
-
-
     end
     
     properties
@@ -19,8 +16,8 @@ classdef GridManagerExp < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
         end
         
         %See GridManagerAbstract

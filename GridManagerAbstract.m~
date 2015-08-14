@@ -159,17 +159,13 @@ classdef (Abstract) GridManagerAbstract < handle
         function ind = get_nearest_of_type(obj, i, j, t)
             assert(obj.plot_grid == 1);
             indices = find(obj.matrix == t);
-            base = sub2ind(size(obj.matrix), i, j);
-            indices = indices(indices ~= base);
-            if isempty(indices)
+            if length(indices) == 0
                 ind = 0;
-                return;
             end
-            dists = matrix_distance(obj, repmat(base,1,length(indices))', indices);
-            [~,i] = min(dists);
-            ind = indices(i);
+            matrix_distance(obj, repmat(base,1,length(indices), indices));
+            [~,i] = min(m
+            
         end
-        
         %Returns the manhattan distance between 2 cells in the matrix. Uses wrapping
         %if ~obj.edges
         function d = matrix_distance(obj, base, ind)
@@ -189,7 +185,24 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns the nearest free square in the matrix
         function ind = get_nearest_free(obj, i, j)
             ind = get_nearest_of_type(obj, i, j, 0);
-
+%             assert(obj.plot_grid == 1)
+%             free = find(obj.matrix == 0);
+%             [x, y] = ind2sub(size(obj.matrix, 1), free);
+%             m = inf;
+%             a = 0; b = 0;
+%             for k = 1:length(x)
+%                 d = abs(x(k)-i) + abs(y(k) - j);
+%                 if d < m
+%                     m = d;
+%                     a = x(k);
+%                     b = y(k);
+%                 end
+%             end 
+%             if a == 0 || b == 0
+%                 ind = 0;
+%             else
+%                 ind = sub2ind(size(obj.matrix),a,b);
+%             end
         end
 
         %Gets the center cell in the matrix

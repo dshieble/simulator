@@ -52,7 +52,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes;
+global group evolving parameter_manager rects paused grid_manager parameters_clear stepping temp_axes;
 classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
 if ~isempty(varargin)
     e = [];
@@ -109,7 +109,6 @@ paused = 0;
 grid_manager = [];
 parameters_clear = 1;
 stepping = 0;
-spatial_on = 1;
 temp_axes = axes('Parent',handles.params_panel, 'Units', 'characters', 'Position', handles.param_2_text.Position);
 
 
@@ -348,7 +347,7 @@ handles.model_name_banner.String = parameter_manager.classConstants(parameter_ma
 parameter_manager.updateBoxes();
 toggle_visible(handles);
 
-    
+
  
 function population_box_Callback(hObject, eventdata, handles)
 % hObject    handle to population_box (see GCBO)
@@ -359,13 +358,10 @@ function population_box_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
 global parameter_manager;
 parameter_manager.updateMatrixProperties();
-
-
     
 
 % --- Executes on button press in plot_grid_button.
 function plot_grid_button_Callback(hObject, eventdata, handles)
-
 global parameter_manager;
 parameter_manager.set_plot_grid(handles.plot_grid_button.Value);
 toggle_visible(handles);
@@ -471,8 +467,8 @@ end
 
 % --- Executes on button press in spatial_structure_check.
 function spatial_structure_check_Callback(hObject, eventdata, handles)
-global spatial_on;
-spatial_on = handles.spatial_structure_check.Value;
+global parameter_manager;
+parameter_manager.spatial_on = handles.spatial_structure_check.Value;
 
 
 
@@ -493,7 +489,7 @@ parameter_manager.recombination_number = handles.recombination_box.Value;
 % --- Executes on button press in page_button.
 function page_button_Callback(hObject, eventdata, handles)
 %Flip to the next page of the graph
-global evolving stepping group grid_manager;
+global stepping group grid_manager;
 if isempty(grid_manager)
     return
 end
@@ -506,7 +502,13 @@ if ~stepping && grid_manager.num_types > 16
 end
 
 
-
+% --- Executes on button press in remove_edges_check.
+function remove_edges_check_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_edges_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global parameter_manger;
+parameter_manger.edges_on = ~handles.remove_edges_check.Value;
 
 
 
@@ -607,7 +609,7 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.init_pop_box.Style = 'text';
     %plot_grid
     parameter_manager.updateBoxes();
-    handles.recombination_check.Enable = 'on';
+    handles.recombination_check.Visible = 'on';
     if parameter_manager.recombination == 1
         handles.recombination_panel.Visible = 'on';
     end
@@ -618,7 +620,7 @@ else
     %num_types
     handles.num_types_box.Style = 'edit';
     handles.init_pop_box.Style = 'edit';
-    handles.recombination_check.Enable = 'off';
+    handles.recombination_check.Visible = 'off';
     %plot_grid
     parameter_manager.updateBoxes();
 end
@@ -631,9 +633,11 @@ else
 end
 
 if parameter_manager.plot_grid && ~strcmp(parameter_manager.classConstants(parameter_manager.current_model).Name, 'Wright-Fisher')
-    handles.spatial_structure_check.Enable = 'on';
+    handles.spatial_structure_check.Visible = 'on';
+    handles.remove_edges_check.Visible = 'on';
 else
-    handles.spatial_structure_check.Enable = 'off';
+    handles.spatial_structure_check.Visible = 'off';
+    handles.remove_edges_check.Visible = 'off';
 end
 
 
@@ -649,6 +653,7 @@ if on
     handles.genetics_button.Enable = 'on';
     handles.spatial_structure_check.Enable = 'on';
     handles.recombination_check.Enable = 'on';
+    handles.remove_edges_check.Enable = 'on';
     handles.model1_button.Enable = 'on';
     handles.model2_button.Enable = 'on';
     handles.model3_button.Enable = 'on';
@@ -676,6 +681,7 @@ else
     handles.model3_button.Enable = 'off';
     handles.model4_button.Enable = 'off';
     handles.num_types_box.Enable = 'off';
+    handles.remove_edges_check.Enable = 'off';
     handles.types_popup.Enable = 'off';
     handles.init_pop_box.Enable = 'off';
     handles.loci_box.Enable = 'off';
@@ -689,6 +695,8 @@ else
     handles.mutation_matrix_button.Enable = 'off';
 
 end
+toggle_visible(handles);
+
 
 %Responsible for resetting all of the things on the screen to their
 %defaults
@@ -891,7 +899,7 @@ handles.reset_button.BackgroundColor = [1 0 0];
 drawnow;
 
 function initializeGridManager(handles)
-global grid_manager parameter_manager rects spatial_on;
+global grid_manager parameter_manager rects;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
 plottingParams = struct();
@@ -913,7 +921,8 @@ constructor_arguements = {...
     MutationManager(parameter_manager),...
     parameter_manager.plot_grid,...
     plottingParams, ...
-    spatial_on,...
+    parameter_manager.spatial_on,...
+    parameter_manager.edges_on,...
     parameter_manager.getField('Param1'), ...
     parameter_manager.getField('Param2')};
 constructor = str2func(parameter_manager.classConstants(parameter_manager.current_model).className);
@@ -936,6 +945,8 @@ else
     handles.preview_button.Enable = 'off';
 %     handles.page_button.Enable = 'off';
 end
+
+
 
 function prop = getConstantProperty(name, propName)
 % Gets a constant property of a class, given that class's name as a string
@@ -1195,4 +1206,4 @@ end
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 09-Aug-2015 14:49:25
+% Last Modified by GUIDE v2.5 13-Aug-2015 23:23:18

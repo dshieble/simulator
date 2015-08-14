@@ -17,8 +17,8 @@ classdef GridManagerLogistic < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
+        function obj = GridManagerLogistic(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
         end
         
         %See GridManagerAbstract'

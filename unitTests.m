@@ -1,0 +1,12 @@
+pop_size = 25;
+birth_rate = [1 1];
+plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingParams.plot_log = 0;
+PM_fake = struct();
+PM_fake.mutating = 0;
+PM_fake.mutation_matrix = [0.99 0.01; 0.01 0.99];
+PM_fake.num_loci = 1;
+PM_fake.recombination = 0;
+PM_fake.recombination_number = 0;
+MM = MutationManager(PM_fake);
+m = GridManagerLogistic(pop_size, [1], MM, 1, plottingParams, 1, 1, birth_rate, 0);
+m.matrix = randi(5,5);
