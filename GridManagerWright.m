@@ -18,9 +18,8 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n)
-            assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, f, n);
+        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
         end
         
         %See GridManagerAbstract
@@ -35,14 +34,14 @@ classdef GridManagerWright < GridManagerAbstract
             counts = obj.total_count(:, obj.timestep);
             v = (obj.Param1.*counts);
             probs = v./sum(v);
-            new_counts = mnrnd(numel(obj.matrix), probs);
+            new_counts = mnrnd(obj.max_size, probs);
             if obj.plot_grid 
                 long_mat = [];
                 for i = 1:obj.num_types
                     long_mat = [long_mat repmat(i,1,new_counts(i))];
                 end
                 long_mat = long_mat(randperm(length(long_mat)));
-                assert(numel(long_mat) == numel(obj.matrix));
+                assert(numel(long_mat) == obj.max_size);
                 obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
             end
             obj.total_count(:, obj.timestep + 1) = new_counts;

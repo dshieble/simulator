@@ -17,10 +17,11 @@ classdef GridManagerMoran < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n)
-            assert(sum(Ninit)==dim.^2);
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, n);
+                
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, b, d);
         end
+        
         
         %See GridManagerAbstract
         %mat - new updated matrix
@@ -31,7 +32,7 @@ classdef GridManagerMoran < GridManagerAbstract
             %pick a cell at random, kill it, then pick a type in proportion
             %to birth rate and replace killed cell with that type
             gen_vec = obj.total_count(:, obj.timestep);
-            for i = 1:numel(obj.matrix)
+            for i = 1:obj.max_size
                 tot_rates = gen_vec.*(obj.Param1);
                 %choose a type to birth
                 num = rand()*sum(tot_rates);

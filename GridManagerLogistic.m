@@ -44,8 +44,8 @@ classdef GridManagerLogistic < GridManagerAbstract
                 end
 
                 if num + obj.Param1(chosen_type)*gen_vec(chosen_type) > 0
-                    if rand() <= 1-(sum(gen_vec)/numel(obj.matrix))
-                        if sum(gen_vec) < numel(obj.matrix)
+                    if rand() <= 1-(sum(gen_vec)/obj.max_size)
+                        if sum(gen_vec) < obj.max_size
                             if obj.plot_grid
                                 %choose a cell of the chosen type, and fill the
                                 %nearest cell to it with the chosen type
@@ -75,7 +75,7 @@ classdef GridManagerLogistic < GridManagerAbstract
         %difference between birth and death rates here
         function update_params(obj)
             for i = 1:obj.num_types
-                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./numel(obj.matrix);
+                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./obj.max_size;
                 obj.mean_fitness(i, obj.timestep) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));

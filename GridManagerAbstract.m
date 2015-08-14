@@ -10,6 +10,7 @@ classdef (Abstract) GridManagerAbstract < handle
    
     
     properties
+        max_size;
         save_data;
         matrix;
         timestep;
@@ -19,11 +20,11 @@ classdef (Abstract) GridManagerAbstract < handle
         colors;
         mean_fitness;
         overall_mean_fitness;
-        plot_grid;
         generations;
         old_matrix;
         mutation_manager; 
         plottingParams;
+        plot_grid;
         spatial_on;
         Param1;
         Param2;
@@ -33,29 +34,44 @@ classdef (Abstract) GridManagerAbstract < handle
         %the plotting parameters, as well as other useful variables like
         %the color variable. The final 2 inputs are the Param1 and the
         %Param2 inputs
-        function obj = GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, p1, p2)
+        function obj = GridManagerAbstract(max_size, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, p1, p2)
+            assert(~plot_grid || floor(sqrt(max_size))^2 == max_size)
+            assert(~obj.atCapacity || sum(Ninit)==max_size);
+            
             obj.Param1 = p1';
             obj.Param2 = p2';
-            obj.matrix = zeros(dim);
-            obj.old_matrix = obj.matrix;
-            if (sum(Ninit) == numel(obj.matrix)) || ~spatial_on
-                r = randperm(numel(obj.matrix));
-                i = 1;
-                for type = 1:length(Ninit)
-                    n = Ninit(type);
-                    obj.matrix(r(i:n+i-1)) = type;
-                    i = i + n;
-                end
+            obj.spatial_on = spatial_on;
+            obj.plot_grid = plot_grid;
+            if obj.plot_grid
+                obj.matrix = zeros(sqrt(max_size));
             else
-                for type = 1:length(Ninit)
-                    ind = obj.get_free();
-                    obj.matrix(ind) = type;
-                    for j = 2:length(Ninit(type))
-                        obj.matrix(obj.get_nearest_free(ind)) = type;
+                obj.matrix = [];
+            end
+            obj.old_matrix = obj.matrix;
+            obj.max_size = max_size;
+            if obj.plot_grid
+                if (sum(Ninit) == obj.max_size) || ~spatial_on %static population models, random placement
+                    r = randperm(numel(obj.matrix));
+                    i = 1;
+                    for type = 1:length(Ninit)
+                        n = Ninit(type);
+                        obj.matrix(r(i:n+i-1)) = type;
+                        i = i + n;
+                    end
+                else %non-static models, place founding cells in center
+                    org_vec = [];
+                    for type = 1:length(Ninit)
+                        org_vec = [org_vec repmat(type,1,Ninit(type))];
+                    end
+                    org_vec = org_vec(randperm(length(org_vec)));
+                    ind = obj.get_center();
+                    for i = 1:length(org_vec)
+                        obj.matrix(ind) = org_vec(i);
+                        [a, b] = ind2sub(size(obj.matrix), ind);
+                        ind = obj.get_nearest_free(a,b);
                     end
                 end
             end
-            
             
             obj.timestep = 1;
             
@@ -83,10 +99,8 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];
             obj.generations = [1];
-            obj.plot_grid = plot_grid;
             obj.mutation_manager = mutation_manager;
             obj.plottingParams = plottingParams;
-            obj.spatial_on = spatial_on;
             obj.save_data = struct('Param1', p1, 'Param2', p2);
             obj.update_params();
         end
@@ -103,7 +117,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.mutation_manager.mutate(obj);
             obj.mutation_manager.generational_recombination(obj);
             if ~obj.plot_grid
-                changed = (1:numel(obj.matrix))';
+                changed = [];
             else
                 changed = find(obj.old_matrix ~= obj.matrix);
                 obj.old_matrix = obj.matrix;
@@ -113,15 +127,17 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.save_data.total_count = obj.total_count;
             mat = obj.matrix;
             t = obj.timestep;
-            h = max(obj.total_count(:, obj.timestep))>=numel(obj.matrix);
+            h = max(obj.total_count(:, obj.timestep))>=obj.max_size;
             h = h && ~obj.mutation_manager.mutating;
+            t
         end
 
         %Returns a square in the matrix of type t
         function ind = get_of_type(obj, t)
+            assert(obj.plot_grid == 1)
             typed = find(obj.matrix == t);
             if isempty(typed)
-                ind = randi(numel(obj.matrix));
+                ind = randi(obj.max_size);
             else       
                 ind = typed(randi(length(typed)));
             end
@@ -129,9 +145,10 @@ classdef (Abstract) GridManagerAbstract < handle
         
         %Returns a free square in the matrix
         function ind = get_free(obj)
+            assert(obj.plot_grid == 1)
             free = find(obj.matrix == 0);
             if isempty(free)
-                ind = randi(numel(obj.matrix));
+                ind = randi(obj.max_size);
             else       
                 ind = free(randi(length(free)));
             end
@@ -139,6 +156,7 @@ classdef (Abstract) GridManagerAbstract < handle
 
         %Returns the nearest square in the matrix of type t
         function ind = get_nearest_of_type(obj, i, j, t)
+            assert(obj.plot_grid == 1)
             ofType = find(obj.matrix == t);
             [x, y] = ind2sub(size(obj.matrix, 1), ofType);
             m = inf;
@@ -161,6 +179,7 @@ classdef (Abstract) GridManagerAbstract < handle
         
         %Returns the nearest free square in the matrix
         function ind = get_nearest_free(obj, i, j)
+            assert(obj.plot_grid == 1)
             free = find(obj.matrix == 0);
             [x, y] = ind2sub(size(obj.matrix, 1), free);
             m = inf;
@@ -180,6 +199,13 @@ classdef (Abstract) GridManagerAbstract < handle
             end
         end
 
+        %Gets the center cell in the matrix
+        function ind = get_center(obj)
+        	assert(obj.plot_grid == 1);
+            a = floor(size(obj.matrix, 1)/2);
+            ind = sub2ind(size(obj.matrix),a,a);
+        end
+        
         %Gets the ith color from the color matrix
         function c = get_color(obj,i)
             c = obj.colors(i,:);
@@ -202,6 +228,8 @@ classdef (Abstract) GridManagerAbstract < handle
         
         %Returns a random cell of the chosen type
         function out = getRandomOfType(obj, type)
+            assert(obj.plot_grid == 1)
+            
             ofType = find(obj.matrix == type);
             out = ofType(randi(numel(ofType)));
         end

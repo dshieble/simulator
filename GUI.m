@@ -5,7 +5,10 @@ function varargout = GUI(varargin)
 % ParameterManager class, which stores the parameters that the user inputs,
 % and instantiating the GridManager classes, which run the simulation using
 % the variables in ParameterManager. This function also handles the button
-% presses and what components of the GUI are presented to the user.
+% presses and what components of the GUI are presented to the user. 
+
+% All messages that are presented to the user (except for the uitable dialogs)
+% are created in this file
 
 % Caveats on the Programming Style: 
 % Many of the variables in the file are global and there are a few calls to
@@ -49,7 +52,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Attach global variables to handles object
-global group evolving old_matrix parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes;
+global group evolving parameter_manager rects paused grid_manager parameters_clear stepping spatial_on temp_axes;
 classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
 if ~isempty(varargin)
     e = [];
@@ -99,7 +102,6 @@ for i = 1:4
 end
 handles.model_name_banner.String = classConstants(i).Name;
 parameter_manager = ParameterManager(handles, classConstants);
-old_matrix = zeros(parameter_manager.matrix.edge_size);
 group = 1;
 evolving = 0;
 rects = [];
@@ -117,8 +119,8 @@ temp_axes.Visible = 'off';
 fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
 set(handles.axes_grid,'XTick',[]);
 set(handles.axes_grid,'YTick',[]);
-handles.axes_grid.XLim = [1 parameter_manager.matrix.edge_size];
-handles.axes_grid.YLim = [1 parameter_manager.matrix.edge_size];
+handles.axes_grid.XLim = [1 sqrt(parameter_manager.pop_size)];
+handles.axes_grid.YLim = [1 sqrt(parameter_manager.pop_size)];
 
 
 %fill the boxes properly
@@ -223,7 +225,6 @@ function param_1_box_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global parameter_manager;
 parameter_manager.updateStructs();
-verify_parameters(handles);
 
 function init_pop_box_Callback(hObject, eventdata, handles)
 % hObject    handle to init_pop_box (see GCBO)
@@ -263,12 +264,12 @@ end
 
 % --- Executes on button press in reset_button.
 function reset_button_Callback(hObject, eventdata, handles)
-global evolving stepping rects parameter_manager;
+global evolving stepping rects parameter_manager grid_manager;
 if ~evolving && ~stepping
     cleanup(handles)
     cla(handles.axes_grid);
     cla(handles.axes_graph);
-    rects = cell(parameter_manager.matrix.edge_size);
+    rects = cell(sqrt(numel(grid_manager.matrix)));
     drawnow;
     handles.page_button.Enable = 'off';
     toggle_visible(handles);
@@ -358,7 +359,6 @@ function population_box_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of population_box as a double
 global parameter_manager;
 parameter_manager.updateMatrixProperties();
-verify_parameters(handles);
 
 
     
@@ -400,30 +400,28 @@ if ~evolving && ~stepping
 end
 
 
-% --- Executes on button press in demography_button.
-function demography_button_Callback(hObject, eventdata, handles)
-global parameter_manager;
-parameter_manager.mutating = 0;
-toggle_visible(handles);
-handles.mutation_panel.Visible = 'off';
-handles.num_types_string.String = 'Number of Types:';
-handles.params_string.String =  'Parameters For Type:';
-
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.mutating = 1;
-toggle_visible(handles);
-handles.mutation_panel.Visible = 'on';
-handles.num_types_string.String = 'Number of Alleles:';
-handles.params_string.String =  'Parameters For Allele:';
+if handles.genetics_button.Value
+    parameter_manager.mutating = 1;
+    toggle_visible(handles);
+    handles.mutation_panel.Visible = 'on';
+    handles.num_types_string.String = 'Number of Alleles:';
+    handles.params_string.String =  'Parameters For Allele:';
+else
+    parameter_manager.mutating = 0;
+    toggle_visible(handles);
+    handles.mutation_panel.Visible = 'off';
+    handles.num_types_string.String = 'Number of Types:';
+    handles.params_string.String =  'Parameters For Type:';
+end 
 
 function loci_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
 parameter_manager.updateMultipleLoci();
 toggle_visible(handles);
 parameter_manager.updateBoxes();
-verify_parameters(handles);
 
 
 % function max_iterations_box_Callback(hObject, eventdata, handles)
@@ -527,20 +525,21 @@ end
 
 function verify_parameters(handles)
 %This function makes sure that all of the input boxes are aligned with the
-%expected inputs
+%expected inputs. This function is called only when the run button is
+%pressed
 global parameter_manager parameters_clear;
 parameters_clear = 0;
 if parameter_manager.mutating && (parameter_manager.num_loci > parameter_manager.max_num_loci)
     parameter_manager.num_loci = parameter_manager.max_num_loci;
 	warndlg(sprintf('ERROR: The number of loci must be no greater than %d.', parameter_manager.max_num_loci));
 elseif ~parameter_manager.updateMatrixProperties()
-    warndlg('ERROR: Population size must be a perfect square and between 16 than 2500!');
+    warndlg(sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than 25,000. Population size must be at least 16.', parameter_manager.max_pop_size));
 elseif ~parameter_manager.verifyAllBoxesClean();
     warndlg('ERROR: All input must be numerical.');
 elseif parameter_manager.mutating && parameter_manager.num_loci > 1 && parameter_manager.s < -1;
     warndlg('ERROR: S must be no less than -1!');
 elseif ~parameter_manager.verifySizeOk()
-	warndlg(sprintf('ERROR: Initial Populations must sum to %d for Moran and Wright-Fisher, and must be no greater than %d for Exponential and Logistic', parameter_manager.matrix.edge_size.^2, parameter_manager.matrix.edge_size.^2));
+	warndlg(sprintf('ERROR: Initial Populations must sum to %d for constant size models (Moran, Wright-Fisher), and must be no greater than %d for non-constant size models (Exponential, Logistic)', parameter_manager.pop_size, parameter_manager.pop_size));
 else    
     parameters_clear = 1;
 end
@@ -626,7 +625,7 @@ end
 if parameter_manager.classConstants(parameter_manager.current_model).plottingEnabled
     handles.plot_grid_button.Enable = 'on';
 else
-    parameter_manager.plot_grid = 0;
+    parameter_manager.set_plot_grid(0);
     handles.plot_grid_button.Value = 0;
     handles.plot_grid_button.Enable = 'off';
 end
@@ -648,7 +647,6 @@ if on
     handles.plot_grid_button.Enable = 'on';
     handles.population_box.Enable = 'on';
     handles.genetics_button.Enable = 'on';
-    handles.demography_button.Enable = 'on';
     handles.spatial_structure_check.Enable = 'on';
     handles.recombination_check.Enable = 'on';
     handles.model1_button.Enable = 'on';
@@ -671,7 +669,6 @@ else
     handles.plot_grid_button.Enable = 'off';
     handles.population_box.Enable = 'off';
     handles.genetics_button.Enable = 'off';
-    handles.demography_button.Enable = 'off';
     handles.spatial_structure_check.Enable = 'off';
     handles.recombination_check.Enable = 'off';
     handles.model1_button.Enable = 'off';
@@ -752,12 +749,12 @@ end
 if grid_manager.plot_grid 
     perm = c(randperm(length(c)))';
     for p = perm
-        [i, j] = ind2sub(parameter_manager.matrix.edge_size, p);
+        [i, j] = ind2sub(sqrt(numel(grid_manager.matrix)), p);
         if (~isempty(rects(i,j)))
             delete(rects{i,j});
         end
         if (matrix(i,j) ~= 0)
-            mult = (50/parameter_manager.matrix.edge_size);
+            mult = 50/sqrt(numel(grid_manager.matrix));
             rects{i,j} = rectangle(...
                 'Parent', handles.axes_grid,...
                 'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
@@ -800,8 +797,8 @@ switch grid_manager.plottingParams.plot_type
         y_axis_label = 'Mean Fitness';
 end
 if grid_manager.plottingParams.plot_log
-    vec = log(vec);
-    y_axis_label = sprintf('log(%s)', y_axis_label);
+    vec = log10(vec);
+    y_axis_label = sprintf('log10(%s)', y_axis_label);
 end
 for i = 1:size(vec,1)
     hold on;
@@ -838,7 +835,7 @@ evolving = 1;
 %If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';
-    parameter_manager.plot_grid = 0;
+    parameter_manager.set_plot_grid(0);
     handles.plot_grid_button.Value = 0;
 end
 %Turn off the boxes on the screens and recolor the buttons
@@ -911,7 +908,7 @@ else
     plottingParams.plot_log = 0;
 end
 constructor_arguements = {...
-    parameter_manager.matrix.edge_size,...
+    parameter_manager.pop_size,...
     parameter_manager.getField('Ninit'), ...
     MutationManager(parameter_manager),...
     parameter_manager.plot_grid,...
@@ -923,7 +920,7 @@ constructor = str2func(parameter_manager.classConstants(parameter_manager.curren
 grid_manager = constructor(constructor_arguements{:});
 cla(handles.axes_grid);
 cla(handles.axes_graph);
-rects = cell(parameter_manager.matrix.edge_size);
+rects = cell(sqrt(numel(grid_manager.matrix)));
 
 function enable_buttons(handles, on)
 if on
