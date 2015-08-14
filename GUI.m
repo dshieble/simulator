@@ -507,8 +507,8 @@ function remove_edges_check_Callback(hObject, eventdata, handles)
 % hObject    handle to remove_edges_check (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global parameter_manger;
-parameter_manger.edges_on = ~handles.remove_edges_check.Value;
+global parameter_manager;
+parameter_manager.edges_on = ~handles.remove_edges_check.Value;
 
 
 
@@ -915,6 +915,7 @@ if handles.plot_button_log.Value
 else
     plottingParams.plot_log = 0;
 end
+
 constructor_arguements = {...
     parameter_manager.pop_size,...
     parameter_manager.getField('Ninit'), ...
