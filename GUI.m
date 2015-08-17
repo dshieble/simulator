@@ -378,10 +378,14 @@ global parameter_manager evolving stepping;
 if evolving || stepping
     return
 else
-    handles.preview_button.String = 'Pulling up the Population Parameters...';
-    drawnow;
-    PopulationParametersDialog(parameter_manager);
-    handles.preview_button.String = 'See All Population Parameters';
+    if ~parameter_manager.mutating || parameter_manager.num_loci < 12
+        handles.preview_button.String = 'Pulling up the Population Parameters...';
+        drawnow;
+        PopulationParametersDialog(parameter_manager);
+        handles.preview_button.String = 'See All Population Parameters';
+    else
+        warndlg('Number of Loci must be less than 12 to see all population parameters!');
+    end
 end
 
 
@@ -391,10 +395,23 @@ global parameter_manager evolving stepping;
 if ~evolving && ~stepping
     m = MutationMatrixDialog(parameter_manager.mutation_matrix, parameter_manager.num_loci);
     if ~isempty(m) 
-        parameter_manager.mutation_matrix = m;
+        parameter_manager.set_mutation_matrix(m);
     end
 end
 
+% --- Executes on button press in initial_frequencies_button.
+function initial_frequencies_button_Callback(hObject, eventdata, handles)
+global parameter_manager evolving stepping;
+if ~evolving && ~stepping && parameter_manager.mutating && parameter_manager.num_loci > 1
+    if parameter_manager.num_loci >= 12
+    	warndlg('Number of Loci must be less than 12 to edit initial frequencies');
+        return;
+    end
+    f = InitialFrequenciesDialog(parameter_manager.initial_frequencies, parameter_manager.num_loci);
+    if ~isempty(f) 
+        parameter_manager.set_initial_frequencies(f);
+    end
+end
 
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
@@ -607,6 +624,8 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     %num_types
     handles.num_types_box.Style = 'text';
     handles.init_pop_box.Style = 'text';
+    %initial frequencies
+    handles.initial_frequencies_button.Visible = 'on';
     %plot_grid
     parameter_manager.updateBoxes();
     handles.recombination_check.Visible = 'on';
@@ -621,10 +640,13 @@ else
     handles.num_types_box.Style = 'edit';
     handles.init_pop_box.Style = 'edit';
     handles.recombination_check.Visible = 'off';
+    %initial frequencies
+    handles.initial_frequencies_button.Visible = 'off';
     %plot_grid
     parameter_manager.updateBoxes();
 end
-if parameter_manager.classConstants(parameter_manager.current_model).plottingEnabled
+if parameter_manager.classConstants(parameter_manager.current_model).plottingEnabled &&...
+        (~parameter_manager.mutating || parameter_manager.num_loci <= 16) %don't plot if too many loci or not plotting enabled
     handles.plot_grid_button.Enable = 'on';
 else
     parameter_manager.set_plot_grid(0);
@@ -647,6 +669,7 @@ adjust_text(handles);
 
 
 function enable_inputs(handles, on)
+toggle_visible(handles);
 if on
     handles.plot_grid_button.Enable = 'on';
     handles.population_box.Enable = 'on';
@@ -670,6 +693,7 @@ if on
     handles.plot_button_linear.Enable = 'on';
     handles.plot_button_log.Enable = 'on';
     handles.mutation_matrix_button.Enable = 'on';
+    handles.initial_frequencies_button.Enable = 'on';
 else
     handles.plot_grid_button.Enable = 'off';
     handles.population_box.Enable = 'off';
@@ -693,9 +717,9 @@ else
     handles.plot_button_linear.Enable = 'off';
     handles.plot_button_log.Enable = 'off';
     handles.mutation_matrix_button.Enable = 'off';
+    handles.initial_frequencies_button.Enable = 'off';
 
 end
-toggle_visible(handles);
 
 
 %Responsible for resetting all of the things on the screen to their
@@ -734,12 +758,7 @@ if group > grid_manager.num_types
     group = 1;
 end
 while evolving == 1
-   try
-       [matrix, c, t, halt] = grid_manager.get_next();
-   catch e
-       disp(e.message);
-       break;
-   end
+   [matrix, c, t, halt] = grid_manager.get_next();
    draw_iteration(matrix, c,handles, first_run);
    first_run = 0;
     if runOnce || halt% || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
@@ -836,16 +855,16 @@ end
 function run(handles, runOnce)
 %Execute the simulation
 global evolving group paused parameter_manager;
-toggle_visible(handles)
-group = 1;
-handles.run_button.String = 'Calculating...';
-evolving = 1;
 %If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';
     parameter_manager.set_plot_grid(0);
     handles.plot_grid_button.Value = 0;
 end
+group = 1;
+handles.run_button.String = 'Calculating...';
+evolving = 1;
+toggle_visible(handles)
 %Turn off the boxes on the screens and recolor the buttons
 enable_inputs(handles, 0);
 enable_buttons(handles, 0);
@@ -1207,4 +1226,4 @@ end
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 13-Aug-2015 23:23:18
+% Last Modified by GUIDE v2.5 17-Aug-2015 17:45:45

@@ -56,7 +56,7 @@ function matrix = MutationMatrixDialog(current, num_loci)
     %to the GUI script upon the execution of uiresume
     function save(~,~)
        data = cell2mat(table.Data);
-       if sum(isnan(data)) > 0
+       if sum(isnumeric(data)) > 0
            warndlg('ERROR: All entries must be numerical!')
            return;
        end

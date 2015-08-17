@@ -23,6 +23,7 @@ classdef ParameterManager < handle
         model_parameters;
         classConstants;
         
+        initial_frequencies; %frequency of each genotype at inception
         mutating;
         mutation_matrix;
         num_loci;
@@ -77,6 +78,7 @@ classdef ParameterManager < handle
             %mutations
             obj.mutating = 0;
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
+            obj.initial_frequencies = [1 0];
             obj.num_loci = 1;
             obj.max_num_loci = 15;
             obj.recombination = 0;
@@ -164,7 +166,8 @@ classdef ParameterManager < handle
             obj.updateMultipleLoci();
         end
         
-        %Updates the mutation matrix and the num_loci box
+        %Updates the num_loci box and resets the default
+        %frequencies vector
         function updateMultipleLoci(obj) 
             num_l = str2double(obj.handles.loci_box.String);
             if isnumeric(num_l)
@@ -187,7 +190,7 @@ classdef ParameterManager < handle
                 end
             end  
             obj.handles.num_loci_box.String = num2str(obj.num_loci);
-
+            obj.initial_frequencies = [1 zeros(1,2.^obj.num_loci - 1)];
         end
         
         %Updates the boxes to the stored struct values (sister function of
@@ -262,11 +265,14 @@ classdef ParameterManager < handle
                 end
             end
             if obj.num_loci > 1 && obj.mutating
-                if strcmp(param, 'Ninit')
+                if strcmp(param, 'Ninit')                    
                     if ~obj.classConstants(model).atCapacity
                         out = [obj.model_parameters(model).Ninit_default zeros(1, 2^obj.num_loci - 1)];
                     else
-                    	out = [obj.pop_size zeros(1, 2^obj.num_loci - 1)];
+                        tail = floor(obj.pop_size.*obj.initial_frequencies(2:end));
+                        assert(sum(tail) <= obj.pop_size);
+                        assert(length(obj.initial_frequencies) == 2^obj.num_loci);
+                        out = [obj.pop_size - sum(tail) tail]; %some rounding to ensure that sum of types adds to pop_size
                     end
                 elseif strcmp(param, 'Param2')
                 	out = repmat(obj.model_parameters(model).Param2_default,1,2^obj.num_loci);
@@ -329,6 +335,19 @@ classdef ParameterManager < handle
         function set_plot_grid(obj, input)
             obj.plot_grid = input;
         end
+        
+        %sets the mutation_matrix variable. I might add some interesting logic
+        %here...
+        function set_mutation_matrix(obj, m)
+            obj.mutation_matrix = m;
+        end
+        
+        %sets the initial_frequencies variable. I might add some interesting logic
+        %here...
+        function set_initial_frequencies(obj, df)
+            obj.initial_frequencies = df;
+        end
+        
         
         %Updates the maximum number of iterations for the non-plotting case
         %based on the input to the max_iterations box
