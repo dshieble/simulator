@@ -100,7 +100,7 @@ for i = 1:4
         eval(['handles.model' num2str(i) '_button.Visible = ''off'';']);        
     end
 end
-handles.model_name_banner.String = classConstants(i).Name;
+handles.model_name_banner.String = classConstants(1).Name;
 parameter_manager = ParameterManager(handles, classConstants);
 group = 1;
 evolving = 0;
@@ -436,13 +436,6 @@ parameter_manager.updateMultipleLoci();
 toggle_visible(handles);
 parameter_manager.updateBoxes();
 
-
-% function max_iterations_box_Callback(hObject, eventdata, handles)
-% global parameter_manager;
-% parameter_manager.updateMaxIterations();
-
-
-
 % --- Executes on button press in step_button.
 function step_button_Callback(hObject, eventdata, handles)
 global grid_manager stepping evolving paused;
@@ -759,7 +752,7 @@ if group > grid_manager.num_types
 end
 while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
-   draw_iteration(matrix, c,handles, first_run);
+   draw_iteration(matrix, c, handles, first_run);
    first_run = 0;
     if runOnce || halt% || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
         break
@@ -779,6 +772,7 @@ if grid_manager.plot_grid
         [i, j] = ind2sub(sqrt(numel(grid_manager.matrix)), p);
         if (~isempty(rects(i,j)))
             delete(rects{i,j});
+            rects{i,j} = [];
         end
         if (matrix(i,j) ~= 0)
             mult = 50/sqrt(numel(grid_manager.matrix));
@@ -1162,19 +1156,6 @@ function loci_box_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-% % --- Executes during object creation, after setting all properties.
-% function max_iterations_box_CreateFcn(hObject, eventdata, handles)
-% % hObject    handle to max_iterations_box (see GCBO)
-% % eventdata  reserved - to be defined in a future version of MATLAB
-% % handles    empty - handles not created until after all CreateFcns called
-% 
-% % Hint: edit controls usually have a white background on Windows.
-% %       See ISPC and COMPUTER.
-% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-%     set(hObject,'BackgroundColor','white');
-% end
-
 
 % --- Executes during object creation, after setting all properties.
 function edit28_CreateFcn(hObject, eventdata, handles)

@@ -60,10 +60,10 @@ classdef GridManagerLogistic < GridManagerAbstract
                         end
                     end
                 else
-                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
                     if obj.plot_grid && gen_vec(chosen_type) > 0
                         obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
                     end
+                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
                 end
             end
             %then, include all computation updates

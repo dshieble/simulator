@@ -3,18 +3,26 @@
 function new = InitialFrequenciesDialog(current, num_loci)
 
     %Start Script
-    d = dialog('Position',[100 100 400 400],'Name','Initial Frequencies For Static Population Models');
+    d = dialog('Position',[100 100 400 400],'Name','Initial Frequencies For Static (Moran, Wright-Fisher) Population Models');
     new = [];
 
+    
+    
     btn1 = uicontrol('Parent',d,...
-               'Position',[50 50 100 25],...
+               'Position',[150 25 100 25],...
                'String','Cancel',...
                'Callback',@cancel);
            
     btn2 = uicontrol('Parent',d,...
-           'Position',[50 100 100 25],...
+           'Position',[150 75 100 25],...
            'String','Save',...
-           'Callback',@save);       
+           'Callback',@save);  
+       
+    btn3 = uicontrol('Parent',d,...
+           'Position',[150 125 100 25],...
+           'String','Homogenize',...
+           'Callback',@make_uniform);  
+       
     
     widths = cell(1,size(current,1));
     for x = 1:size(current,1)
@@ -62,6 +70,12 @@ function new = InitialFrequenciesDialog(current, num_loci)
         new = data';
         uiresume;
         delete(gcf);
+    end
+
+    function make_uniform(~,~)
+        for j = 1:length(table.Data)
+            table.Data{j} = 1/length(table.Data);
+        end
     end
 
     

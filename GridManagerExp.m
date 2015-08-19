@@ -26,6 +26,7 @@ classdef GridManagerExp < GridManagerAbstract
         %t - the timestep
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
+            fprintf('before: vec %d mat %d \n', sum(obj.total_count(:, obj.timestep)), length(find(obj.matrix)));
             gen_vec = obj.total_count(:, obj.timestep);
             for i = 1:sum(gen_vec)
                 if sum(gen_vec) == 0
@@ -51,20 +52,22 @@ classdef GridManagerExp < GridManagerAbstract
                                 [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
                                 obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
                             else
-                                obj.matrix(obj.get_free()) = chosen_type;
+                                obj.matrix(obj.get_free()) = chosen_type;   
                             end
                         end
                     end
                 else
-                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
                     if obj.plot_grid && gen_vec(chosen_type) > 0
                         obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
                     end
+                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
                 end
             end
             obj.total_count(:, obj.timestep + 1) = gen_vec;
             %then, include all computation updates
             [mat, changed, t, h] = obj.get_next_cleanup();
+            fprintf('after: vec %d mat %d \n', sum(obj.total_count(:, obj.timestep)), length(find(obj.matrix)));
+
         end
         
             

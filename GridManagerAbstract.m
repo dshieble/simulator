@@ -130,7 +130,7 @@ classdef (Abstract) GridManagerAbstract < handle
             mat = obj.matrix;
             t = obj.timestep;
             h = max(obj.total_count(:, obj.timestep))>=obj.max_size;
-            h = h && ~obj.mutation_manager.mutating;
+            h = h && ~obj.mutation_manager.mutating || (sum(obj.total_count(:, obj.timestep)) == 0);
         end
 
         %Returns a square in the matrix of type t
@@ -156,10 +156,10 @@ classdef (Abstract) GridManagerAbstract < handle
         end
 
         %Returns the nearest square in the matrix of type t        
-        function ind = get_nearest_of_type(obj, i, j, t)
+        function ind = get_nearest_of_type(obj, x, y, t)
             assert(obj.plot_grid == 1);
             indices = find(obj.matrix == t);
-            base = sub2ind(size(obj.matrix), i, j);
+            base = sub2ind(size(obj.matrix), x, y);
             indices = indices(indices ~= base);
             if isempty(indices)
                 ind = 0;
@@ -189,7 +189,33 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns the nearest free square in the matrix
         function ind = get_nearest_free(obj, i, j)
             ind = get_nearest_of_type(obj, i, j, 0);
-
+        end
+        
+        %If there is a free cell adjacent to a cell of type t, returns that
+        %cell. Otherwise, returns free cell nearest to cell i,j
+        function ind = get_nearest_free_to_type(obj, t, i, j)
+            assert(0 == 1);
+%             assert(obj.plot_grid == 1);
+%             conv_mat = [0 1 0; 1 0.1 1; 0 1 0];
+%             
+%             
+% %         	indices = find(obj.matrix == t);
+% %             side = sqrt(obj.max_size);
+% %             for k = 1:length(indices)
+% %                 index = indices(k);
+% %                 [x, y] = ind2sub(size(obj.matrix), index);
+% %                 lower_x = max(1, x-1); lower_y = max(1, y-1);
+% %                 upper_x = min(side, x+1); upper_y = min(side, y+1);
+% %                 for i = lower_x:upper_x
+% %                     for j = lower_y:upper_y
+% %                         if obj.matrix(i,j) == 0
+% %                             ind = sub2ind(size(obj.matrix), i, j);
+% %                             return;
+% %                         end
+% %                     end
+% %                 end
+% %             end
+%             ind = obj.get_nearest_free(i,j);
         end
 
         %Gets the center cell in the matrix

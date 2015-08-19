@@ -3,7 +3,7 @@ classdef GridManagerMoran < GridManagerAbstract
 
     properties (Constant)
         %The tag properties, these characterize the class itself
-        Name = 'Moran'
+        Name = 'Moran';
         Generational = 1;
         Param_1_Name = 'Birth Rate';
         Param_2_Name = '';
