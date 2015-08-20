@@ -817,7 +817,7 @@ switch grid_manager.plottingParams.plot_type
         y_axis_label = 'Percent Population Size';
     case 'age_dist'
         vec = grid_manager.age_structure{end};
-        y_axis_label = 'Proportion of Organisms';
+        y_axis_label = 'Age Distribution';
     case 'overall_mean_fitness'
         vec = grid_manager.overall_mean_fitness(:)';
         y_axis_label = 'Mean Fitness';
@@ -828,22 +828,17 @@ if grid_manager.plottingParams.plot_log
 end
 for i = 1:size(vec,1)
     hold on;
-    if ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
-        plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
-    else
-        cla(handles.axes_graph);
-        bar(1:length(vec), vec, 'Parent', handles.axes_graph);
-    end
+    plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
 end
 if ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
     xlabel('Generations', 'Parent', handles.axes_graph);
 else
-    xlabel('Age', 'Parent', handles.axes_graph);
+    xlabel('Generations', 'Parent', handles.axes_graph);
 end
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 %If the plot type is overall mean fitness, there is only one line and no
 %need for a legend
-if first_run && ~strcmp(grid_manager.plottingParams.plot_type, 'overall_mean_fitness') && ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
+if first_run && ~strcmp(grid_manager.plottingParams.plot_type, 'overall_mean_fitness')
     legend_input = {};
     for i = range
         if parameter_manager.num_loci > 1 && parameter_manager.mutating
@@ -863,11 +858,6 @@ end
 function run(handles, runOnce)
 %Execute the simulation
 global evolving group paused parameter_manager;
-%We cannnot run age_dist mode if we are not also in plot_grid mode
-if handles.plot_button_age.Value && ~parameter_manager.plot_grid
-    warndlg('ERROR: In order to plot the age distribution, you need to turn the Petri Dish on.');
-    return;
-end
 %If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';

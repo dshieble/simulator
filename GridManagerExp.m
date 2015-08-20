@@ -81,6 +81,7 @@ classdef GridManagerExp < GridManagerAbstract
                 obj.mean_fitness(i, obj.timestep) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
+            obj.age_structure{obj.timestep} = hist(obj.age_matrix(:))./obj.max_size;
         end
 
     end

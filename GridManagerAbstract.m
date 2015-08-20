@@ -7,21 +7,30 @@ classdef (Abstract) GridManagerAbstract < handle
 %contains a method get_next that advances the matrix/counts to the next
 %generation, based on the model that the GridManager's implementation is based
 %on
-   
+    properties (Abstract, Constant)
+        Name;
+        Generational;
+        Param_1_Name;
+        Param_2_Name;
+        atCapacity;
+        plottingEnabled;
+    end
     
     properties
         max_size;
         save_data;
         matrix;
+        old_matrix;
+        age_matrix; %stores how old each organism in the matrix is 
+        age_structure; %cell array, each cell is a timestep storing a vector that stores the frequency of each age
         timestep;
         num_types;
-        total_count; %num types x timestep matrix
+        total_count; % matrix of dimensions num types x timestep
         percent_count;
         colors;
         mean_fitness;
         overall_mean_fitness;
         generations;
-        old_matrix;
         mutation_manager; 
         plottingParams;
         plot_grid;
@@ -46,8 +55,10 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.edges_on = edges_on;
             if obj.plot_grid
                 obj.matrix = zeros(sqrt(max_size));
+                obj.age_matrix = ones(sqrt(max_size));
             else
                 obj.matrix = [];
+                obj.age_matrix = [];
             end
             obj.old_matrix = obj.matrix;
             obj.max_size = max_size;
@@ -100,6 +111,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.percent_count = [];
             obj.mean_fitness = [];
             obj.overall_mean_fitness = [];
+            obj.age_structure = {[]};
             obj.generations = [1];
             obj.mutation_manager = mutation_manager;
             obj.plottingParams = plottingParams;
@@ -122,6 +134,12 @@ classdef (Abstract) GridManagerAbstract < handle
                 changed = [];
             else
                 changed = find(obj.old_matrix ~= obj.matrix);
+                if obj.Generational
+                    obj.age_matrix(changed) = 0;
+                    obj.age_matrix = obj.age_matrix + 1;
+                    obj.age_matrix(obj.matrix == 0) = -1;
+
+                end
                 obj.old_matrix = obj.matrix;
             end
             obj.generations = [obj.generations obj.timestep];
@@ -261,6 +279,11 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.mean_fitness(i, obj.timestep) = (obj.Param1(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
+            if obj.Generational
+                obj.age_structure{obj.timestep} = hist(obj.age_matrix(obj.age_matrix ~= -1), max(obj.age_matrix(:)))./obj.max_size;
+            end
+            %TODO: TEST THIS ^
+            
         end
         
         
