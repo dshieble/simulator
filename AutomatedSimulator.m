@@ -13,23 +13,28 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     %TestInput - AutomatedSimulator('GridManagerLogistic', [1 1], [1 1], [0.01 0.01], 'total_pop_size', 900)
     %TestInput2 - AutomatedSimulator('GridManagerMoran', [450 450], [1 1], [0.01 0.01], 'total_pop_size', 900)
 
+    %ErrorInputs
+    %AutomatedSimulator('GridManagerLogistic', [1 1 1], [1 1], [0.01 0.01])
+    %AutomatedSimulator('GridManagerLogistic', [1 1], [1 1], [0.01 0.01], 'mutating', 1, 'mutation_matrix', [.01 .01 .01; .08 .08 .08; .01 .01 .01]);
+    %AutomatedSimulator('GridManagerLogistic', [1 1 1], [1 1], [0.01 0.01], 'num_loci', 0.1)
+
     p = inputParser;
 
     addRequired(p,'GridManagerClass',@(s) exist(s, 'file'));
-    addRequired(p,'Ninit',@posint_verifier);
-    addRequired(p,'p1',@isnum_verifier);
-    addRequired(p,'p2',@isnum_verifier);
+    addRequired(p,'Ninit',@is_positive_integer);
+    addRequired(p,'p1',@is_number);
+    addRequired(p,'p2',@is_number);
 
     addParameter(p,'mutating', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'mutation_matrix', [], @(M) size(M,1) == size(M,2) && pos_verifier(M));
-    addParameter(p,'num_loci', 0, @posint_verifier);
-    addParameter(p,'recombination_number', 0, @posint_verifier);
+    addParameter(p,'mutation_matrix', [], @(M) size(M,1) == size(M,2) && is_positive_number(M));
+    addParameter(p,'num_loci', 0, @is_positive_integer);
+    addParameter(p,'recombination_number', 0, @is_positive_integer);
     addParameter(p,'matrix_on', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'total_pop_size', 2500, @posint_verifier);
+    addParameter(p,'total_pop_size', 2500, @is_positive_integer);
     addParameter(p,'return_type', 'total_count', @(x) any(validatestring(x,{'total_count', 'matrix', 'age_dist'})));
     addParameter(p,'spatial_on', 0, @(x) x == 0 || x == 1);
     addParameter(p,'edges_on', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'max_iterations', 25,  @posint_verifier);
+    addParameter(p,'max_iterations', 25,  @is_positive_integer);
 
     parse(p,GridManagerClass, Ninit, p1, p2, varargin{:})
     assert(length(p.Results.Ninit) == length(p.Results.p1) && length(p.Results.p1) == length(p.Results.p2), 'Lengths pf Ninit, p1 and p2 must be the same!');
@@ -39,6 +44,7 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     if isempty(p.Results.mutation_matrix)
         mutation_matrix = generate_mutation_matrix(numel(p.Results.Ninit));
     else
+        assert(length(p.Results.Ninit) == size(p.Results.mutation_matrix,1), 'The sides of mutation matrix are the incorrect length');
         mutation_matrix = p.Results.mutation_matrix;
     end
     
@@ -80,7 +86,7 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     end
 
 
-    function out = isnum_verifier(n)
+    function out = is_number(n)
         %verifies that input is a vector of numbers
         out = 1;
         if any(~isnumeric(n))
@@ -90,20 +96,20 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
         end
     end
 
-    function out = pos_verifier(n)
+    function out = is_positive_number(n)
         %verifies that input is a vector of positive numbers
         out = 1;
-        if ~isnum_verifier(n)
+        if ~is_number(n)
             out = 0;
         elseif any(n < 0) %negative
             out = 0;
         end 
     end
 
-    function out = posint_verifier(n)
+    function out = is_positive_integer(n)
         %verifies that input is a vector of positive integers
         out = 1;
-        if ~pos_verifier(n)
+        if ~is_positive_number(n)
             out = 0;
         elseif any(round(n) ~= n) %non-integer
             out = 0;
