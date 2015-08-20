@@ -14,12 +14,12 @@ classdef MutationManager < handle
     
     methods (Access = public)
         
-        function obj = MutationManager(parameter_manager)
-            obj.num_loci = parameter_manager.num_loci;
-            obj.mutation_matrix = parameter_manager.mutation_matrix;
-            obj.mutating = parameter_manager.mutating;
-            obj.recombining = parameter_manager.recombination;
-            obj.recombination_number = parameter_manager.recombination_number;
+        function obj = MutationManager(mutating, mutation_matrix, num_loci, recombination, recombination_number)
+            obj.mutating =  mutating;
+            obj.mutation_matrix =  mutation_matrix;
+            obj.num_loci = num_loci;
+            obj.recombining = recombination;
+            obj.recombination_number = recombination_number;
         end
         
         %Accepts a grid_manager, updates the matrix and total_count

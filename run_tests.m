@@ -5,13 +5,7 @@
 pop_size = 100;
 edges_on = 1; 
 spatial_on = 0;
-PM_fake = struct(); %A struct that performs the same function as a parameter manager
-PM_fake.mutating = 0;
-PM_fake.mutation_matrix = [0.99 0.01; 0.01 0.99];
-PM_fake.num_loci = 1;
-PM_fake.recombination = 0;
-PM_fake.recombination_number = 0;
-MM = MutationManager(PM_fake); %make a mutation manager with the fake parameter_manager
+MM = MutationManager(0, [0.99 0.01; 0.01 0.99], 1, 0, 0);
 plot_grid = 0;
 plottingParams = struct(); plottingParams.plot_type = 'total_count'; plottingParams.plot_log = 0;
 

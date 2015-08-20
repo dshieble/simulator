@@ -193,8 +193,8 @@ classdef (Abstract) GridManagerAbstract < handle
         
         %If there is a free cell adjacent to a cell of type t, returns that
         %cell. Otherwise, returns free cell nearest to cell i,j
-        function ind = get_nearest_free_to_type(obj, t, i, j)
-            assert(0 == 1);
+%         function ind = get_nearest_free_to_type(obj, t, i, j)
+%             assert(0 == 1);
 %             assert(obj.plot_grid == 1);
 %             conv_mat = [0 1 0; 1 0.1 1; 0 1 0];
 %             
@@ -216,7 +216,7 @@ classdef (Abstract) GridManagerAbstract < handle
 % %                 end
 % %             end
 %             ind = obj.get_nearest_free(i,j);
-        end
+%         end
 
         %Gets the center cell in the matrix
         function ind = get_center(obj)
