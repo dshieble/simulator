@@ -802,6 +802,7 @@ if isempty(grid_manager)
 end
 if first_run
     cla(handles.axes_graph);
+    legend('hide');
 end
 if group > grid_manager.num_types
     group = 1;

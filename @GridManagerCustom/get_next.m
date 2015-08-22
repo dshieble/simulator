@@ -1,4 +1,9 @@
 function [mat, changed, t, h] = get_next(obj)
+%TODO: Change the instructions and logic to account for the new matrix
+%rules
+%TODO: Change the logic so that plot_grid is automatically enabled whenever
+%we use the matrix method, even if the grid is not being plotted
+
 %This is the get_next wrapper method that performs the necessary updates
 %and makes the necessary calls by interacting directly with the
 %user-defined get_next_matrix or get_next_vector functions

@@ -25,18 +25,17 @@ classdef MutationManager < handle
         %Accepts a grid_manager, updates the matrix and total_count
         %parameters of the grid_manager based on the mutation parameters
         function mutate(obj, grid_manager)
-            matrix = grid_manager.matrix;
             if obj.mutating
                 if grid_manager.plot_grid %Mutate each cell individually
-                    for i = 1:numel(matrix)
-                        type = matrix(i)-1;
+                    for i = 1:numel(grid_manager.matrix)
+                        type = grid_manager.matrix(i)-1;
                         new_type = 0;
                         if type >= 0
                             if obj.num_loci == 1 %choose new type with weighted random selection
                                 num = rand();
                                 while num > 0
                                     new_type = new_type + 1;
-                                    num = num - obj.mutation_matrix(new_type, matrix(i));
+                                    num = num - obj.mutation_matrix(new_type, grid_manager.matrix(i));
                                 end
                             else %mutate each allele seperately
                                 for j = 0:(obj.num_loci-1)
@@ -51,10 +50,9 @@ classdef MutationManager < handle
                                 end
                                 new_type = new_type + 1;
                             end
-                            matrix(i) = new_type;
+                            grid_manager.mutateMatrix(i, new_type);
                         end
                     end
-                    grid_manager.matrix = matrix;
                     for i = 1:grid_manager.num_types
                         grid_manager.total_count(i, grid_manager.timestep) = numel(find(grid_manager.matrix == i));
                     end
@@ -73,20 +71,18 @@ classdef MutationManager < handle
                                 organism = i - 1;
                                 for k = 1:log2(grid_manager.num_types)
                                     if bitget(organism, k) %if allele is 1
-                                        obj.mutation_matrix(1,2)
                                         if rand() < obj.mutation_matrix(1,2)
                                             organism = bitset(organism, k,0);
                                         end
                                     else %if allele is 0
                                         if rand() < obj.mutation_matrix(2,1)
-                                            obj.mutation_matrix(2,1)
                                             organism = bitset(organism, k, 1);
                                         end
                                     end
                                 end
                                 assert(organism<=grid_manager.num_types);
-                                if i ~= organism + 1
-                                end
+%                                 if i ~= organism + 1
+%                                 end
                                 gen_vec(i) = gen_vec(i) - 1;
                                 gen_vec(organism + 1) = gen_vec(organism + 1) + 1;
                             end
@@ -120,7 +116,8 @@ classdef MutationManager < handle
                     if rand() < obj.recombination_number
                         ind_1 = indices(i); ind_2 = indices(i+1);
                         assert((matrix(ind_1)>0) && (matrix(ind_2)>0))
-                        num_1 = matrix(ind_1) - 1; num_2 = matrix(ind_2) - 1;
+                        num_1 = matrix(ind_1) - 1; 
+                        num_2 = matrix(ind_2) - 1;
                         if num_1 ~= num_2
                             new_num_1 = 0; new_num_2 = 0;
                             crossover = randi(obj.num_loci);
@@ -133,16 +130,18 @@ classdef MutationManager < handle
                                     new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
                                 end
                             end
-                            %fprintf('1 - %s 2 - %s 1_new - %s 2_new - %s\n', dec2bin(num_1), dec2bin(num_2), dec2bin(new_num_1), dec2bin(new_num_2));
                         else
                             new_num_1 = num_1; new_num_2 = num_2;
                         end
+                        %Change the fake Matrix as well as the actual
+                        %grid_manager matrix
                         matrix(ind_1) = new_num_1 + 1;
                         matrix(ind_2) = new_num_2 + 1;
+                        if grid_manager.plot_grid
+                            grid_manager.mutateMatrix(ind_1, new_num_1 + 1);
+                            grid_manager.mutateMatrix(ind_2, new_num_2 + 1);
+                        end
                     end
-                end
-                if grid_manager.plot_grid
-                    grid_manager.matrix = matrix;
                 end
                 for i = 1:grid_manager.num_types
                 	grid_manager.total_count(i, grid_manager.timestep) = numel(find(matrix == i));

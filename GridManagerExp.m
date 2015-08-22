@@ -26,7 +26,6 @@ classdef GridManagerExp < GridManagerAbstract
         %t - the timestep
         %h - whether or not we should halt
         function [mat, changed, t, h] = get_next(obj)
-            fprintf('before: vec %d mat %d \n', sum(obj.total_count(:, obj.timestep)), length(find(obj.matrix)));
             gen_vec = obj.total_count(:, obj.timestep);
             for i = 1:sum(gen_vec)
                 if sum(gen_vec) == 0
@@ -50,15 +49,15 @@ classdef GridManagerExp < GridManagerAbstract
                             %nearest cell to it with the chosen type
                             if obj.spatial_on
                                 [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                                obj.matrix(obj.get_nearest_free(a, b)) = chosen_type;
+                                obj.changeMatrix(obj.get_nearest_free(a, b), chosen_type);
                             else
-                                obj.matrix(obj.get_free()) = chosen_type;   
+                                obj.changeMatrix(obj.get_free(), chosen_type);   
                             end
                         end
                     end
                 else
                     if obj.plot_grid && gen_vec(chosen_type) > 0
-                        obj.matrix(obj.getRandomOfType(chosen_type)) = 0;
+                        obj.changeMatrix(obj.getRandomOfType(chosen_type), 0);
                     end
                     gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
                 end
@@ -66,8 +65,6 @@ classdef GridManagerExp < GridManagerAbstract
             obj.total_count(:, obj.timestep + 1) = gen_vec;
             %then, include all computation updates
             [mat, changed, t, h] = obj.get_next_cleanup();
-            fprintf('after: vec %d mat %d \n', sum(obj.total_count(:, obj.timestep)), length(find(obj.matrix)));
-
         end
         
             
@@ -76,12 +73,10 @@ classdef GridManagerExp < GridManagerAbstract
         %Overriden method to account for fact that fitness is determined by
         %difference between birth and death rates here
         function update_params(obj)
+            update_params@GridManagerAbstract(obj);
             for i = 1:obj.num_types
-                obj.percent_count(i, obj.timestep) = obj.total_count(i, obj.timestep)./obj.max_size;
                 obj.mean_fitness(i, obj.timestep) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
             end
-            obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
-            obj.age_structure{obj.timestep} = hist(obj.age_matrix(:))./obj.max_size;
         end
 
     end

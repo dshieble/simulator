@@ -1,4 +1,9 @@
-function new_mat = get_next_matrix(obj, old_mat, param1, param2, max_pop_size)
+function [new_mat] = get_next_matrix(obj, old_mat, param1, param2, max_pop_size)
+%TODO: Possibly implement functionality to allow for age matrix input and
+%output as well
+%TODO: Change the description and structure here to account for the new
+%matrix model
+
 %In this file, you can implement a matrix-based model. You are given access
 %to the matrix from the previous iteration and the parameters that you enter
 %into the GUI, and you generate the matrix for the current generation.

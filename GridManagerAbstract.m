@@ -1,4 +1,9 @@
 classdef (Abstract) GridManagerAbstract < handle
+%TODO: Make kill and birth methods to prevent subclasses from touching the
+%matrix directly and handle updating the ages from a step up perspective!!
+    
+    
+    
 %This class is the parent class of the 4 grid managers. It contains methods
 %that are used by all of its child classes, as well as the instance
 %variables used across all classes. 
@@ -16,13 +21,16 @@ classdef (Abstract) GridManagerAbstract < handle
         plottingEnabled;
     end
     
+    properties (SetAccess = private)
+        matrix; %Stores the location of each organism
+        old_matrix; %Stores the matrix from the previous iteration
+        age_matrix; %stores how old each organism in the matrix is 
+        age_structure; %cell array, each cell is a timestep storing a vector that stores the frequency of each age
+    end
+    
     properties
         max_size;
         save_data;
-        matrix;
-        old_matrix;
-        age_matrix; %stores how old each organism in the matrix is 
-        age_structure; %cell array, each cell is a timestep storing a vector that stores the frequency of each age
         timestep;
         num_types;
         total_count; % matrix of dimensions num types x timestep
@@ -55,7 +63,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.edges_on = edges_on;
             if obj.plot_grid
                 obj.matrix = zeros(sqrt(max_size));
-                obj.age_matrix = ones(sqrt(max_size));
+                obj.age_matrix = zeros(sqrt(max_size)) - 1;
             else
                 obj.matrix = [];
                 obj.age_matrix = [];
@@ -68,7 +76,7 @@ classdef (Abstract) GridManagerAbstract < handle
                     i = 1;
                     for type = 1:length(Ninit)
                         n = Ninit(type);
-                        obj.matrix(r(i:n+i-1)) = type;
+                        obj.changeMatrix(r(i:n+i-1), type);
                         i = i + n;
                     end
                 else %non-static models, place founding cells in center
@@ -79,7 +87,7 @@ classdef (Abstract) GridManagerAbstract < handle
                     org_vec = org_vec(randperm(length(org_vec)));
                     ind = obj.get_center();
                     for i = 1:length(org_vec)
-                        obj.matrix(ind) = org_vec(i);
+                        obj.changeMatrix(ind, org_vec(i));
                         [a, b] = ind2sub(size(obj.matrix), ind);
                         ind = obj.get_nearest_free(a,b);
                     end
@@ -134,17 +142,13 @@ classdef (Abstract) GridManagerAbstract < handle
                 changed = [];
             else
                 changed = find(obj.old_matrix ~= obj.matrix);
-                if obj.Generational
-                    obj.age_matrix(changed) = 0;
-                    obj.age_matrix = obj.age_matrix + 1;
-                    obj.age_matrix(obj.matrix == 0) = -1;
-
-                end
                 obj.old_matrix = obj.matrix;
             end
             obj.generations = [obj.generations obj.timestep];
             obj.update_params();
             obj.save_data.total_count = obj.total_count;
+            obj.save_data.total_count = obj.total_count;
+            obj.save_data.age_structure = obj.age_structure;
             mat = obj.matrix;
             t = obj.timestep;
             h = max(obj.total_count(:, obj.timestep))>=obj.max_size;
@@ -208,33 +212,6 @@ classdef (Abstract) GridManagerAbstract < handle
         function ind = get_nearest_free(obj, i, j)
             ind = get_nearest_of_type(obj, i, j, 0);
         end
-        
-        %If there is a free cell adjacent to a cell of type t, returns that
-        %cell. Otherwise, returns free cell nearest to cell i,j
-%         function ind = get_nearest_free_to_type(obj, t, i, j)
-%             assert(0 == 1);
-%             assert(obj.plot_grid == 1);
-%             conv_mat = [0 1 0; 1 0.1 1; 0 1 0];
-%             
-%             
-% %         	indices = find(obj.matrix == t);
-% %             side = sqrt(obj.max_size);
-% %             for k = 1:length(indices)
-% %                 index = indices(k);
-% %                 [x, y] = ind2sub(size(obj.matrix), index);
-% %                 lower_x = max(1, x-1); lower_y = max(1, y-1);
-% %                 upper_x = min(side, x+1); upper_y = min(side, y+1);
-% %                 for i = lower_x:upper_x
-% %                     for j = lower_y:upper_y
-% %                         if obj.matrix(i,j) == 0
-% %                             ind = sub2ind(size(obj.matrix), i, j);
-% %                             return;
-% %                         end
-% %                     end
-% %                 end
-% %             end
-%             ind = obj.get_nearest_free(i,j);
-%         end
 
         %Gets the center cell in the matrix
         function ind = get_center(obj)
@@ -270,7 +247,38 @@ classdef (Abstract) GridManagerAbstract < handle
             ofType = find(obj.matrix == type);
             out = ofType(randi(numel(ofType)));
         end
-            
+        
+        % Matrix Methods
+        
+        %Changes an element in the matrix and resets the age
+        function changeMatrix(obj, ind, new)
+            assert(obj.plot_grid == 1);
+            obj.matrix(ind) = new;
+            if new > 0
+                obj.age_matrix(ind) = 0;
+            else
+                obj.age_matrix(ind) = -1;
+            end
+        end
+        
+        %Mutates an element in the matrix (changes it without changing its
+        %age)
+        function mutateMatrix(obj, ind, new)
+            assert(obj.plot_grid == 1);
+            assert(obj.matrix(ind) ~= 0, 'ERROR: Cannot mutate an element that is currently zero');
+            assert(new ~= 0, 'ERROR: Cannot mutate an element to become zero');
+            obj.matrix(ind) = new;
+        end
+        
+        %Resets the matrix to the input
+        function resetMatrix(obj, new_mat)
+            assert(obj.plot_grid == 1);
+            obj.matrix = new_mat;
+            obj.age_matrix = zeros(sqrt(obj.max_size));
+            obj.age_matrix(new_mat == 0) = -1;
+        end
+        
+                    
         %Updates the total_count, the percent_count and the mean_fitness
         %variables for plotting. 
         function update_params(obj)
@@ -280,14 +288,16 @@ classdef (Abstract) GridManagerAbstract < handle
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
             if obj.Generational
-                obj.age_structure{obj.timestep} = hist(obj.age_matrix(obj.age_matrix ~= -1), max(obj.age_matrix(:)))./obj.max_size;
-            end
-            %TODO: TEST THIS ^
-            
+                obj.age_matrix(obj.age_matrix ~= -1) = obj.age_matrix(obj.age_matrix ~= -1) + 1;
+                ages = obj.age_matrix(obj.age_matrix ~= -1);
+                obj.age_structure{obj.timestep} = hist(ages, max(ages))./length(ages);
+            end            
         end
         
         
     end
+    
+    
     
     methods (Abstract)        
         %A method implemented by all of the child GridManager class.

@@ -56,9 +56,11 @@ classdef GridManagerMoran < GridManagerAbstract
                     %with the birthed type
                     if obj.spatial_on
                         [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                        obj.matrix(obj.get_nearest_of_type(a, b, dead_type)) = chosen_type;
+                        ind = obj.get_nearest_of_type(a, b, dead_type);
+                        assert(ind ~= -1, 'ERROR: get_nearest_of_type is returning -1');
+                        obj.changeMatrix(ind, chosen_type);
                     else
-                        obj.matrix(obj.get_of_type(dead_type)) = chosen_type;
+                        obj.changeMatrix(obj.get_of_type(dead_type), chosen_type);
                     end
                 end
             end

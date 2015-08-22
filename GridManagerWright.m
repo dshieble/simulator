@@ -41,7 +41,7 @@ classdef GridManagerWright < GridManagerAbstract
                 end
                 long_mat = long_mat(randperm(length(long_mat)));
                 assert(numel(long_mat) == obj.max_size);
-                obj.matrix = reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2));
+                obj.resetMatrix(reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2)));
             end
             obj.total_count(:, obj.timestep + 1) = new_counts;
             [mat, changed, t, h] = obj.get_next_cleanup();
