@@ -16,10 +16,10 @@ if parameter_manager.mutating && parameter_manager.num_loci > 1
     end
     for i = 1:2^parameter_manager.num_loci
         data{1,i + 1} = dec2bin(i - 1, parameter_manager.num_loci);
-        if parameter_manager.classConstants(parameter_manager.current_model).Generational %if generational model
-            data{2,i + 1} = num2str(parameter_manager.lociParam1Generational(i));
+        if parameter_manager.classConstants(parameter_manager.current_model).OverlappingGenerations %if OverlappingGenerations model
+            data{2,i + 1} = num2str(parameter_manager.lociParam1OverlappingGenerations(i));
         else
-            data{2,i + 1} = num2str(parameter_manager.lociParam1NonGenerational(i));
+            data{2,i + 1} = num2str(parameter_manager.lociParam1NonOverlappingGenerations(i));
         end
         if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name) %if 2 parameters
             data{3,i + 1} = num2str(0.01);

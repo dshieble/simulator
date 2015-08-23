@@ -31,8 +31,8 @@ classdef ParameterManager < handle
         e;
         %function variables
         numOnes;
-        lociParam1Generational;
-        lociParam1NonGenerational;
+        lociParam1OverlappingGenerations;
+        lociParam1NonOverlappingGenerations;
         max_num_loci;
         recombination;
         recombination_number;
@@ -89,8 +89,8 @@ classdef ParameterManager < handle
             obj.e = 0;
             %function variables
             obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
-            obj.lociParam1Generational = @(num) 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
-            obj.lociParam1NonGenerational = @(num) exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
+            obj.lociParam1OverlappingGenerations = @(num) 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
+            obj.lociParam1NonOverlappingGenerations = @(num) exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
             %cleanup
             obj.updateNumTypes();
         end
@@ -279,10 +279,10 @@ classdef ParameterManager < handle
                 elseif strcmp(param, 'Param1')
                     out = zeros(1,2^obj.num_loci);
                     for i = 1:2^obj.num_loci
-                        if obj.classConstants(model).Generational
-                            out(i) = obj.lociParam1Generational(i); 
+                        if obj.classConstants(model).OverlappingGenerations
+                            out(i) = obj.lociParam1OverlappingGenerations(i); 
                         else
-                            out(i) = obj.lociParam1NonGenerational(i);
+                            out(i) = obj.lociParam1NonOverlappingGenerations(i);
                         end
                     end
                 else

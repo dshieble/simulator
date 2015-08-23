@@ -93,8 +93,8 @@ classdef MutationManager < handle
             end
         end
         
-        %Performs a generational recombination
-        function generational_recombination(obj, grid_manager)
+        %Performs a OverlappingGenerations recombination
+        function OverlappingGenerations_recombination(obj, grid_manager)
             if obj.mutating && obj.recombining && obj.num_loci > 1
                 if grid_manager.plot_grid
                     matrix = grid_manager.matrix;

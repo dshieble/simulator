@@ -5,7 +5,7 @@ classdef GridManagerLogistic < GridManagerAbstract
     properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Logistic';
-        Generational = 1;
+        OverlappingGenerations = 1;
         Param_1_Name = 'Birth Rate';
         Param_2_Name = 'Death Rate';
         atCapacity = 0;

@@ -4,7 +4,7 @@ classdef GridManagerWright < GridManagerAbstract
    properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Wright-Fisher';
-        Generational = 0;
+        OverlappingGenerations = 0;
         Param_1_Name = 'Fitness';
         Param_2_Name = '';
         atCapacity = 1;

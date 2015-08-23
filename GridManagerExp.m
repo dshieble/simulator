@@ -4,7 +4,7 @@ classdef GridManagerExp < GridManagerAbstract
     properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Exponential';
-        Generational = 1;
+        OverlappingGenerations = 1;
         Param_1_Name = 'Birth Rate';
         Param_2_Name = 'Death Rate';
         atCapacity = 0;

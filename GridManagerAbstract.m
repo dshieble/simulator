@@ -14,7 +14,7 @@ classdef (Abstract) GridManagerAbstract < handle
 %on
     properties (Abstract, Constant)
         Name;
-        Generational;
+        OverlappingGenerations;
         Param_1_Name;
         Param_2_Name;
         atCapacity;
@@ -137,7 +137,7 @@ classdef (Abstract) GridManagerAbstract < handle
         function [mat, changed, t, h] = get_next_cleanup(obj)
             obj.timestep = obj.timestep + 1;
             obj.mutation_manager.mutate(obj);
-            obj.mutation_manager.generational_recombination(obj);
+            obj.mutation_manager.OverlappingGenerations_recombination(obj);
             if ~obj.plot_grid
                 changed = [];
             else
@@ -287,7 +287,7 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.mean_fitness(i, obj.timestep) = (obj.Param1(i))*obj.percent_count(i, obj.timestep); 
             end
             obj.overall_mean_fitness(obj.timestep) = dot(obj.mean_fitness(:,obj.timestep), obj.total_count(:,obj.timestep));
-            if obj.Generational
+            if obj.OverlappingGenerations
                 obj.age_matrix(obj.age_matrix ~= -1) = obj.age_matrix(obj.age_matrix ~= -1) + 1;
                 ages = obj.age_matrix(obj.age_matrix ~= -1);
                 obj.age_structure{obj.timestep} = hist(ages, max(ages))./length(ages);

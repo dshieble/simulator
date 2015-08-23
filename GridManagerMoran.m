@@ -4,7 +4,7 @@ classdef GridManagerMoran < GridManagerAbstract
     properties (Constant)
         %The tag properties, these characterize the class itself
         Name = 'Moran';
-        Generational = 1;
+        OverlappingGenerations = 1;
         Param_1_Name = 'Birth Rate';
         Param_2_Name = '';
         atCapacity = 1;
@@ -54,12 +54,12 @@ classdef GridManagerMoran < GridManagerAbstract
                     %choose a cell of the birthed type, and find the
                     %nearest cell to it of the kill type and fill that cell
                     %with the birthed type
-                    if obj.spatial_on
+                    if obj.spatial_on && (dead_type ~= chosen_type)
                         [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
                         ind = obj.get_nearest_of_type(a, b, dead_type);
-                        assert(ind ~= -1, 'ERROR: get_nearest_of_type is returning -1');
+                        assert(ind > 0, sprintf('ERROR: get_nearest_of_type is returning %d', ind));
                         obj.changeMatrix(ind, chosen_type);
-                    else
+                    else %if dead type and chosen type are equal, then we just reset the age of a random organism of that type. 
                         obj.changeMatrix(obj.get_of_type(dead_type), chosen_type);
                     end
                 end

@@ -864,16 +864,16 @@ end
 function run(handles, runOnce)
 %Execute the simulation
 global evolving group paused parameter_manager;
-%We cannnot run age_dist mode if we are not also in plot_grid mode
-if (handles.plot_button_age.Value && ~parameter_manager.plot_grid) || (handles.plot_button_age.Value && parameter_manager.getNumTypes() > 16)
-    warndlg('ERROR: In order to plot the age distribution, you need to turn the Petri Dish on. You cannot turn the Petri Dish on if the number of types is at least 16.');
-    return;
-end
-%If the number of types is greater than 16, turn petri dish off
+%If the number of types is greater than 16, remove plot_grid
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';
     parameter_manager.set_plot_grid(0);
     handles.plot_grid_button.Value = 0;
+end
+%We cannnot run age_dist mode if we are not also in plot_grid mode
+if handles.plot_button_age.Value && ~parameter_manager.plot_grid
+    warndlg('ERROR: In order to plot the age distribution, you need to turn the Petri Dish on.');
+    return;
 end
 group = 1;
 handles.run_button.String = 'Calculating...';
