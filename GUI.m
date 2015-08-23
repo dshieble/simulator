@@ -317,7 +317,7 @@ parameter_manager.updateStructs();
 % --- Executes on button press in model1_button.
 function model1_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.current_model = 1;
+parameter_manager.updateBasicParameters()
 handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
@@ -326,7 +326,7 @@ toggle_visible(handles);
 % --- Executes on button press in model2_button.
 function model2_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.current_model = 2;
+parameter_manager.updateBasicParameters()
 handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
@@ -334,7 +334,7 @@ toggle_visible(handles);
 % --- Executes on button press in model3_button.
 function model3_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.current_model = 3;
+parameter_manager.updateBasicParameters()
 handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
@@ -342,7 +342,7 @@ toggle_visible(handles);
 % --- Executes on button press in model4_button.
 function model4_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.current_model = 4;
+parameter_manager.updateBasicParameters()
 handles.model_name_banner.String = parameter_manager.classConstants(parameter_manager.current_model).Name;
 parameter_manager.updateBoxes();
 toggle_visible(handles);
@@ -360,10 +360,10 @@ global parameter_manager;
 parameter_manager.updateMatrixProperties();
     
 
-% --- Executes on button press in plot_grid_button.
-function plot_grid_button_Callback(hObject, eventdata, handles)
+% --- Executes on button press in matrixOn_button.
+function matrixOn_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.set_plot_grid(handles.plot_grid_button.Value);
+parameter_manager.setMatrixOn(handles.matrixOn_button.Value);
 toggle_visible(handles);
 
 
@@ -416,14 +416,13 @@ end
 % --- Executes on button press in genetics_button.
 function genetics_button_Callback(hObject, eventdata, handles)
 global parameter_manager;
+parameter_manager.updateBasicParameters();
 if handles.genetics_button.Value
-    parameter_manager.mutating = 1;
     toggle_visible(handles);
     handles.mutation_panel.Visible = 'on';
     handles.num_types_string.String = 'Number of Alleles:';
     handles.params_string.String =  'Parameters For Allele:';
 else
-    parameter_manager.mutating = 0;
     toggle_visible(handles);
     handles.mutation_panel.Visible = 'off';
     handles.num_types_string.String = 'Number of Types:';
@@ -478,21 +477,22 @@ end
 % --- Executes on button press in spatial_structure_check.
 function spatial_structure_check_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.spatial_on = handles.spatial_structure_check.Value;
+parameter_manager.updateBasicParameters();
+
 
 
 
 % --- Executes on button press in recombination_check.
 function recombination_check_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.recombination = handles.recombination_check.Value;
+parameter_manager.updateBasicParameters();
 toggle_visible(handles);
 
 
 
 function recombination_box_Callback(hObject, eventdata, handles)
 global parameter_manager;
-parameter_manager.recombination_number = handles.recombination_box.Value;
+parameter_manager.updateBasicParameters();
 
 
 
@@ -518,7 +518,7 @@ function remove_edges_check_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global parameter_manager;
-parameter_manager.edges_on = ~handles.remove_edges_check.Value;
+parameter_manager.updateBasicParameters();
 
 
 
@@ -619,10 +619,10 @@ if (parameter_manager.num_loci > 1) && parameter_manager.mutating
     handles.init_pop_box.Style = 'text';
     %initial frequencies
     handles.initial_frequencies_button.Visible = 'on';
-    %plot_grid
+    %matrixOn
     parameter_manager.updateBoxes();
     handles.recombination_check.Visible = 'on';
-    if parameter_manager.recombination == 1
+    if parameter_manager.recombining == 1
         handles.recombination_panel.Visible = 'on';
     end
 else
@@ -635,19 +635,19 @@ else
     handles.recombination_check.Visible = 'off';
     %initial frequencies
     handles.initial_frequencies_button.Visible = 'off';
-    %plot_grid
+    %matrixOn
     parameter_manager.updateBoxes();
 end
 if parameter_manager.classConstants(parameter_manager.current_model).plottingEnabled &&...
         (~parameter_manager.mutating || parameter_manager.num_loci <= 16) %don't plot if too many loci or not plotting enabled
-    handles.plot_grid_button.Enable = 'on';
+    handles.matrixOn_button.Enable = 'on';
 else
-    parameter_manager.set_plot_grid(0);
-    handles.plot_grid_button.Value = 0;
-    handles.plot_grid_button.Enable = 'off';
+    parameter_manager.setMatrixOn(0);
+    handles.matrixOn_button.Value = 0;
+    handles.matrixOn_button.Enable = 'off';
 end
 
-if parameter_manager.plot_grid && ~strcmp(parameter_manager.classConstants(parameter_manager.current_model).Name, 'Wright-Fisher')
+if parameter_manager.matrixOn && ~strcmp(parameter_manager.classConstants(parameter_manager.current_model).Name, 'Wright-Fisher')
     handles.spatial_structure_check.Visible = 'on';
     handles.remove_edges_check.Visible = 'on';
 else
@@ -664,7 +664,7 @@ adjust_text(handles);
 function enable_inputs(handles, on)
 toggle_visible(handles);
 if on
-    handles.plot_grid_button.Enable = 'on';
+    handles.matrixOn_button.Enable = 'on';
     handles.population_box.Enable = 'on';
     handles.genetics_button.Enable = 'on';
     handles.spatial_structure_check.Enable = 'on';
@@ -689,7 +689,7 @@ if on
     handles.mutation_matrix_button.Enable = 'on';
     handles.initial_frequencies_button.Enable = 'on';
 else
-    handles.plot_grid_button.Enable = 'off';
+    handles.matrixOn_button.Enable = 'off';
     handles.population_box.Enable = 'off';
     handles.genetics_button.Enable = 'off';
     handles.spatial_structure_check.Enable = 'off';
@@ -756,7 +756,7 @@ while evolving == 1
    [matrix, c, t, halt] = grid_manager.get_next();
    draw_iteration(matrix, c, handles, first_run);
    first_run = 0;
-    if runOnce || halt% || (~plot_grid && (grid_manager.timestep > parameter_manager.max_iterations))
+    if runOnce || halt% || (~matrixOn && (grid_manager.timestep > parameter_manager.max_iterations))
         break
     end
 end
@@ -768,7 +768,7 @@ if isempty(grid_manager)
     fprintf('ERROR: Grid Manager Empty')
     return
 end
-if grid_manager.plot_grid 
+if grid_manager.matrixOn 
     perm = c(randperm(length(c)))';
     for p = perm
         [i, j] = ind2sub(sqrt(numel(grid_manager.matrix)), p);
@@ -809,34 +809,34 @@ if group > grid_manager.num_types
 end
 range = group:min(group + 15, grid_manager.num_types);
 %plot the graph
-switch grid_manager.plottingParams.plot_type
-    case 'total_count'
-    	vec = grid_manager.total_count(range, :);
-        y_axis_label = 'Population Count';
-    case 'percent_count'
-        vec = grid_manager.percent_count(range, :);
-        y_axis_label = 'Percent Population Size';
-    case 'age_dist'
-        vec = grid_manager.age_structure{end};
-        y_axis_label = 'Proportion of Organisms';
-    case 'overall_mean_fitness'
-        vec = grid_manager.overall_mean_fitness(:)';
-        y_axis_label = 'Mean Fitness';
+if handles.plot_button_count.Value
+    vec = grid_manager.total_count(range, :);
+    y_axis_label = 'Population Count';
+elseif handles.plot_button_percent.Value
+    vec = grid_manager.percent_count(range, :);
+    y_axis_label = 'Percent Population Size';
+elseif handles.plot_button_age.Value
+    vec = grid_manager.age_structure{end};
+    y_axis_label = 'Proportion of Organisms';
+else
+    vec = grid_manager.overall_mean_fitness(:)';
+    y_axis_label = 'Mean Fitness';
 end
-if grid_manager.plottingParams.plot_log
+
+if  handles.plot_button_log.Value
     vec = log10(vec);
     y_axis_label = sprintf('log10(%s)', y_axis_label);
 end
 for i = 1:size(vec,1)
     hold on;
-    if ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
-        plot(grid_manager.generations, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
+    if ~handles.plot_button_age.Value
+        plot(1:grid_manager.timestep, vec(i,:), 'Parent', handles.axes_graph, 'Color', grid_manager.get_color(i));
     else
         cla(handles.axes_graph);
         bar(1:length(vec), vec, 'Parent', handles.axes_graph);
     end
 end
-if ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
+if ~handles.plot_button_age.Value
     xlabel('Generations', 'Parent', handles.axes_graph);
 else
     xlabel('Age', 'Parent', handles.axes_graph);
@@ -844,7 +844,7 @@ end
 ylabel(y_axis_label, 'Parent', handles.axes_graph);
 %If the plot type is overall mean fitness, there is only one line and no
 %need for a legend
-if first_run && ~strcmp(grid_manager.plottingParams.plot_type, 'overall_mean_fitness') && ~strcmp(grid_manager.plottingParams.plot_type, 'age_dist')
+if first_run && ~handles.plot_button_age.Value && ~handles.plot_button_fitness.Value
     legend_input = {};
     for i = range
         if parameter_manager.num_loci > 1 && parameter_manager.mutating
@@ -864,16 +864,16 @@ end
 function run(handles, runOnce)
 %Execute the simulation
 global evolving group paused parameter_manager;
-%We cannnot run age_dist mode if we are not also in plot_grid mode
-if (handles.plot_button_age.Value && ~parameter_manager.plot_grid) || (handles.plot_button_age.Value && parameter_manager.getNumTypes() > 16)
+%We cannnot run age_dist mode if we are not also in matrixOn mode
+if (handles.plot_button_age.Value && ~parameter_manager.matrixOn) || (handles.plot_button_age.Value && parameter_manager.getNumTypes() > 16)
     warndlg('ERROR: In order to plot the age distribution, you need to turn the Petri Dish on. You cannot turn the Petri Dish on if the number of types is at least 16.');
     return;
 end
 %If the number of types is greater than 16, turn petri dish off
 if parameter_manager.getNumTypes() > 16
     handles.page_button.Enable = 'on';
-    parameter_manager.set_plot_grid(0);
-    handles.plot_grid_button.Value = 0;
+    parameter_manager.setMatrixOn(0);
+    handles.matrixOn_button.Value = 0;
 end
 group = 1;
 handles.run_button.String = 'Calculating...';
@@ -935,35 +935,19 @@ function initializeGridManager(handles)
 global grid_manager parameter_manager rects;
 %Initialize the grid manager object based on the parameter_manager and the
 %current model
-plottingParams = struct();
-if handles.plot_button_count.Value
-    plottingParams.plot_type = 'total_count';
-elseif handles.plot_button_percent.Value
-    plottingParams.plot_type = 'percent_count';
-elseif handles.plot_button_age.Value
-    plottingParams.plot_type = 'age_dist';
-else
-	plottingParams.plot_type = 'overall_mean_fitness';
-end
-if handles.plot_button_log.Value
-    plottingParams.plot_log = 1;
-else
-    plottingParams.plot_log = 0;
-end
 MM = MutationManager(parameter_manager.mutating,...
             parameter_manager.mutation_matrix,...
             parameter_manager.num_loci,...
-            parameter_manager.recombination,...
+            parameter_manager.recombining,...
             parameter_manager.recombination_number);
 
 constructor_arguements = {...
     parameter_manager.pop_size,...
     parameter_manager.getField('Ninit'), ...
     MM,...
-    parameter_manager.plot_grid,...
-    plottingParams, ...
-    parameter_manager.spatial_on,...
-    parameter_manager.edges_on,...
+    parameter_manager.matrixOn,...
+    parameter_manager.spatialOn,...
+    parameter_manager.edgesOn,...
     parameter_manager.getField('Param1'), ...
     parameter_manager.getField('Param2')};
 constructor = str2func(parameter_manager.classConstants(parameter_manager.current_model).className);
@@ -1234,4 +1218,4 @@ end
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 17-Aug-2015 17:45:45
+% Last Modified by GUIDE v2.5 23-Aug-2015 14:41:07

@@ -4,7 +4,7 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     % num_loci - 0
     % mutation_matrix - [0.99 0.01; 0.01 0.99]
     % recombination_number - 0
-    % plot_grid - 0
+    % matrixOn - 0
     % totalPopSize - 2500
     % spatial_on - 1
     % edges_on - 1

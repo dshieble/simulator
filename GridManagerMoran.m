@@ -17,8 +17,8 @@ classdef GridManagerMoran < GridManagerAbstract
     methods (Access = public)
         
                 
-        function obj = GridManagerMoran(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
+        function obj = GridManagerMoran(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
         
         
@@ -50,11 +50,11 @@ classdef GridManagerMoran < GridManagerAbstract
                 end
                 gen_vec(dead_type) = gen_vec(dead_type) - 1;
                 %Render the birth and death on the matrix
-                if obj.plot_grid
+                if obj.matrixOn
                     %choose a cell of the birthed type, and find the
                     %nearest cell to it of the kill type and fill that cell
                     %with the birthed type
-                    if obj.spatial_on && (dead_type ~= chosen_type)
+                    if obj.spatialOn && (dead_type ~= chosen_type)
                         [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
                         ind = obj.get_nearest_of_type(a, b, dead_type);
                         assert(ind > 0, sprintf('ERROR: get_nearest_of_type is returning %d', ind));

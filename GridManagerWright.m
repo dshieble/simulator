@@ -17,8 +17,8 @@ classdef GridManagerWright < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerWright(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
+        function obj = GridManagerWright(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
         
         %See GridManagerAbstract
@@ -34,7 +34,7 @@ classdef GridManagerWright < GridManagerAbstract
             v = (obj.Param1.*counts);
             probs = v./sum(v);
             new_counts = mnrnd(obj.max_size, probs);
-            if obj.plot_grid 
+            if obj.matrixOn 
                 long_mat = [];
                 for i = 1:obj.num_types
                     long_mat = [long_mat repmat(i,1,new_counts(i))];

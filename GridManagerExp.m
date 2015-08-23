@@ -1,8 +1,8 @@
 classdef GridManagerExp < GridManagerAbstract
 %This class is an implementation of the GridManager class for the
 %Exponential model
-    properties (Constant)
-        %The tag properties, these characterize the class itself
+
+    properties (Constant) %See GridManagerAbstract for description
         Name = 'Exponential';
         OverlappingGenerations = 1;
         Param_1_Name = 'Birth Rate';
@@ -16,8 +16,8 @@ classdef GridManagerExp < GridManagerAbstract
     
     methods (Access = public)
         
-        function obj = GridManagerExp(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, plot_grid, plottingParams, spatial_on, edges_on, b, d);
+        function obj = GridManagerExp(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d)
+            obj@GridManagerAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
         
         %See GridManagerAbstract
@@ -44,10 +44,10 @@ classdef GridManagerExp < GridManagerAbstract
                 if num + obj.Param1(chosen_type)*gen_vec(chosen_type) > 0
                     if sum(gen_vec) < obj.max_size
                         gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
-                        if obj.plot_grid
+                        if obj.matrixOn
                             %choose a cell of the chosen type, and fill the
                             %nearest cell to it with the chosen type
-                            if obj.spatial_on
+                            if obj.spatialOn
                                 [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
                                 obj.changeMatrix(obj.get_nearest_free(a, b), chosen_type);
                             else
@@ -56,7 +56,7 @@ classdef GridManagerExp < GridManagerAbstract
                         end
                     end
                 else
-                    if obj.plot_grid && gen_vec(chosen_type) > 0
+                    if obj.matrixOn && gen_vec(chosen_type) > 0
                         obj.changeMatrix(obj.getRandomOfType(chosen_type), 0);
                     end
                     gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
@@ -74,9 +74,11 @@ classdef GridManagerExp < GridManagerAbstract
         %difference between birth and death rates here
         function update_params(obj)
             update_params@GridManagerAbstract(obj);
+            mean_fitness = zeros(1,obj.num_types);
             for i = 1:obj.num_types
-                obj.mean_fitness(i, obj.timestep) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
+                mean_fitness(i) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
             end
+            obj.overall_mean_fitness(obj.timestep) = dot(mean_fitness, obj.total_count(:,obj.timestep));
         end
 
     end

@@ -1,19 +1,21 @@
+classdef MutationManager < handle
 %This class handles the mutations and recombinations of elements in the matrix. When >1 loci
 %are selected, this class also converts types to their binary allele
-%strings via the conversion allele_n = nth bit of (num-1) (0 indexed)
+%strings via the conversion allele_n = nth bit of (num-1) (0 indexed).
 
-classdef MutationManager < handle
-    
-    properties
-        num_loci;
-        mutation_matrix;
-        mutating;
-        recombining;
-        recombination_number;
+%The mutation methods in this class are called once every generation
+
+    properties (SetAccess = private)
+        mutating; %Whether or not mutation is enabled
+        mutation_matrix; %A matrix that stores the transition probabilities. 
+        num_loci; %The number of loci in each genotype
+        recombining; %Whether or not recombination is enabled 
+        recombination_number; %The recombination probability.
     end
     
     methods (Access = public)
         
+        %Basic Constructor for the MutationManager class
         function obj = MutationManager(mutating, mutation_matrix, num_loci, recombination, recombination_number)
             obj.mutating =  mutating;
             obj.mutation_matrix =  mutation_matrix;
@@ -22,11 +24,13 @@ classdef MutationManager < handle
             obj.recombination_number = recombination_number;
         end
         
+        %TODO: Simplify this function
+        %TODO: Add more comments to the below functions
         %Accepts a grid_manager, updates the matrix and total_count
         %parameters of the grid_manager based on the mutation parameters
         function mutate(obj, grid_manager)
             if obj.mutating
-                if grid_manager.plot_grid %Mutate each cell individually
+                if grid_manager.matrixOn %Mutate each cell individually
                     for i = 1:numel(grid_manager.matrix)
                         type = grid_manager.matrix(i)-1;
                         new_type = 0;
@@ -53,9 +57,11 @@ classdef MutationManager < handle
                             grid_manager.mutateMatrix(i, new_type);
                         end
                     end
+                    gen_vec = zeros(1,grid_manager.num_types);
                     for i = 1:grid_manager.num_types
-                        grid_manager.total_count(i, grid_manager.timestep) = numel(find(grid_manager.matrix == i));
+                        gen_vec(i) = numel(find(grid_manager.matrix == i));
                     end
+                    grid_manager.setTotalCount(gen_vec);
                 else %non-plotting
                     gen_vec = zeros(1, grid_manager.num_types);
                     if obj.num_loci == 1
@@ -88,15 +94,15 @@ classdef MutationManager < handle
                             end
                         end
                     end
-                    grid_manager.total_count(:, grid_manager.timestep) = gen_vec;
+                    grid_manager.setTotalCount(gen_vec);
                 end
             end
         end
         
-        %Performs a OverlappingGenerations recombination
-        function OverlappingGenerations_recombination(obj, grid_manager)
+        %Performs a generational recombination
+        function recombination(obj, grid_manager)
             if obj.mutating && obj.recombining && obj.num_loci > 1
-                if grid_manager.plot_grid
+                if grid_manager.matrixOn
                     matrix = grid_manager.matrix;
                 else
                     matrix = [];
@@ -137,15 +143,17 @@ classdef MutationManager < handle
                         %grid_manager matrix
                         matrix(ind_1) = new_num_1 + 1;
                         matrix(ind_2) = new_num_2 + 1;
-                        if grid_manager.plot_grid
+                        if grid_manager.matrixOn
                             grid_manager.mutateMatrix(ind_1, new_num_1 + 1);
                             grid_manager.mutateMatrix(ind_2, new_num_2 + 1);
                         end
                     end
                 end
+                gen_vec = zeros(1,grid_manager.num_types);
                 for i = 1:grid_manager.num_types
-                	grid_manager.total_count(i, grid_manager.timestep) = numel(find(matrix == i));
+                    gen_vec(i) = numel(find(grid_manager.matrix == i));
                 end
+                grid_manager.setTotalCount(gen_vec);
             end
         end
         

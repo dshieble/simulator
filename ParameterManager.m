@@ -1,41 +1,40 @@
-
 classdef ParameterManager < handle
 %This powerhouse of a class stores the parameters for each of the different
 %models and updates the display based on these parameters. It serves as an
 %interface between the backend and frontend. 
 
-    properties (SetAccess = private)
-    	plot_grid;
+    properties (Constant)
+        max_types = 500; %The maximum possible number of different types 
+        max_pop_size = 25000; %The maximum possible total population size (petri dish off)
+        max_plotting_pop_size = 2500; %The maximum possible total population size (petri dish on)
+        max_num_loci = 15; %Maximum possible number of loci
     end
-    
-    properties
+
+    properties (SetAccess = private)
+    	matrixOn; %Determines whether the matrix model or vector model is used
+        initial_frequencies; %Frequency of each genotype at inception
+        handles; %Struct that stores pointers to the graphics objects
+        classConstants; %Struct that stores the Constant properties of the currently used GridManager classes
+        pop_size; %The current total population size
+        model_parameters; %The current parameters (Ninit, birth_rate, death_rate, fitness) of each type in each model
+        num_types; %The number of different types in the current model. NOT UPDATED BASED ON num_loci
+
+        %Mutation 
+        mutating; %Whether or not mutation is currently enabled.
+        mutation_matrix; %The matrix that stores the current mutation transition probabilities
+        recombining; %Whether or not recombination is enabled 
+        recombination_number; %The recombination probability.
         
-        spatial_on;
-        edges_on;
-        current_model;
-        max_types;
-        num_types;
-        handles;
-        pop_size;
-        max_pop_size;
-        max_plotting_pop_size;
+        %Multiple Loci
+        s; %A parameter for determining the type parameters in the num_loci > 1 case
+        num_loci; %The number of loci in each genotype
+        e; %A parameter for determining the type parameters in the num_loci > 1 case
         
-        model_parameters;
-        classConstants;
-        
-        initial_frequencies; %frequency of each genotype at inception
-        mutating;
-        mutation_matrix;
-        num_loci;
-        s;
-        e;
-        %function variables
-        numOnes;
-        lociParam1OverlappingGenerations;
-        lociParam1NonOverlappingGenerations;
-        max_num_loci;
-        recombination;
-        recombination_number;
+        %Non-Mutation Basic Parameters
+        spatialOn; %Determines whether the spatial structure is considered.
+        edgesOn; %Determines whether the edges are considered when searching for the closest square of a type. 
+        current_model; %The number of the current model
+
     end
     
     methods (Access = public)
@@ -46,15 +45,11 @@ classdef ParameterManager < handle
         function obj = ParameterManager(handles, classConstants)
             obj.classConstants = classConstants;
             obj.current_model = 1;
-            obj.set_plot_grid(handles.plot_grid_button.Value);
-            obj.spatial_on = 1;
-            obj.edges_on = 1;
+            obj.setMatrixOn(handles.matrixOn_button.Value);
+            obj.spatialOn = 1;
+            obj.edgesOn = 1;
             %numerical parameters
             obj.pop_size = 2500;
-            obj.max_pop_size = 25000;
-            obj.max_plotting_pop_size = 2500;
-
-            obj.max_types = 500;
             obj.num_types = 2;
             
             obj.handles = handles;
@@ -80,22 +75,40 @@ classdef ParameterManager < handle
             obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
             obj.initial_frequencies = [1 0];
             obj.num_loci = 1;
-            obj.max_num_loci = 15;
-            obj.recombination = 0;
+            obj.recombining = 0;
             obj.recombination_number = 0;
 
             %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
-            %function variables
-            obj.numOnes = @(x) sum(bitget(x,1:ceil(log2(x))+1)); %number of one bits
-            obj.lociParam1OverlappingGenerations = @(num) 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
-            obj.lociParam1NonOverlappingGenerations = @(num) exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
+
             %cleanup
             obj.updateNumTypes();
         end
         
-        %Updates the stored structs to the box values
+        %Updates the mutation/recombination and basic parameters to the
+        %input values
+        function updateBasicParameters(obj)
+            obj.mutating = obj.handles.genetics_button.Value;
+            obj.recombining = obj.handles.recombination_check.Value;
+            obj.recombination_number = obj.handles.recombination_box.Value;
+            obj.spatialOn = obj.handles.spatial_structure_check.Value;
+            obj.edgesOn = ~obj.handles.remove_edges_check.Value;
+            
+            %current model
+            if obj.handles.model1_button.Value
+                obj.current_model = 1;
+            elseif obj.handles.model2_button.Value
+            	obj.current_model = 2;
+            elseif obj.handles.model3_button.Value
+            	obj.current_model = 3;
+            elseif obj.handles.model4_button.Value
+                obj.current_model = 4;
+            end
+        end
+            
+        
+        %Updates the stored parameters to the box values
         function updateStructs(obj)
             type = obj.handles.types_popup.Value;
             %logistic
@@ -226,7 +239,7 @@ classdef ParameterManager < handle
                 %asserting that if plotting is enabled, the size is less
                 %than 2500 and square.
                 if (size_temp >= 16) && ...
-                    ((~obj.plot_grid && size_temp <= obj.max_pop_size) || (round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500)))
+                    ((~obj.matrixOn && size_temp <= obj.max_pop_size) || (round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500)))
                     if size_temp ~= obj.pop_size
                         changed = 1;
                     end
@@ -330,10 +343,10 @@ classdef ParameterManager < handle
             end
         end
         
-        %sets the plot_grid variable. I might add some interesting logic
+        %sets the matrixOn variable. I might add some interesting logic
         %here...
-        function set_plot_grid(obj, input)
-            obj.plot_grid = input;
+        function setMatrixOn(obj, input)
+            obj.matrixOn = input;
         end
         
         %sets the mutation_matrix variable. I might add some interesting logic
@@ -348,17 +361,24 @@ classdef ParameterManager < handle
             obj.initial_frequencies = df;
         end
         
+        %number of one bits in input number x
+        function out = numOnes(obj,x) 
+            out = sum(bitget(x,1:ceil(log2(x))+1));
+        end
         
-        %Updates the maximum number of iterations for the non-plotting case
-        %based on the input to the max_iterations box
-%         function updateMaxIterations(obj)
-%             num = str2double(obj.handles.max_iterations_box.String);
-%             if isnumeric(num)
-%                 obj.max_iterations = num;
-%             else
-%                 obj.handles.max_iterations_box.String = obj.max_iterations;
-%             end
-%         end
+        %A function that computes the first model parameter based on the
+        %number of 1s for OverlappingGenerations models (Logistic, Moren,
+        %Exp, etc)
+        function out = lociParam1OverlappingGenerations(obj,num) 
+            out = 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
+        end
+        
+        %A function that computes the first model parameter based on the
+        %number of 1s for NonOverlappingGenerations models (Wright-Fisher)
+        function out = lociParam1NonOverlappingGenerations(obj,num)
+            out = exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
+        end
+
         
         
     end
