@@ -390,7 +390,7 @@ classdef GUIHelper < handle
                 vec = obj.gridManager.percent_count(range, :);
                 y_axis_label = 'Percent Population Size';
             elseif handles.plot_button_age.Value
-                vec = obj.gridManager.age_structure{end};
+                vec = obj.gridManager.ageStructure{end};
                 y_axis_label = 'Proportion of Organisms';
             else
                 vec = obj.gridManager.overall_mean_fitness(:)';
@@ -401,7 +401,7 @@ classdef GUIHelper < handle
                 vec = log10(vec);
                 y_axis_label = sprintf('log10(%s)', y_axis_label);
             end
-            
+            %Actually plots the line or bar graph
             for i = 1:size(vec,1)
                 hold on;
                 if ~handles.plot_button_age.Value
@@ -411,6 +411,7 @@ classdef GUIHelper < handle
                     bar(1:length(vec), vec, 'Parent', handles.axes_graph);
                 end
             end
+            %draws the correct xlabel
             if ~handles.plot_button_age.Value
                 xlabel('Generations', 'Parent', handles.axes_graph);
             else

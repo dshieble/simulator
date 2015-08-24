@@ -22,6 +22,11 @@ classdef MutationManager < handle
             obj.numLoci = numLoci;
             obj.recombining = recombination;
             obj.recombinationNumber = recombinationNumber;
+            assert(all(sum(obj.mutationMatrix) == 1), 'ASSERTION ERROR: Columns of Mutation Matrix must sum to 1.');
+            if obj.numLoci > 1 && obj.mutating
+            	assert(all(size(obj.mutationMatrix) == [2 2]), 'ASSERTION ERROR: If numLoci > 1, Mutation Matrix must be 2x2');
+            end
+
         end
         
         %TODO: Simplify this function
@@ -87,8 +92,6 @@ classdef MutationManager < handle
                                     end
                                 end
                                 assert(organism<=gridManager.numTypes);
-%                                 if i ~= organism + 1
-%                                 end
                                 tempVec(i) = tempVec(i) - 1;
                                 tempVec(organism + 1) = tempVec(organism + 1) + 1;
                             end

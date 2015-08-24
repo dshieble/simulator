@@ -49,8 +49,7 @@ classdef (Abstract) GridManagerAbstract < handle
         %Param2 inputs
         function obj = GridManagerAbstract(maxSize, Ninit, mutationManager, matrixOn, spatialOn, edgesOn, p1, p2)
             assert(~matrixOn || floor(sqrt(maxSize))^2 == maxSize)
-            assert(~obj.atCapacity || sum(Ninit)==maxSize);
-            
+            assert((obj.atCapacity && sum(Ninit)==maxSize) || (~obj.atCapacity && sum(Ninit) <= maxSize), 'ASSERTION ERROR: Incorrect initial populations');
             obj.Param1 = p1';
             obj.Param2 = p2';
             obj.spatialOn = spatialOn;
@@ -277,7 +276,7 @@ classdef (Abstract) GridManagerAbstract < handle
                 meanFitness(i) = (obj.Param1(i))*obj.percentCount(i, obj.timestep); 
             end
             obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
-            if obj.OverlappingGenerations
+            if obj.OverlappingGenerations && obj.matrixOn
                 obj.ageMatrix(obj.ageMatrix ~= -1) = obj.ageMatrix(obj.ageMatrix ~= -1) + 1;
                 ages = obj.ageMatrix(obj.ageMatrix ~= -1);
                 obj.ageStructure{obj.timestep} = hist(ages, max(ages))./length(ages);

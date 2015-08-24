@@ -1,4 +1,10 @@
-%This file is a testing wrapper for the population dynamics simulater
+% This file is the analytical testing wrapper for the population dynamics
+% simulator. The tests contained in this file examine whether the Models
+% produce the expected theoretical behavior.
+
+% The Correctness Tests for the simulator are in the correctnessTests file
+
+
 
 %% Section 1 - Propability of Fixation for Wright Fisher and Moran
 %Initialize some basic variables that are helpful for making GridManagers
