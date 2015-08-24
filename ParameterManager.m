@@ -4,36 +4,36 @@ classdef ParameterManager < handle
 %interface between the backend and frontend. 
 
     properties (Constant)
-        max_types = 500; %The maximum possible number of different types 
-        max_pop_size = 25000; %The maximum possible total population size (petri dish off)
-        max_plotting_pop_size = 2500; %The maximum possible total population size (petri dish on)
-        max_num_loci = 15; %Maximum possible number of loci
+        maxTypes = 500; %The maximum possible number of different types 
+        maxPopSize = 25000; %The maximum possible total population size (petri dish off)
+        maxPlottingPopSize = 2500; %The maximum possible total population size (petri dish on)
+        maxNumLoci = 15; %Maximum possible number of loci
     end
 
     properties (SetAccess = private)
     	matrixOn; %Determines whether the matrix model or vector model is used
-        initial_frequencies; %Frequency of each genotype at inception
+        initialFrequencies; %Frequency of each genotype at inception
         handles; %Struct that stores pointers to the graphics objects
         classConstants; %Struct that stores the Constant properties of the currently used GridManager classes
-        pop_size; %The current total population size
-        model_parameters; %The current parameters (Ninit, birth_rate, death_rate, fitness) of each type in each model
-        num_types; %The number of different types in the current model. NOT UPDATED BASED ON num_loci
+        popSize; %The current total population size
+        modelParameters; %The current parameters (Ninit, birth_rate, death_rate, fitness) of each type in each model
+        numTypes; %The number of different types in the current model. NOT UPDATED BASED ON numLoci
 
         %Mutation 
         mutating; %Whether or not mutation is currently enabled.
-        mutation_matrix; %The matrix that stores the current mutation transition probabilities
+        mutationMatrix; %The matrix that stores the current mutation transition probabilities
         recombining; %Whether or not recombination is enabled 
-        recombination_number; %The recombination probability.
+        recombinationNumber; %The recombination probability.
         
         %Multiple Loci
-        s; %A parameter for determining the type parameters in the num_loci > 1 case
-        num_loci; %The number of loci in each genotype
-        e; %A parameter for determining the type parameters in the num_loci > 1 case
+        s; %A parameter for determining the type parameters in the numLoci > 1 case
+        numLoci; %The number of loci in each genotype
+        e; %A parameter for determining the type parameters in the numLoci > 1 case
         
         %Non-Mutation Basic Parameters
         spatialOn; %Determines whether the spatial structure is considered.
         edgesOn; %Determines whether the edges are considered when searching for the closest square of a type. 
-        current_model; %The number of the current model
+        currentModel; %The number of the current model
 
     end
     
@@ -44,39 +44,39 @@ classdef ParameterManager < handle
         %parameters for each model.
         function obj = ParameterManager(handles, classConstants)
             obj.classConstants = classConstants;
-            obj.current_model = 1;
+            obj.currentModel = 1;
             obj.setMatrixOn(handles.matrixOn_button.Value);
             obj.spatialOn = 1;
             obj.edgesOn = 1;
             %numerical parameters
-            obj.pop_size = 2500;
-            obj.num_types = 2;
+            obj.popSize = 2500;
+            obj.numTypes = 2;
             
             obj.handles = handles;
-            obj.model_parameters = struct(...
+            obj.modelParameters = struct(...
                 'Ninit_default', repmat({[]},1,length(obj.classConstants)),...
                 'Param1_default', repmat({[]},1,length(obj.classConstants)),...
                 'Param2_default', repmat({[]},1,length(obj.classConstants)),...
                 'Ninit', repmat({[]},1,length(obj.classConstants)));
             for i = 1:length(obj.classConstants)
                 if obj.classConstants(i).atCapacity
-                    obj.model_parameters(i).Ninit_default = 1250;
+                    obj.modelParameters(i).Ninit_default = 1250;
                 else
-                    obj.model_parameters(i).Ninit_default = 1;
+                    obj.modelParameters(i).Ninit_default = 1;
                 end
-                obj.model_parameters(i).Param1_default = 1;
-                obj.model_parameters(i).Param2_default = 0.01;
-                obj.model_parameters(i).Ninit = repmat(obj.model_parameters(i).Ninit_default,1, 2);
-                obj.model_parameters(i).Param1 = repmat(obj.model_parameters(i).Param1_default,1, 2);
-                obj.model_parameters(i).Param2 = repmat(obj.model_parameters(i).Param2_default,1, 2);
+                obj.modelParameters(i).Param1_default = 1;
+                obj.modelParameters(i).Param2_default = 0.01;
+                obj.modelParameters(i).Ninit = repmat(obj.modelParameters(i).Ninit_default,1, 2);
+                obj.modelParameters(i).Param1 = repmat(obj.modelParameters(i).Param1_default,1, 2);
+                obj.modelParameters(i).Param2 = repmat(obj.modelParameters(i).Param2_default,1, 2);
             end
             %mutations
             obj.mutating = 0;
-            obj.mutation_matrix = [0.99 0.01; 0.01 0.99];
-            obj.initial_frequencies = [1 0];
-            obj.num_loci = 1;
+            obj.mutationMatrix = [0.99 0.01; 0.01 0.99];
+            obj.initialFrequencies = [1 0];
+            obj.numLoci = 1;
             obj.recombining = 0;
-            obj.recombination_number = 0;
+            obj.recombinationNumber = 0;
 
             %multiple loci params
             obj.s = -0.5;
@@ -91,19 +91,19 @@ classdef ParameterManager < handle
         function updateBasicParameters(obj)
             obj.mutating = obj.handles.genetics_button.Value;
             obj.recombining = obj.handles.recombination_check.Value;
-            obj.recombination_number = obj.handles.recombination_box.Value;
+            obj.recombinationNumber = obj.handles.recombination_box.Value;
             obj.spatialOn = obj.handles.spatial_structure_check.Value;
             obj.edgesOn = ~obj.handles.remove_edges_check.Value;
             
             %current model
             if obj.handles.model1_button.Value
-                obj.current_model = 1;
+                obj.currentModel = 1;
             elseif obj.handles.model2_button.Value
-            	obj.current_model = 2;
+            	obj.currentModel = 2;
             elseif obj.handles.model3_button.Value
-            	obj.current_model = 3;
+            	obj.currentModel = 3;
             elseif obj.handles.model4_button.Value
-                obj.current_model = 4;
+                obj.currentModel = 4;
             end
         end
             
@@ -115,7 +115,7 @@ classdef ParameterManager < handle
             ninit_temp = str2double(obj.handles.init_pop_box.String);
             param_1_temp = str2double(obj.handles.param_1_box.String);
             param_2_temp = str2double(obj.handles.param_2_box.String);
-            if obj.mutating && obj.num_loci > 1
+            if obj.mutating && obj.numLoci > 1
                 if isnumeric(param_1_temp)
                     obj.s = param_1_temp;
                 end
@@ -124,13 +124,13 @@ classdef ParameterManager < handle
                 end
             else
                 if isnumeric(ninit_temp)
-                    obj.model_parameters(obj.current_model).Ninit(type) = round(ninit_temp);
+                    obj.modelParameters(obj.currentModel).Ninit(type) = round(ninit_temp);
                 end
                 if isnumeric(param_1_temp)
-                    obj.model_parameters(obj.current_model).Param1(type) = param_1_temp;
+                    obj.modelParameters(obj.currentModel).Param1(type) = param_1_temp;
                 end
                 if isnumeric(param_2_temp)
-                    obj.model_parameters(obj.current_model).Param2(type) = param_2_temp;
+                    obj.modelParameters(obj.currentModel).Param2(type) = param_2_temp;
                 end
             end
             obj.updateMatrixProperties();
@@ -139,92 +139,92 @@ classdef ParameterManager < handle
         
         %Updates the number of types and then update the boxes to type 1
         function updateNumTypes(obj)
-            num = min(obj.max_types, str2double(obj.handles.num_types_box.String));
+            num = min(obj.maxTypes, str2double(obj.handles.numTypes_box.String));
             if isnumeric(num)
-                if num < obj.num_types && num > 0
+                if num < obj.numTypes && num > 0
                     obj.handles.types_popup.String(num+1:end) = [];
                     for model = 1:length(obj.classConstants)
-                        obj.model_parameters(model).Ninit(num+1:end) = [];
-                        obj.model_parameters(model).Param1(num+1:end) = [];
-                        obj.model_parameters(model).Param2(num+1:end) = [];
+                        obj.modelParameters(model).Ninit(num+1:end) = [];
+                        obj.modelParameters(model).Param1(num+1:end) = [];
+                        obj.modelParameters(model).Param2(num+1:end) = [];
                     end
-                elseif num > obj.num_types && num > 0
-                    for i = obj.num_types+1:num
+                elseif num > obj.numTypes && num > 0
+                    for i = obj.numTypes+1:num
                         obj.handles.types_popup.String{i} = i;
                         for model = 1:length(obj.classConstants)
-                            obj.model_parameters(model).Ninit(i) = obj.model_parameters(model).Ninit_default;
-                            obj.model_parameters(model).Param1(i) = obj.model_parameters(model).Param1_default;
-                            obj.model_parameters(model).Param2(i) = obj.model_parameters(model).Param2_default;
+                            obj.modelParameters(model).Ninit(i) = obj.modelParameters(model).Ninit_default;
+                            obj.modelParameters(model).Param1(i) = obj.modelParameters(model).Param1_default;
+                            obj.modelParameters(model).Param2(i) = obj.modelParameters(model).Param2_default;
                         end
                     end
                 end
                 %adjust birth and death rates accordingly
-                if num ~= obj.num_types
+                if num ~= obj.numTypes
                     for i = 1:length(obj.classConstants)
                         if obj.classConstants(i).atCapacity
-                        	obj.model_parameters(i).Ninit = zeros(1,num);
+                        	obj.modelParameters(i).Ninit = zeros(1,num);
                             for j = 1:(num-1)
-                                obj.model_parameters(i).Ninit(j) = floor(obj.pop_size/num);
-                                obj.model_parameters(i).Ninit(j) = floor(obj.pop_size/num);
+                                obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
+                                obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
                             end
-                            obj.model_parameters(i).Ninit(num) = obj.pop_size - sum(obj.model_parameters(i).Ninit);
+                            obj.modelParameters(i).Ninit(num) = obj.popSize - sum(obj.modelParameters(i).Ninit);
                         end
                     end
                 end
-                obj.num_types = num;
+                obj.numTypes = num;
                 obj.handles.types_popup.Value = 1;
                 obj.updateBoxes();
             end
-            obj.handles.num_types_box.String = num2str(obj.num_types);
+            obj.handles.numTypes_box.String = num2str(obj.numTypes);
             obj.updateMultipleLoci();
         end
         
-        %Updates the num_loci box and resets the default
+        %Updates the numLoci box and resets the default
         %frequencies vector
         function updateMultipleLoci(obj) 
             num_l = str2double(obj.handles.loci_box.String);
             if isnumeric(num_l)
-                obj.num_loci = max(1,num_l);
+                obj.numLoci = max(1,num_l);
             end
-            if obj.num_loci == 1
-                num_a = obj.num_types;
+            if obj.numLoci == 1
+                num_a = obj.numTypes;
             else
                 num_a = 2;
             end
             %reinitialize mutation matrix
-            obj.mutation_matrix = zeros(num_a);
+            obj.mutationMatrix = zeros(num_a);
             for i = 1:num_a
                 for j = 1:num_a
                     if i == j
-                        obj.mutation_matrix(i,j) = 1 - 0.01*(num_a-1);
+                        obj.mutationMatrix(i,j) = 1 - 0.01*(num_a-1);
                     else
-                        obj.mutation_matrix(i,j) = 0.01;
+                        obj.mutationMatrix(i,j) = 0.01;
                     end
                 end
             end  
-            obj.handles.num_loci_box.String = num2str(obj.num_loci);
-            obj.initial_frequencies = [1 zeros(1,2.^obj.num_loci - 1)];
+            obj.handles.numLoci_box.String = num2str(obj.numLoci);
+            obj.initialFrequencies = [1 zeros(1,2.^obj.numLoci - 1)];
         end
         
         %Updates the boxes to the stored struct values (sister function of
         %updateStructs)
         function updateBoxes(obj)
             type = obj.handles.types_popup.Value;
-            if obj.num_loci > 1 && obj.mutating
-                obj.handles.num_types_box.String = 2;
+            if obj.numLoci > 1 && obj.mutating
+                obj.handles.numTypes_box.String = 2;
                 obj.handles.param_1_box.String = obj.s;
                 obj.handles.param_2_box.String = obj.e;
-                if ~obj.classConstants(obj.current_model).atCapacity
+                if ~obj.classConstants(obj.currentModel).atCapacity
                     obj.handles.init_pop_box.String = 1;
                 else
-                    obj.handles.init_pop_box.String = obj.pop_size;
+                    obj.handles.init_pop_box.String = obj.popSize;
                 end
-                obj.handles.loci_box.String = obj.num_loci;
+                obj.handles.loci_box.String = obj.numLoci;
             else
-                obj.handles.num_types_box.String = obj.num_types;
-                obj.handles.param_1_box.String = obj.model_parameters(obj.current_model).Param1(type);
-                obj.handles.param_2_box.String = obj.model_parameters(obj.current_model).Param2(type);
-                obj.handles.init_pop_box.String = obj.model_parameters(obj.current_model).Ninit(type);
+                obj.handles.numTypes_box.String = obj.numTypes;
+                obj.handles.param_1_box.String = obj.modelParameters(obj.currentModel).Param1(type);
+                obj.handles.param_2_box.String = obj.modelParameters(obj.currentModel).Param2(type);
+                obj.handles.init_pop_box.String = obj.modelParameters(obj.currentModel).Ninit(type);
             end
                 
         end
@@ -239,23 +239,23 @@ classdef ParameterManager < handle
                 %asserting that if plotting is enabled, the size is less
                 %than 2500 and square.
                 if (size_temp >= 16) && ...
-                    ((~obj.matrixOn && size_temp <= obj.max_pop_size) || (round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500)))
-                    if size_temp ~= obj.pop_size
+                    ((~obj.matrixOn && size_temp <= obj.maxPopSize) || (round(sqrt(size_temp))^2 == size_temp && (size_temp <= 2500)))
+                    if size_temp ~= obj.popSize
                         changed = 1;
                     end
-                    obj.pop_size = size_temp;
+                    obj.popSize = size_temp;
                     noerror = 1;
                 end
             end
             if changed
                 for i = 1:length(obj.classConstants)
                     if obj.classConstants(i).atCapacity
-                        obj.model_parameters(i).Ninit = zeros(1,obj.num_types);
-                        for j = 1:(obj.num_types-1)
-                            obj.model_parameters(i).Ninit(j) = floor(obj.pop_size/obj.num_types);
-                            obj.model_parameters(i).Ninit(j) = floor(obj.pop_size/obj.num_types);
+                        obj.modelParameters(i).Ninit = zeros(1,obj.numTypes);
+                        for j = 1:(obj.numTypes-1)
+                            obj.modelParameters(i).Ninit(j) = floor(obj.popSize/obj.numTypes);
+                            obj.modelParameters(i).Ninit(j) = floor(obj.popSize/obj.numTypes);
                         end
-                        obj.model_parameters(i).Ninit(obj.num_types) = obj.pop_size - sum(obj.model_parameters(i).Ninit);
+                        obj.modelParameters(i).Ninit(obj.numTypes) = obj.popSize - sum(obj.modelParameters(i).Ninit);
                     end
                 end
             end
@@ -264,34 +264,34 @@ classdef ParameterManager < handle
        
         
         %Provides an interface for accessing parameters that does not
-        %require the user to know whether the num_loci > 1, or what the
+        %require the user to know whether the numLoci > 1, or what the
         %current model is
         function out = getField(obj, param)
-            model = obj.current_model;
-            if strcmp(param,'num_types')
-                if ~obj.mutating || obj.num_loci == 1
-                    out = obj.num_types;
+            model = obj.currentModel;
+            if strcmp(param,'numTypes')
+                if ~obj.mutating || obj.numLoci == 1
+                    out = obj.numTypes;
                     return;
                 else
-                    out = 2^obj.num_loci;
+                    out = 2^obj.numLoci;
                     return;
                 end
             end
-            if obj.num_loci > 1 && obj.mutating
+            if obj.numLoci > 1 && obj.mutating
                 if strcmp(param, 'Ninit')                    
                     if ~obj.classConstants(model).atCapacity
-                        out = [obj.model_parameters(model).Ninit_default zeros(1, 2^obj.num_loci - 1)];
+                        out = [obj.modelParameters(model).Ninit_default zeros(1, 2^obj.numLoci - 1)];
                     else
-                        tail = floor(obj.pop_size.*obj.initial_frequencies(2:end));
-                        assert(sum(tail) <= obj.pop_size);
-                        assert(length(obj.initial_frequencies) == 2^obj.num_loci);
-                        out = [obj.pop_size - sum(tail) tail]; %some rounding to ensure that sum of types adds to pop_size
+                        tail = floor(obj.popSize.*obj.initialFrequencies(2:end));
+                        assert(sum(tail) <= obj.popSize);
+                        assert(length(obj.initialFrequencies) == 2^obj.numLoci);
+                        out = [obj.popSize - sum(tail) tail]; %some rounding to ensure that sum of types adds to popSize
                     end
                 elseif strcmp(param, 'Param2')
-                	out = repmat(obj.model_parameters(model).Param2_default,1,2^obj.num_loci);
+                	out = repmat(obj.modelParameters(model).Param2_default,1,2^obj.numLoci);
                 elseif strcmp(param, 'Param1')
-                    out = zeros(1,2^obj.num_loci);
-                    for i = 1:2^obj.num_loci
+                    out = zeros(1,2^obj.numLoci);
+                    for i = 1:2^obj.numLoci
                         if obj.classConstants(model).OverlappingGenerations
                             out(i) = obj.lociParam1OverlappingGenerations(i); 
                         else
@@ -302,21 +302,21 @@ classdef ParameterManager < handle
                     error('Incorrect input to getField')
                 end
             else
-                out = getfield(obj.model_parameters(model), param);
+                out = getfield(obj.modelParameters(model), param);
             end
         end
 
-        %For the num_loci<1 case, verifies that the sum of the Ninits for 
+        %For the numLoci<1 case, verifies that the sum of the Ninits for 
         % all species is the original populaiton size 
         function out = verifySizeOk(obj)
             out = 1;
-            if (obj.num_loci == 1 || ~obj.mutating)
-                if obj.classConstants(obj.current_model).atCapacity
-                    if sum(obj.model_parameters(obj.current_model).Ninit) ~= obj.pop_size
+            if (obj.numLoci == 1 || ~obj.mutating)
+                if obj.classConstants(obj.currentModel).atCapacity
+                    if sum(obj.modelParameters(obj.currentModel).Ninit) ~= obj.popSize
                         out = 0;
                     end
                 else
-                    if sum(obj.model_parameters(obj.current_model).Ninit) > obj.pop_size
+                    if sum(obj.modelParameters(obj.currentModel).Ninit) > obj.popSize
                         out = 0;
                     end
                 end
@@ -328,18 +328,18 @@ classdef ParameterManager < handle
             ok = ~(isnan(str2double(obj.handles.param_1_box.String)) || ...
                isnan(str2double(obj.handles.param_2_box.String)) || ...
                isnan(str2double(obj.handles.init_pop_box.String)) || ...
-               isnan(str2double(obj.handles.num_types_box.String)) || ...
+               isnan(str2double(obj.handles.numTypes_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)));
                %isnan(str2double(obj.handles.max_iterations_box.String)));
         end
 
         %returns the current number of types, regardless of whether
-        %num_loci > 1 or not
+        %numLoci > 1 or not
         function out = getNumTypes(obj)
-            if obj.mutating && obj.num_loci > 1
-                out = 2^obj.num_loci;
+            if obj.mutating && obj.numLoci > 1
+                out = 2^obj.numLoci;
             else
-                out = obj.num_types;
+                out = obj.numTypes;
             end
         end
         
@@ -349,16 +349,16 @@ classdef ParameterManager < handle
             obj.matrixOn = input;
         end
         
-        %sets the mutation_matrix variable. I might add some interesting logic
+        %sets the mutationMatrix variable. I might add some interesting logic
         %here...
-        function set_mutation_matrix(obj, m)
-            obj.mutation_matrix = m;
+        function setMutationMatrix(obj, m)
+            obj.mutationMatrix = m;
         end
         
-        %sets the initial_frequencies variable. I might add some interesting logic
+        %sets the initialFrequencies variable. I might add some interesting logic
         %here...
-        function set_initial_frequencies(obj, df)
-            obj.initial_frequencies = df;
+        function setInitialFrequencies(obj, df)
+            obj.initialFrequencies = df;
         end
         
         %number of one bits in input number x

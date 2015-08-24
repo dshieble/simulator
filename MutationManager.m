@@ -1,115 +1,115 @@
 classdef MutationManager < handle
 %This class handles the mutations and recombinations of elements in the matrix. When >1 loci
 %are selected, this class also converts types to their binary allele
-%strings via the conversion allele_n = nth bit of (num-1) (0 indexed).
+%strings via the conversion alleleN = nth bit of (num-1) (0 indexed).
 
 %The mutation methods in this class are called once every generation
 
     properties (SetAccess = private)
         mutating; %Whether or not mutation is enabled
-        mutation_matrix; %A matrix that stores the transition probabilities. 
-        num_loci; %The number of loci in each genotype
+        mutationMatrix; %A matrix that stores the transition probabilities. 
+        numLoci; %The number of loci in each genotype
         recombining; %Whether or not recombination is enabled 
-        recombination_number; %The recombination probability.
+        recombinationNumber; %The recombination probability.
     end
     
     methods (Access = public)
         
         %Basic Constructor for the MutationManager class
-        function obj = MutationManager(mutating, mutation_matrix, num_loci, recombination, recombination_number)
+        function obj = MutationManager(mutating, mutationMatrix, numLoci, recombination, recombinationNumber)
             obj.mutating =  mutating;
-            obj.mutation_matrix =  mutation_matrix;
-            obj.num_loci = num_loci;
+            obj.mutationMatrix =  mutationMatrix;
+            obj.numLoci = numLoci;
             obj.recombining = recombination;
-            obj.recombination_number = recombination_number;
+            obj.recombinationNumber = recombinationNumber;
         end
         
         %TODO: Simplify this function
         %TODO: Add more comments to the below functions
-        %Accepts a grid_manager, updates the matrix and total_count
-        %parameters of the grid_manager based on the mutation parameters
-        function mutate(obj, grid_manager)
+        %Accepts a gridManager, updates the matrix and totalCount
+        %parameters of the gridManager based on the mutation parameters
+        function mutate(obj, gridManager)
             if obj.mutating
-                if grid_manager.matrixOn %Mutate each cell individually
-                    for i = 1:numel(grid_manager.matrix)
-                        type = grid_manager.matrix(i)-1;
-                        new_type = 0;
+                if gridManager.matrixOn %Mutate each cell individually
+                    for i = 1:numel(gridManager.matrix)
+                        type = gridManager.matrix(i)-1;
+                        newType = 0;
                         if type >= 0
-                            if obj.num_loci == 1 %choose new type with weighted random selection
+                            if obj.numLoci == 1 %choose new type with weighted random selection
                                 num = rand();
                                 while num > 0
-                                    new_type = new_type + 1;
-                                    num = num - obj.mutation_matrix(new_type, grid_manager.matrix(i));
+                                    newType = newType + 1;
+                                    num = num - obj.mutationMatrix(newType, gridManager.matrix(i));
                                 end
                             else %mutate each allele seperately
-                                for j = 0:(obj.num_loci-1)
-                                    allele = obj.get_nth_allele(type, j);
+                                for j = 0:(obj.numLoci-1)
+                                    allele = obj.getNthAllele(type, j);
                                     num = rand();
-                                    new_allele = -1;
+                                    newAllele = -1;
                                     while num > 0
-                                        new_allele = new_allele + 1;
-                                        num = num - obj.mutation_matrix(new_allele + 1, allele + 1);
+                                        newAllele = newAllele + 1;
+                                        num = num - obj.mutationMatrix(newAllele + 1, allele + 1);
                                     end
-                                    new_type = new_type + new_allele*(2^j);
+                                    newType = newType + newAllele*(2^j);
                                 end
-                                new_type = new_type + 1;
+                                newType = newType + 1;
                             end
-                            grid_manager.mutateMatrix(i, new_type);
+                            gridManager.mutateMatrix(i, newType);
                         end
                     end
-                    gen_vec = zeros(1,grid_manager.num_types);
-                    for i = 1:grid_manager.num_types
-                        gen_vec(i) = numel(find(grid_manager.matrix == i));
+                    tempVec = zeros(1,gridManager.numTypes);
+                    for i = 1:gridManager.numTypes
+                        tempVec(i) = numel(find(gridManager.matrix == i));
                     end
-                    grid_manager.setTotalCount(gen_vec);
+                    gridManager.setTotalCount(tempVec);
                 else %non-plotting
-                    gen_vec = zeros(1, grid_manager.num_types);
-                    if obj.num_loci == 1
-                        for i = 1:grid_manager.num_types
-                            gen_vec = gen_vec + ...
-                                mnrnd(grid_manager.total_count(i, grid_manager.timestep), obj.mutation_matrix(:,i));
+                    tempVec = zeros(1, gridManager.numTypes);
+                    if obj.numLoci == 1
+                        for i = 1:gridManager.numTypes
+                            tempVec = tempVec + ...
+                                mnrnd(gridManager.totalCount(i, gridManager.timestep), obj.mutationMatrix(:,i));
                         end
                         
-                    elseif obj.num_loci > 1 %currently written with the assumption that 2^num_loci is close to numel(population)
-                        gen_vec = grid_manager.total_count(:, grid_manager.timestep);
-                        for i = 1:grid_manager.num_types
-                            for j = 1:grid_manager.total_count(i, grid_manager.timestep)
+                    elseif obj.numLoci > 1 %currently written with the assumption that 2^numLoci is close to numel(population)
+                        tempVec = gridManager.totalCount(:, gridManager.timestep);
+                        for i = 1:gridManager.numTypes
+                            for j = 1:gridManager.totalCount(i, gridManager.timestep)
                                 organism = i - 1;
-                                for k = 1:log2(grid_manager.num_types)
+                                for k = 1:log2(gridManager.numTypes)
                                     if bitget(organism, k) %if allele is 1
-                                        if rand() < obj.mutation_matrix(1,2)
+                                        if rand() < obj.mutationMatrix(1,2)
                                             organism = bitset(organism, k,0);
                                         end
                                     else %if allele is 0
-                                        if rand() < obj.mutation_matrix(2,1)
+                                        if rand() < obj.mutationMatrix(2,1)
                                             organism = bitset(organism, k, 1);
                                         end
                                     end
                                 end
-                                assert(organism<=grid_manager.num_types);
+                                assert(organism<=gridManager.numTypes);
 %                                 if i ~= organism + 1
 %                                 end
-                                gen_vec(i) = gen_vec(i) - 1;
-                                gen_vec(organism + 1) = gen_vec(organism + 1) + 1;
+                                tempVec(i) = tempVec(i) - 1;
+                                tempVec(organism + 1) = tempVec(organism + 1) + 1;
                             end
                         end
                     end
-                    grid_manager.setTotalCount(gen_vec);
+                    gridManager.setTotalCount(tempVec);
                 end
             end
         end
         
         %Performs a generational recombination
-        function recombination(obj, grid_manager)
-            if obj.mutating && obj.recombining && obj.num_loci > 1
-                if grid_manager.matrixOn
-                    matrix = grid_manager.matrix;
+        function recombination(obj, gridManager)
+            if obj.mutating && obj.recombining && obj.numLoci > 1
+                if gridManager.matrixOn
+                    matrix = gridManager.matrix;
                 else
                     matrix = [];
-                    for i = 1:grid_manager.num_types
-                        matrix = [matrix repmat(i, 1, grid_manager.total_count(i, grid_manager.timestep))];
+                    for i = 1:gridManager.numTypes
+                        matrix = [matrix repmat(i, 1, gridManager.totalCount(i, gridManager.timestep))];
                     end
-                    matrix = [matrix zeros(1,numel(grid_manager.matrix) - sum(grid_manager.total_count(:, grid_manager.timestep)))];
+                    matrix = [matrix zeros(1,numel(gridManager.matrix) - sum(gridManager.totalCount(:, gridManager.timestep)))];
                 end
                 
                 indices = 1:numel(matrix);
@@ -119,46 +119,47 @@ classdef MutationManager < handle
                     indices(end) = [];
                 end
                 for i = 1:2:numel(indices)
-                    if rand() < obj.recombination_number
-                        ind_1 = indices(i); ind_2 = indices(i+1);
-                        assert((matrix(ind_1)>0) && (matrix(ind_2)>0))
-                        num_1 = matrix(ind_1) - 1; 
-                        num_2 = matrix(ind_2) - 1;
-                        if num_1 ~= num_2
-                            new_num_1 = 0; new_num_2 = 0;
-                            crossover = randi(obj.num_loci);
-                            for bit = 1:obj.num_loci
+                    if rand() < obj.recombinationNumber
+                        ind1 = indices(i); ind2 = indices(i+1);
+                        assert((matrix(ind1)>0) && (matrix(ind2)>0))
+                        num1 = matrix(ind1) - 1; 
+                        num2 = matrix(ind2) - 1;
+                        if num1 ~= num2
+                            newNum1 = 0; newNum2 = 0;
+                            crossover = randi(obj.numLoci);
+                            for bit = 1:obj.numLoci
                                 if bit < crossover
-                                    new_num_1 = bitset(new_num_1, bit, bitget(num_2, bit));
-                                    new_num_2 = bitset(new_num_2, bit, bitget(num_1, bit));
+                                    %crossover!
+                                    newNum1 = bitset(newNum1, bit, bitget(num2, bit));
+                                    newNum2 = bitset(newNum2, bit, bitget(num1, bit));
                                 else
-                                    new_num_1 = bitset(new_num_1, bit, bitget(num_1, bit));
-                                    new_num_2 = bitset(new_num_2, bit, bitget(num_2, bit));
+                                    newNum1 = bitset(newNum1, bit, bitget(num1, bit));
+                                    newNum2 = bitset(newNum2, bit, bitget(num2, bit));
                                 end
                             end
                         else
-                            new_num_1 = num_1; new_num_2 = num_2;
+                            newNum1 = num1; newNum2 = num2;
                         end
                         %Change the fake Matrix as well as the actual
-                        %grid_manager matrix
-                        matrix(ind_1) = new_num_1 + 1;
-                        matrix(ind_2) = new_num_2 + 1;
-                        if grid_manager.matrixOn
-                            grid_manager.mutateMatrix(ind_1, new_num_1 + 1);
-                            grid_manager.mutateMatrix(ind_2, new_num_2 + 1);
+                        %gridManager matrix
+                        matrix(ind1) = newNum1 + 1;
+                        matrix(ind2) = newNum2 + 1;
+                        if gridManager.matrixOn
+                            gridManager.mutateMatrix(ind1, newNum1 + 1);
+                            gridManager.mutateMatrix(ind2, newNum2 + 1);
                         end
                     end
                 end
-                gen_vec = zeros(1,grid_manager.num_types);
-                for i = 1:grid_manager.num_types
-                    gen_vec(i) = numel(find(grid_manager.matrix == i));
+                tempVec = zeros(1,gridManager.numTypes);
+                for i = 1:gridManager.numTypes
+                    tempVec(i) = numel(find(gridManager.matrix == i));
                 end
-                grid_manager.setTotalCount(gen_vec);
+                gridManager.setTotalCount(tempVec);
             end
         end
         
         %get the nth allele in a type (whether nth bit of number is 0 or 1)
-        function [val] = get_nth_allele(obj, x, n)
+        function [val] = getNthAllele(obj, x, n)
             val = bitand(bitshift(x,-n),1);
         end
         

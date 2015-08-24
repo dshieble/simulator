@@ -1,5 +1,5 @@
 
-function PopulationParametersDialog(parameter_manager)
+function PopulationParametersDialog(parameterManager)
 %this function creates the popup dialog that displays the population
 %parameters
 
@@ -7,36 +7,36 @@ function PopulationParametersDialog(parameter_manager)
 d = dialog('Position',[200 350 380 380],'Name','Population Parameters');
 
 %Generate the data for the table
-if parameter_manager.mutating && parameter_manager.num_loci > 1
-    data = cell(3, 2^parameter_manager.num_loci + 1);
+if parameterManager.mutating && parameterManager.numLoci > 1
+    data = cell(3, 2^parameterManager.numLoci + 1);
     data{1,1} = 'Type';
-    data{2,1} = parameter_manager.classConstants(parameter_manager.current_model).Param_1_Name;
-    if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name)
-        data{3,1} = parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name;
+    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).Param_1_Name;
+    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
+        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).Param_2_Name;
     end
-    for i = 1:2^parameter_manager.num_loci
-        data{1,i + 1} = dec2bin(i - 1, parameter_manager.num_loci);
-        if parameter_manager.classConstants(parameter_manager.current_model).OverlappingGenerations %if OverlappingGenerations model
-            data{2,i + 1} = num2str(parameter_manager.lociParam1OverlappingGenerations(i));
+    for i = 1:2^parameterManager.numLoci
+        data{1,i + 1} = dec2bin(i - 1, parameterManager.numLoci);
+        if parameterManager.classConstants(parameterManager.currentModel).OverlappingGenerations %if OverlappingGenerations model
+            data{2,i + 1} = num2str(parameterManager.lociParam1OverlappingGenerations(i));
         else
-            data{2,i + 1} = num2str(parameter_manager.lociParam1NonOverlappingGenerations(i));
+            data{2,i + 1} = num2str(parameterManager.lociParam1NonOverlappingGenerations(i));
         end
-        if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name) %if 2 parameters
+        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name) %if 2 parameters
             data{3,i + 1} = num2str(0.01);
         end
     end
 else
-    data = cell(3, parameter_manager.num_types + 1);
+    data = cell(3, parameterManager.numTypes + 1);
     data{1,1} = 'Type';
-    data{2,1} = parameter_manager.classConstants(parameter_manager.current_model).Param_1_Name;
-    if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name)
-        data{3,1} = parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name;
+    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).Param_1_Name;
+    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
+        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).Param_2_Name;
     end
-    for i = 1:parameter_manager.num_types
+    for i = 1:parameterManager.numTypes
         data{1,i + 1} = num2str(i);
-        data{2,i + 1} = num2str(parameter_manager.model_parameters(parameter_manager.current_model).Param1(i));
-        if ~isempty(parameter_manager.classConstants(parameter_manager.current_model).Param_2_Name)
-            data{3,i + 1} = num2str(parameter_manager.model_parameters(parameter_manager.current_model).Param2(i));
+        data{2,i + 1} = num2str(parameterManager.model_parameters(parameterManager.currentModel).Param1(i));
+        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
+            data{3,i + 1} = num2str(parameterManager.model_parameters(parameterManager.currentModel).Param2(i));
         end
     end
 end

@@ -1,6 +1,6 @@
 %this function creates the popup dialog that allows us to edit the mutation
 %matrix
-function matrix = MutationMatrixDialog(current, num_loci)
+function matrix = MutationMatrixDialog(current, numLoci)
 
     %Start Script
     d = dialog('Position',[100 100 1100 600],'Name','Mutation Matrix');
@@ -36,7 +36,7 @@ function matrix = MutationMatrixDialog(current, num_loci)
         'ColumnWidth', widths,...
         'CellEditCallback', @diagonalManager);
         %'CellSelectionCallback', @changeEditable);
-    if num_loci > 1
+    if numLoci > 1
         table.RowName =  {'0','1'};
         table.ColumnName =  {'0','1'};
     end

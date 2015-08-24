@@ -5,8 +5,8 @@ classdef GridManagerLogistic < GridManagerAbstract
     properties (Constant) %See GridManagerAbstract for description
         Name = 'Logistic';
         OverlappingGenerations = 1;
-        Param_1_Name = 'Birth Rate';
-        Param_2_Name = 'Death Rate';
+        ParamName1 = 'Birth Rate';
+        ParamName2 = 'Death Rate';
         atCapacity = 0;
         plottingEnabled = 1;
     end
@@ -25,60 +25,60 @@ classdef GridManagerLogistic < GridManagerAbstract
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [mat, changed, t, h] = get_next(obj)
-            gen_vec = obj.total_count(:, obj.timestep);
-            for i = 1:sum(gen_vec)
-                if sum(gen_vec) <= 0
+        function [mat, changed, t, h] = getNext(obj)
+            tempVec = obj.totalCount(:, obj.timestep);
+            for i = 1:sum(tempVec)
+                if sum(tempVec) <= 0
                     break;
                 end
-                tot_rates = gen_vec.*(obj.Param1 + obj.Param2);
-                if min(tot_rates) < 0
-                    tot_rates = tot_rates + abs(min(tot_rates));
+                totRates = tempVec.*(obj.Param1 + obj.Param2);
+                if min(totRates) < 0
+                    totRates = totRates + abs(min(totRates));
                 end
-                num = rand()*sum(tot_rates);
-                chosen_type = 0;
+                num = rand()*sum(totRates);
+                chosenType = 0;
                 while num > 0
-                    chosen_type = chosen_type + 1;
-                    num = num - tot_rates(chosen_type);
+                    chosenType = chosenType + 1;
+                    num = num - totRates(chosenType);
                 end
 
-                if num + obj.Param1(chosen_type)*gen_vec(chosen_type) > 0
-                    if rand() <= 1-(sum(gen_vec)/obj.max_size)
-                        if sum(gen_vec) < obj.max_size
+                if num + obj.Param1(chosenType)*tempVec(chosenType) > 0
+                    if rand() <= 1-(sum(tempVec)/obj.maxSize)
+                        if sum(tempVec) < obj.maxSize
                             if obj.matrixOn
                                 %choose a cell of the chosen type, and fill the
                                 %nearest cell to it with the chosen type
                                 if obj.spatialOn
-                                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosen_type));
-                                    obj.changeMatrix(obj.get_nearest_free(a, b), chosen_type);
+                                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
+                                    obj.changeMatrix(obj.getNearestFree(a, b), chosenType);
                                 else
-                                	obj.changeMatrix(obj.get_free(), chosen_type);
+                                	obj.changeMatrix(obj.getFree(), chosenType);
                                 end
                             end
-                            gen_vec(chosen_type) = gen_vec(chosen_type) + 1;
+                            tempVec(chosenType) = tempVec(chosenType) + 1;
                         end
                     end
                 else
-                    if obj.matrixOn && gen_vec(chosen_type) > 0
-                        obj.changeMatrix(obj.getRandomOfType(chosen_type), 0);
+                    if obj.matrixOn && tempVec(chosenType) > 0
+                        obj.changeMatrix(obj.getRandomOfType(chosenType), 0);
                     end
-                    gen_vec(chosen_type) = max(0, gen_vec(chosen_type) - 1);
+                    tempVec(chosenType) = max(0, tempVec(chosenType) - 1);
                 end
             end
             %then, include all computation updates
-            obj.total_count(:, obj.timestep + 1) = gen_vec;
-            [mat, changed, t, h] = obj.get_next_cleanup();
+            obj.totalCount(:, obj.timestep + 1) = tempVec;
+            [mat, changed, t, h] = obj.getNextCleanup();
         end
         
         %Overriden method to account for fact that fitness is determined by
         %difference between birth and death rates here
-        function update_params(obj)
-            update_params@GridManagerAbstract(obj);
-            mean_fitness = zeros(1,obj.num_types);
-            for i = 1:obj.num_types
-                mean_fitness(i) = (obj.Param1(i)-obj.Param2(i))*obj.percent_count(i, obj.timestep); 
+        function updateParams(obj)
+            updateParams@GridManagerAbstract(obj);
+            meanFitness = zeros(1,obj.numTypes);
+            for i = 1:obj.numTypes
+                meanFitness(i) = (obj.Param1(i)-obj.Param2(i))*obj.percentCount(i, obj.timestep); 
             end
-            obj.overall_mean_fitness(obj.timestep) = dot(mean_fitness, obj.total_count(:,obj.timestep));
+            obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
         end
 
     end

@@ -5,13 +5,13 @@ classdef GUIHelper < handle
     
     
     % The main purpose of this class is interfacing with the
-    % ParameterManager class, which stores the parameters that the user inputs,
-    % and instantiating the GridManager classes, which run the simulation using
-    % the variables in ParameterManager. This function also handles what components 
-    % of the GUI are presented to the user. 
+% ParameterManager class, which stores the parameters that the user inputs,
+% and instantiating the GridManager classes, which run the simulation using
+% the variables in ParameterManager. This function also handles the button
+% presses and what components of the GUI are presented to the user. 
 
-    % All messages that are presented to the user (except for the uitable dialogs)
-    % are created in this file or the main function
+% All messages that are presented to the user (except for the uitable dialogs)
+% are created in this file
     
     %TODO: temp_axes
     %TODO: Speed up plotting by changing rects to Visible/Invisible rather
