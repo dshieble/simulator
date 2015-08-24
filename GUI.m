@@ -1,4 +1,4 @@
-function varargout = Main(varargin)
+function varargout = GUI(varargin)
 % This is the main function for the Population Dynamics Simulator Project.
 % This is a guide-generated file, and it contains all of the GUI Callbacks.
 
@@ -198,7 +198,7 @@ handles.f.UserData.parameterManager.updateMatrixProperties();
 function matrixOn_button_Callback(hObject, eventdata, handles)
 % Executes on button press in matrixOn_button.
 handles.f.UserData.parameterManager.setMatrixOn(handles.matrixOn_button.Value);
-toggle_visible(handles);
+handles.f.UserData.toggleVisible(handles);
 
 
 function preview_button_Callback(hObject, eventdata, handles)
@@ -235,7 +235,7 @@ if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping &&...
     	warndlg('Number of Loci must be less than 12 to edit initial frequencies');
         return;
     end
-    f = InitialFrequenciesDialog(handles.f.UserData.parameterManager.initial_frequencies,...
+    f = InitialFrequenciesDialog(handles.f.UserData.parameterManager.initialFrequencies,...
         handles.f.UserData.parameterManager.numLoci);
     if ~isempty(f) 
         handles.f.UserData.parameterManager.set_initial_frequencies(f);

@@ -1,6 +1,6 @@
 %this function creates the popup dialog that allows us to edit the mutation
 %matrix
-function new = InitialFrequenciesDialog(current, num_loci)
+function new = InitialFrequenciesDialog(current, numLoci)
 
     %Start Script
     d = dialog('Position',[100 100 400 400],'Name','Initial Frequencies For Static (Moran, Wright-Fisher) Population Models');
@@ -21,7 +21,7 @@ function new = InitialFrequenciesDialog(current, num_loci)
     btn3 = uicontrol('Parent',d,...
            'Position',[150 125 100 25],...
            'String','Homogenize',...
-           'Callback',@make_uniform);  
+           'Callback',@makeUniform);  
        
     
     widths = cell(1,size(current,1));
@@ -37,10 +37,10 @@ function new = InitialFrequenciesDialog(current, num_loci)
         'ColumnEditable', logical(ones(1,size(current,1))),...
         'ColumnWidth', widths);
     table.Data = num2cell(table.Data);
-    rowname = cell(1, 2^num_loci);
+    rowname = cell(1, 2^numLoci);
     colname = {'Frequency'};
-    for i = 1:(2^num_loci)
-        rowname{i} = sprintf('Type %s', dec2bin(i - 1, num_loci));
+    for i = 1:(2^numLoci)
+        rowname{i} = sprintf('Type %s', dec2bin(i - 1, numLoci));
     end
     
     table.RowName =  rowname;
@@ -72,7 +72,7 @@ function new = InitialFrequenciesDialog(current, num_loci)
         delete(gcf);
     end
 
-    function make_uniform(~,~)
+    function makeUniform(~,~)
         for j = 1:length(table.Data)
             table.Data{j} = 1/length(table.Data);
         end

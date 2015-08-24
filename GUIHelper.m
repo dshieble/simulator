@@ -126,11 +126,11 @@ classdef GUIHelper < handle
             
             %TODO: Define the logic of parametersClear
             obj.parametersClear = 0;
-            if obj.parameterManager.mutating && (obj.parameterManager.numLoci > obj.parameterManager.max_num_loci)
-                obj.parameterManager.numLoci = obj.parameterManager.max_num_loci;
-                warndlg(sprintf('ERROR: The number of loci must be no greater than %d.', obj.parameterManager.max_num_loci));
+            if obj.parameterManager.mutating && (obj.parameterManager.numLoci > obj.parameterManager.maxNumLoci)
+                obj.parameterManager.numLoci = obj.parameterManager.maxNumLoci;
+                warndlg(sprintf('ERROR: The number of loci must be no greater than %d.', obj.parameterManager.maxNumLoci));
             elseif ~obj.parameterManager.updateMatrixProperties()
-                warndlg(sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than 25,000. Population size must be at least 16.', obj.parameterManager.max_pop_size));
+                warndlg(sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than 25,000. Population size must be at least 16.', obj.parameterManager.maxPopSize));
             elseif ~obj.parameterManager.verifyAllBoxesClean();
                 warndlg('ERROR: All input must be numerical.');
             elseif obj.parameterManager.mutating && obj.parameterManager.numLoci > 1 && obj.parameterManager.s < -1;
@@ -465,7 +465,7 @@ classdef GUIHelper < handle
             obj.evolving = 0;
             %if the termination is not a pause
             if ~obj.paused
-                cleanup(handles)
+                obj.cleanup(handles)
             end
         end
 
@@ -486,7 +486,7 @@ classdef GUIHelper < handle
             obj.runLoop(0, handles, 0);
             obj.evolving = 0;
             if ~obj.paused
-                cleanup(handles)
+                obj.cleanup(handles)
             end
         end
 

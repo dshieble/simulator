@@ -10,9 +10,9 @@ d = dialog('Position',[200 350 380 380],'Name','Population Parameters');
 if parameterManager.mutating && parameterManager.numLoci > 1
     data = cell(3, 2^parameterManager.numLoci + 1);
     data{1,1} = 'Type';
-    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).Param_1_Name;
-    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
-        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).Param_2_Name;
+    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).ParamName1;
+    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).ParamName2)
+        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).ParamName2;
     end
     for i = 1:2^parameterManager.numLoci
         data{1,i + 1} = dec2bin(i - 1, parameterManager.numLoci);
@@ -21,22 +21,22 @@ if parameterManager.mutating && parameterManager.numLoci > 1
         else
             data{2,i + 1} = num2str(parameterManager.lociParam1NonOverlappingGenerations(i));
         end
-        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name) %if 2 parameters
+        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).ParamName2) %if 2 parameters
             data{3,i + 1} = num2str(0.01);
         end
     end
 else
     data = cell(3, parameterManager.numTypes + 1);
     data{1,1} = 'Type';
-    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).Param_1_Name;
-    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
-        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).Param_2_Name;
+    data{2,1} = parameterManager.classConstants(parameterManager.currentModel).ParamName1;
+    if ~isempty(parameterManager.classConstants(parameterManager.currentModel).ParamName2)
+        data{3,1} = parameterManager.classConstants(parameterManager.currentModel).ParamName2;
     end
     for i = 1:parameterManager.numTypes
         data{1,i + 1} = num2str(i);
-        data{2,i + 1} = num2str(parameterManager.model_parameters(parameterManager.currentModel).Param1(i));
-        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).Param_2_Name)
-            data{3,i + 1} = num2str(parameterManager.model_parameters(parameterManager.currentModel).Param2(i));
+        data{2,i + 1} = num2str(parameterManager.modelParameters(parameterManager.currentModel).Param1(i));
+        if ~isempty(parameterManager.classConstants(parameterManager.currentModel).ParamName2)
+            data{3,i + 1} = num2str(parameterManager.modelParameters(parameterManager.currentModel).Param2(i));
         end
     end
 end
