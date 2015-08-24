@@ -32,9 +32,8 @@ classdef GUIHelper < handle
     methods
         
         function obj = GUIHelper(handles, names)
-            %The constructor for the GUIHelper class. 
-            % names - The input to the Main function, which is either empty
-            % or a list of class names
+            %The constructor for the GUIHelper class. The input is the same
+            %input to the main function. 
             
             classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
 
@@ -50,7 +49,6 @@ classdef GUIHelper < handle
                         obj.getConstantProperty(names{i}, 'atCapacity');
                         obj.getConstantProperty(names{i}, 'plottingEnabled');
                     catch e
-                        fprintf('%s is not a valid class. Initializing with the default classes.', names{i});
                         break
                     end
                 end
@@ -320,19 +318,31 @@ classdef GUIHelper < handle
             if obj.group > obj.gridManager.numTypes
                 obj.group = 1;
             end
-            %Draw the rectangle objects on the grid
-            for ind = 1:numel(obj.gridManager.matrix)
-                [i, j] = ind2sub(sqrt(numel(obj.gridManager.matrix)), ind);
-                mult = 50/sqrt(numel(obj.gridManager.matrix));
-                obj.rects{i,j} = rectangle(...
-                    'Parent', handles.axes_grid,...
-                    'Position',[mult*i-mult mult*j-mult mult*1 mult*1], ...
-                    'Visible', 'off');
+            
+                        if obj.gridManager.matrixOn 
+                %Draw the matrix
+                perm = c(randperm(length(c)))';
+                for p = perm
+                    [i, j] = ind2sub(sqrt(numel(obj.gridManager.matrix)), p);
+                    if (~isempty(obj.rects(i,j)))
+                        delete(obj.rects{i,j});
+                        obj.rects{i,j} = [];
+                    end
+                    if (matrix(i,j) ~= 0)
+                        mult = 50/sqrt(numel(obj.gridManager.matrix));
+                        obj.rects{i,j} = rectangle(...
+                            'Parent', handles.axes_grid,...
+                            'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
+                            'facecolor',obj.gridManager.getColor(matrix(i,j)));
+                    end
+                end
+                drawnow;
             end
-            drawnow;
+            
+            
             while obj.evolving
                [matrix, c, t, halt] = obj.gridManager.getNext();
-               obj.drawIteration(c, handles, firstRun);
+               obj.drawIteration(matrix, c, handles, firstRun);
                firstRun = 0;
                 if runOnce || halt
                     break
@@ -341,20 +351,23 @@ classdef GUIHelper < handle
         end
 
         
-        function drawIteration(obj, c, handles, firstRun)
+        function drawIteration(obj, matrix, c, handles, firstRun)
             %A single iteration of the simulation loop
             if obj.gridManager.matrixOn 
                 %Draw the matrix
                 perm = c(randperm(length(c)))';
                 for p = perm
-                    %Change the color of the rectangle objects
-                    %appropriately.
                     [i, j] = ind2sub(sqrt(numel(obj.gridManager.matrix)), p);
-                    if obj.gridManager.matrix(i,j) == 0
-                        obj.rects{i,j}.Visible = 'off';
-                    else
-                        obj.rects{i,j}.Visible = 'on';
-                        obj.rects{i,j}.FaceColor = obj.gridManager.getColor(obj.gridManager.matrix(i,j));
+                    if (~isempty(obj.rects(i,j)))
+                        delete(obj.rects{i,j});
+                        obj.rects{i,j} = [];
+                    end
+                    if (matrix(i,j) ~= 0)
+                        mult = 50/sqrt(numel(obj.gridManager.matrix));
+                        obj.rects{i,j} = rectangle(...
+                            'Parent', handles.axes_grid,...
+                            'Position',[mult*i-mult mult*j-mult mult*1 mult*1],...
+                            'facecolor',obj.gridManager.getColor(matrix(i,j)));
                     end
                 end
                 drawnow;

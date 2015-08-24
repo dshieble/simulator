@@ -37,9 +37,12 @@ function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for GUI
 handles.output = hObject;
 
+
+
 % Attach global variables to handles object
 handles.f.UserData = GUIHelper(handles, varargin);
- 
+
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -60,10 +63,7 @@ function run_button_Callback(hObject, eventdata, handles)
 if handles.f.UserData.stepping
     return;
 end
-if ~handles.f.UserData.evolving && ~handles.f.UserData.paused
-    handles.f.UserData.verifyParameters(handles);
-end
-if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && handles.f.UserData.parametersClear %run
+if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && handles.f.UserData.verifyParameters(handles)
     handles.f.UserData.run(handles, 0);
 elseif ~handles.f.UserData.evolving && handles.f.UserData.paused %continue
     handles.f.UserData.continueRunning(handles);

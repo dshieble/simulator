@@ -86,9 +86,10 @@ classdef ParameterManager < handle
             obj.updateNumTypes();
         end
         
-        %Updates the mutation/recombination and basic parameters to the
-        %input values
+
         function updateBasicParameters(obj)
+            %Updates the mutation/recombination and basic parameters to the
+            %input values
             obj.mutating = obj.handles.genetics_button.Value;
             obj.recombining = obj.handles.recombination_check.Value;
             obj.recombinationNumber = obj.handles.recombination_box.Value;
@@ -108,8 +109,8 @@ classdef ParameterManager < handle
         end
             
         
-        %Updates the stored parameters to the box values
         function updateStructs(obj)
+            %Updates the stored parameters to the box values
             type = obj.handles.types_popup.Value;
             %logistic
             ninit_temp = str2double(obj.handles.init_pop_box.String);
@@ -137,8 +138,8 @@ classdef ParameterManager < handle
         end
         
         
-        %Updates the number of types and then update the boxes to type 1
         function updateNumTypes(obj)
+            %Updates the number of types and then update the boxes to type 1
             num = min(obj.maxTypes, str2double(obj.handles.numTypes_box.String));
             if isnumeric(num)
                 if num < obj.numTypes && num > 0
@@ -179,9 +180,10 @@ classdef ParameterManager < handle
             obj.updateMultipleLoci();
         end
         
-        %Updates the numLoci box and resets the default
-        %frequencies vector
+
         function updateMultipleLoci(obj) 
+        	%Updates the numLoci box and resets the default
+            %frequencies vector
             num_l = str2double(obj.handles.loci_box.String);
             if isnumeric(num_l)
                 obj.numLoci = max(1,num_l);
@@ -206,9 +208,10 @@ classdef ParameterManager < handle
             obj.initialFrequencies = [1 zeros(1,2.^obj.numLoci - 1)];
         end
         
-        %Updates the boxes to the stored struct values (sister function of
-        %updateStructs)
+
         function updateBoxes(obj)
+        	%Updates the boxes to the stored struct values (sister function of
+            %updateStructs)
             type = obj.handles.types_popup.Value;
             if obj.numLoci > 1 && obj.mutating
                 obj.handles.numTypes_box.String = 2;
@@ -229,9 +232,10 @@ classdef ParameterManager < handle
                 
         end
         
-        %Updates the size of the matrix/population based on the input to the
-        %population box string
+
         function noerror = updateMatrixProperties(obj)
+        	%Updates the size of the matrix/population based on the input to the
+            %population box string
             size_temp = str2double(obj.handles.population_box.String);
             noerror = 0;
             changed = 0;
@@ -263,10 +267,11 @@ classdef ParameterManager < handle
         end
        
         
-        %Provides an interface for accessing parameters that does not
-        %require the user to know whether the numLoci > 1, or what the
-        %current model is
+
         function out = getField(obj, param)
+        	%Provides an interface for accessing parameters that does not
+            %require the user to know whether the numLoci > 1, or what the
+            %current model is
             model = obj.currentModel;
             if strcmp(param,'numTypes')
                 if ~obj.mutating || obj.numLoci == 1
@@ -306,9 +311,10 @@ classdef ParameterManager < handle
             end
         end
 
-        %For the numLoci<1 case, verifies that the sum of the Ninits for 
-        % all species is the original populaiton size 
+
         function out = verifySizeOk(obj)
+            %For the numLoci<1 case, verifies that the sum of the Ninits for 
+            % all species is the original populaiton size 
             out = 1;
             if (obj.numLoci == 1 || ~obj.mutating)
                 if obj.classConstants(obj.currentModel).atCapacity
@@ -323,19 +329,19 @@ classdef ParameterManager < handle
             end
         end
         
-        %Verifies that the input to all boxes is numerical
         function ok = verifyAllBoxesClean(obj)
+            %Verifies that the input to all boxes is numerical
             ok = ~(isnan(str2double(obj.handles.param_1_box.String)) || ...
                isnan(str2double(obj.handles.param_2_box.String)) || ...
                isnan(str2double(obj.handles.init_pop_box.String)) || ...
                isnan(str2double(obj.handles.numTypes_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)));
-               %isnan(str2double(obj.handles.max_iterations_box.String)));
         end
 
-        %returns the current number of types, regardless of whether
-        %numLoci > 1 or not
+
         function out = getNumTypes(obj)
+        	%returns the current number of types, regardless of whether
+            %numLoci > 1 or not
             if obj.mutating && obj.numLoci > 1
                 out = 2^obj.numLoci;
             else
@@ -343,39 +349,40 @@ classdef ParameterManager < handle
             end
         end
         
-        %sets the matrixOn variable. I might add some interesting logic
-        %here...
+
         function setMatrixOn(obj, input)
+        	%Sets the matrixOn variable. I might add some interesting logic
+            %here
             obj.matrixOn = input;
         end
         
-        %sets the mutationMatrix variable. I might add some interesting logic
-        %here...
-        function setMutationMatrix(obj, m)
+        function setMutationMatrix(obj, m)       
+            %Sets the mutationMatrix variable.
             obj.mutationMatrix = m;
         end
         
-        %sets the initialFrequencies variable. I might add some interesting logic
-        %here...
         function setInitialFrequencies(obj, df)
+            %sets the initialFrequencies variable.
             obj.initialFrequencies = df;
         end
         
-        %number of one bits in input number x
         function out = numOnes(obj,x) 
+            %number of one bits in input number x
             out = sum(bitget(x,1:ceil(log2(x))+1));
         end
         
-        %A function that computes the first model parameter based on the
-        %number of 1s for OverlappingGenerations models (Logistic, Moren,
-        %Exp, etc)
+
         function out = lociParam1OverlappingGenerations(obj,num) 
+        	%A function that computes the first model parameter based on the
+            %number of 1s for OverlappingGenerations models (Logistic, Moren,
+            %Exp, etc)
             out = 1 + obj.s*(obj.numOnes(num - 1)^(1-obj.e));
         end
         
-        %A function that computes the first model parameter based on the
-        %number of 1s for NonOverlappingGenerations models (Wright-Fisher)
+
         function out = lociParam1NonOverlappingGenerations(obj,num)
+        	%A function that computes the first model parameter based on the
+            %number of 1s for NonOverlappingGenerations models (Wright-Fisher)
             out = exp(obj.s*(obj.numOnes(num - 1)^(1-obj.e)));
         end
 
