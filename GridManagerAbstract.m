@@ -65,6 +65,11 @@ classdef (Abstract) GridManagerAbstract < handle
             end
             obj.oldMatrix = obj.matrix;
             obj.maxSize = maxSize;
+            obj.timestep = 1;
+            obj.numTypes = length(Ninit);
+            obj.totalCount = Ninit';
+            
+            
             if obj.matrixOn
                 if (sum(Ninit) == obj.maxSize) || ~spatialOn %static population models, random placement
                     r = randperm(numel(obj.matrix));
@@ -88,9 +93,8 @@ classdef (Abstract) GridManagerAbstract < handle
                     end
                 end
             end
-            
-            obj.timestep = 1;
-            obj.numTypes = length(Ninit);
+           
+
             %when there are more than 10 types, colors become randomized
             obj.colors = [1 0 0; ...
                 0 1 0; ...
@@ -109,7 +113,6 @@ classdef (Abstract) GridManagerAbstract < handle
                 .25 0 .5; ...
                 0 .25 .5; ...
                 .15 .15 .15;];
-            obj.totalCount = Ninit';
             obj.percentCount = [];
             obj.overallMeanFitness = [];
             obj.ageStructure = {[]};
@@ -146,16 +149,6 @@ classdef (Abstract) GridManagerAbstract < handle
             h = h && ~obj.mutationManager.mutating || (sum(obj.totalCount(:, obj.timestep)) == 0);
         end
 
-        %Returns a square in the matrix of type t
-        function ind = getOfType(obj, t)
-            assert(obj.matrixOn == 1)
-            typed = find(obj.matrix == t);
-            if isempty(typed)
-                ind = randi(obj.maxSize);
-            else
-                ind = typed(randi(length(typed)));
-            end
-        end
         
         %Returns a free square in the matrix
         function ind = getFree(obj)
@@ -186,6 +179,7 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns the manhattan distance between 2 cells in the matrix. Uses wrapping
         %if ~obj.edges
         function d = matrixDistance(obj, base, ind)
+            assert(obj.matrixOn == 1);
             [a_1, b_1] = ind2sub(size(obj.matrix), base);
             [a_2, b_2] = ind2sub(size(obj.matrix), ind);
             wd = abs(a_1 - a_2);
@@ -201,13 +195,14 @@ classdef (Abstract) GridManagerAbstract < handle
         
         %Returns the nearest free square in the matrix
         function ind = getNearestFree(obj, i, j)
+            assert(obj.matrixOn == 1);
             ind = getNearestOfType(obj, i, j, 0);
         end
 
         %Gets the center cell in the matrix
         function ind = getCenter(obj)
         	assert(obj.matrixOn == 1);
-            a = floor(size(obj.matrix, 1)/2);
+            a = ceil(size(obj.matrix, 1)/2);
             ind = sub2ind(size(obj.matrix),a,a);
         end
         
@@ -218,32 +213,25 @@ classdef (Abstract) GridManagerAbstract < handle
 
         %returns 1 if there is only one species
         function h = isHomogenous(obj)
-            found = 0;
-            h = 1;
-            for i = 1:size(obj.matrix, 1)
-                if ~isempty(find(obj.matrix == i, 1))
-                    found = found + 1;
-                end
-                if found >= 2 
-                    h = 0;
-                    break;
-                end
-            end
+            h = (max(obj.totalCount(:, obj.timestep)) == obj.maxSize);
         end
         
         %Returns a random cell of the chosen type
         function out = getRandomOfType(obj, type)
             assert(obj.matrixOn == 1)
-            
             ofType = find(obj.matrix == type);
-            out = ofType(randi(numel(ofType)));
+            if isempty(ofType)
+                out = -1;
+            else
+            	out = ofType(randi(numel(ofType)));
+            end
         end
-        
-        % Matrix Methods
-        
+                
         %Changes an element in the matrix and resets the age
         function changeMatrix(obj, ind, new)
             assert(obj.matrixOn == 1);
+            assert(numel(new) == 1);
+            assert((new >= 0) && (new <= obj.numTypes) && (round(new) == new), 'ERROR: New type must be an integer between 0 and numTypes');
             obj.matrix(ind) = new;
             if new > 0
                 obj.ageMatrix(ind) = 0;
@@ -256,17 +244,21 @@ classdef (Abstract) GridManagerAbstract < handle
         %age)
         function mutateMatrix(obj, ind, new)
             assert(obj.matrixOn == 1);
+            assert(numel(new) == 1);
             assert(obj.matrix(ind) ~= 0, 'ERROR: Cannot mutate an element that is currently zero');
             assert(new ~= 0, 'ERROR: Cannot mutate an element to become zero');
+            assert(new >= 0 && new <= obj.numTypes && round(new) == new, 'ERROR: New type must be an integer between 0 and numTypes');
             obj.matrix(ind) = new;
         end
         
         %Resets the matrix to the input
-        function resetMatrix(obj, new_mat)
+        function resetMatrix(obj, newMat)
             assert(obj.matrixOn == 1);
-            obj.matrix = new_mat;
+            assert(all(size(obj.matrix) == size(newMat)), 'ERROR: Dimensions of newMat are wrong');
+            assert(all(newMat(:) >= 0) && all(newMat(:) <= obj.numTypes) && all(round(newMat(:)) == newMat(:)), 'ERROR: newMat has invalid elements');
+            obj.matrix = newMat;
             obj.ageMatrix = zeros(sqrt(obj.maxSize));
-            obj.ageMatrix(new_mat == 0) = -1;
+            obj.ageMatrix(newMat == 0) = -1;
         end
         
         %Sets the total count variable

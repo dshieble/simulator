@@ -60,7 +60,9 @@ classdef GridManagerMoran < GridManagerAbstract
                         assert(ind > 0, sprintf('ERROR: getNearestOfType is returning %d', ind));
                         obj.changeMatrix(ind, chosenType);
                     else %if dead type and chosen type are equal, then we just reset the age of a random organism of that type. 
-                        obj.changeMatrix(obj.getOfType(dead_type), chosenType);
+                        ind = obj.getRandomOfType(dead_type);
+                        assert(ind > 0, 'ERROR: getRandomOfType returned -1');
+                        obj.changeMatrix(ind, chosenType);
                     end
                 end
             end

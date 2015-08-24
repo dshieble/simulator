@@ -357,11 +357,9 @@ classdef GUIHelper < handle
                         obj.rects{i,j}.FaceColor = obj.gridManager.getColor(obj.gridManager.matrix(i,j));
                     end
                 end
-                drawnow;
             end
             %Draw the plot to the lower axis
             obj.drawPage(handles, firstRun);
-            pause(0.01);
             drawnow;
         end
             
@@ -373,7 +371,7 @@ classdef GUIHelper < handle
             %types in the interval [obj.group, (obj.group + 16)]
             axes(handles.axes_graph); %make the axes_graph the active axes
             if isempty(obj.gridManager)
-                fprintf('ERROR: Grid Manager Empty')
+                fprintf('ERROR: Grid Manager Empty\n')
                 return
             end
             if firstRun

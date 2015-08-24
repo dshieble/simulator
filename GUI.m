@@ -221,9 +221,9 @@ end
 function mutation_matrix_button_Callback(hObject, eventdata, handles)
 % Executes on button press in mutation_matrix_button.
 if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping
-    m = MutationMatrixDialog(handles.f.UserData.parameterManager.mutation_matrix, handles.f.UserData.parameterManager.numLoci);
+    m = MutationMatrixDialog(handles.f.UserData.parameterManager.mutationMatrix, handles.f.UserData.parameterManager.numLoci);
     if ~isempty(m) 
-        handles.f.UserData.parameterManager.set_mutation_matrix(m);
+        handles.f.UserData.parameterManager.setMutationMatrix(m);
     end
 end
 
@@ -238,7 +238,7 @@ if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping &&...
     f = InitialFrequenciesDialog(handles.f.UserData.parameterManager.initialFrequencies,...
         handles.f.UserData.parameterManager.numLoci);
     if ~isempty(f) 
-        handles.f.UserData.parameterManager.set_initial_frequencies(f);
+        handles.f.UserData.parameterManager.setInitialFrequencies(f);
     end
 end
 
@@ -283,7 +283,7 @@ if ~handles.f.UserData.stepping && ~handles.f.UserData.evolving
         handles.step_button.BackgroundColor = [.25 .25 .25];
         drawnow;
         [matrix, c, t, halt] = handles.f.UserData.gridManager.getNext();
-        handles.f.UserData.drawIteration(matrix, c, handles, 0);
+        handles.f.UserData.drawIteration(c, handles, 0);
         handles.f.UserData.stepping = 0;
         handles.run_button.Enable = 'on';
         handles.run_button.BackgroundColor = [0 1 0];
