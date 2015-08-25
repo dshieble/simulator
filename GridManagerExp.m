@@ -35,6 +35,7 @@ classdef GridManagerExp < GridManagerAbstract
                 if min(totRates) < 0
                     totRates = totRates + abs(min(totRates));
                 end
+                %weighted random selection
                 num = rand()*sum(totRates);
                 chosenType = 0;
                 while num > 0

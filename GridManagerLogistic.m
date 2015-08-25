@@ -11,16 +11,13 @@ classdef GridManagerLogistic < GridManagerAbstract
         plottingEnabled = 1;
     end
     
-    properties
-    end
-    
     methods (Access = public)
         
         function obj = GridManagerLogistic(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d)
             obj@GridManagerAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
         
-        %See GridManagerAbstract'
+        %See GridManagerAbstract
         %mat - new updated matrix
         %changed - entries in matrix that have changed
         %t - the timestep
@@ -35,6 +32,7 @@ classdef GridManagerLogistic < GridManagerAbstract
                 if min(totRates) < 0
                     totRates = totRates + abs(min(totRates));
                 end
+
                 num = rand()*sum(totRates);
                 chosenType = 0;
                 while num > 0
