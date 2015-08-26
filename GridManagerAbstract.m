@@ -240,6 +240,29 @@ classdef (Abstract) GridManagerAbstract < handle
             end
             assert(length(indices) >= 2 && length(indices) <= 4, 'ERROR: Number of Neighbors is incorrect');
         end
+        
+        %Get the neighbors of the input cell. If any neighbor is
+        %free, select it. Otherwise, randomly select a
+        %neighbor weighted by typeWeighting. 0 cells are always chosen if
+        %possible
+        %typeWeighting - a vector of length numTypes that assigns a weight
+        %to the chance of killing each type
+        function RowCol = getNeighborWeighted(obj, a, b, typeWeighting)
+            neighbors = obj.getNeighbors(a, b);
+            neighbors = neighbors(:, randperm(length(neighbors))); %prevent preferential treatment
+            weights = zeros(1, length(neighbors));
+            for w = 1:length(weights)
+                t = obj.matrix(neighbors(1,w), neighbors(2,w));
+                if t == 0
+                    RowCol = [neighbors(1,w), neighbors(2,w)];
+                    return;
+                else
+                    weights(w) = typeWeighting(t);
+                end
+            end
+            index = obj.weightedSelection(weights);
+            RowCol = [neighbors(1,index), neighbors(2,index)];
+        end
 
         %Gets the center cell in the matrix
         function ind = getCenter(obj)
@@ -272,6 +295,11 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns an index in the vector vec, weighted by the contents of
         %vec
         function [ind, num] = weightedSelection(obj, vec)
+            vec = vec + min(vec);
+            if sum(vec) == 0
+                ind = randi(length(vec));
+                return;
+            end
             num = rand()*sum(vec);
             ind = 0;
             while num > 0

@@ -40,21 +40,29 @@ classdef GridManagerLogistic < GridManagerAbstract
                     num = num - totRates(chosenType);
                 end
 
-                if num + obj.Param1(chosenType)*tempVec(chosenType) > 0
+                if num + obj.Param1(chosenType)*tempVec(chosenType) > 0 && sum(tempVec) < obj.maxSize
                     if rand() <= 1-(sum(tempVec)/obj.maxSize)
-                        if sum(tempVec) < obj.maxSize
-                            if obj.matrixOn
-                                %choose a cell of the chosen type, and fill the
-                                %nearest cell to it with the chosen type
-                                if obj.spatialOn
-                                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
-                                    obj.changeMatrix(obj.getNearestFree(a, b), chosenType);
-                                else
-                                	obj.changeMatrix(obj.getFree(), chosenType);
+                        if obj.matrixOn
+                            %Choose a cell of the chosen type, get the
+                            %neighbors of that cell. If any neighbor is
+                            %free, select. Otherwise, randomly select a
+                            %neighbor weighted by death rate. Replace the
+                            %neighbor cell with the chosen type
+                            if obj.spatialOn
+                                [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
+                                v = obj.getNeighborWeighted(a, b, obj.Param2);
+                                ind = sub2ind(size(obj.matrix), v(1), v(2));
+                                deadType = obj.matrix(ind);
+                                if deadType ~= 0
+                                	tempVec(deadType) = tempVec(deadType) - 1;
                                 end
+                                obj.changeMatrix(ind, chosenType);
+                            else
+                                %Change a free cell to the chosen type
+                                obj.changeMatrix(obj.getFree(), chosenType);
                             end
-                            tempVec(chosenType) = tempVec(chosenType) + 1;
                         end
+                        tempVec(chosenType) = tempVec(chosenType) + 1;
                     end
                 else
                     if obj.matrixOn && tempVec(chosenType) > 0

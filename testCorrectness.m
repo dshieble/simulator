@@ -35,8 +35,9 @@ function testGridManagerAbstract(testCase)
 
     verifyEqual(testCase,gridManager.getNeighbors(5,3), [5 5 4;2 4 3]);
     verifyEqual(testCase,gridManager.getNeighbors(3,2), [3 4 3 2;1 2 3 2]);
+    verifyEqual(testCase,gridManager.getNeighborWeighted(3, 3, ones(1,5)), [3,2]);
+    verifyEqual(testCase,gridManager.getNeighborWeighted(3, 1, ones(1,5)), [3,2]);
 
-    
     %edges off
     gridManager = GridManagerLogistic(25, [1 0 0 0 0], MM, 1, 1, 0, ones(1,5), zeros(1,5));
     gridManager.resetMatrix(mat);    
@@ -54,7 +55,6 @@ end
 
 
 function testAutomatedSimulator(testCase)
-
     %Tests that the automated simulator runs without error
 	AutomatedSimulator('GridManagerLogistic', [1 1], [1 1], [0.01 0.01], 'totalPopSize', 900);
     AutomatedSimulator('GridManagerMoran', [25 200], [1 1], [0.01 0.01], 'totalPopSize', 225);

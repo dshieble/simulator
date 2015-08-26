@@ -42,18 +42,22 @@ classdef GridManagerExp < GridManagerAbstract
                     chosenType = chosenType + 1;
                     num = num - totRates(chosenType);
                 end
-                if num + obj.Param1(chosenType)*tempVec(chosenType) > 0
-                    if sum(tempVec) < obj.maxSize
-                        tempVec(chosenType) = tempVec(chosenType) + 1;
-                        if obj.matrixOn
-                            %choose a cell of the chosen type, and fill the
-                            %nearest cell to it with the chosen type
-                            if obj.spatialOn
-                                [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
-                                obj.changeMatrix(obj.getNearestFree(a, b), chosenType);
-                            else
-                                obj.changeMatrix(obj.getFree(), chosenType);   
+                if num + obj.Param1(chosenType)*tempVec(chosenType) > 0 && sum(tempVec) < obj.maxSize
+                    tempVec(chosenType) = tempVec(chosenType) + 1;
+                    if obj.matrixOn
+                        %choose a cell of the chosen type, and fill the
+                        %nearest cell to it with the chosen type
+                        if obj.spatialOn
+                            [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
+                            v = obj.getNeighborWeighted(a, b, obj.Param2);
+                            ind = sub2ind(size(obj.matrix), v(1), v(2));
+                            deadType = obj.matrix(ind);
+                            if deadType ~= 0
+                                tempVec(deadType) = tempVec(deadType) - 1;
                             end
+                            obj.changeMatrix(ind, chosenType);
+                        else
+                            obj.changeMatrix(obj.getFree(), chosenType);   
                         end
                     end
                 else

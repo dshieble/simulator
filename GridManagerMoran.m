@@ -42,8 +42,7 @@ classdef GridManagerMoran < GridManagerAbstract
                 %chosenType
                 if obj.spatialOn && obj.matrixOn
                     [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
-                    neighbors = obj.getNeighbors(a, b);
-                    v = neighbors(:, randi(size(neighbors, 2))); %Random neighbor
+                    v = obj.getNeighborWeighted(a, b, zeros(1, obj.numTypes));
                     deadType = obj.matrix(v(1), v(2));
                     ind = sub2ind(size(obj.matrix), v(1), v(2));
                     obj.changeMatrix(ind, chosenType);
