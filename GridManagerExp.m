@@ -68,7 +68,7 @@ classdef GridManagerExp < GridManagerAbstract
             [mat, changed, t, h] = obj.getNextCleanup();
         end
         
-            
+        
         
         
         %Overriden method to account for fact that fitness is determined by

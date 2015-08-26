@@ -129,7 +129,7 @@ function param_1_box_Callback(hObject, eventdata, handles)
 handles.f.UserData.parameterManager.updateStructs();
 
 function param_2_box_Callback(hObject, eventdata, handles)
-% Executes when parameter 1 is changed
+% Executes when parameter 2 is changed
 handles.f.UserData.parameterManager.updateStructs();
 
 function save_button_Callback(hObject, eventdata, handles)

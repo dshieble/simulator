@@ -34,37 +34,32 @@ classdef GridManagerMoran < GridManagerAbstract
             for i = 1:obj.maxSize
                 totRates = tempVec.*(obj.Param1);
                 %choose a type to birth
-                num = rand()*sum(totRates);
-                chosenType = 0;
-                while num > 0
-                    chosenType = chosenType + 1;
-                    num = num - totRates(chosenType);
-                end
+                chosenType = obj.weightedSelection(totRates);
                 tempVec(chosenType) = tempVec(chosenType) + 1;
-                %choose a type to kill
-                deadNum = rand()*sum(tempVec);
-                deadType = 0;
-                while deadNum > 0
-                    deadType = deadType + 1;
-                    deadNum = deadNum - tempVec(deadType);
-                end
-                tempVec(deadType) = tempVec(deadType) - 1;
-                %Render the birth and death on the matrix
-                if obj.matrixOn
+                %choose a type to kill - random choice of dead type, weighted by current counts 
+                %If spatial structure is enabled, limit the choice of dead
+                %organisms to those surrounding the "mother" organism of
+                %chosenType
+                if obj.spatialOn && obj.matrixOn
+                    [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
+                    neighbors = obj.getNeighbors(a, b);
+                    v = neighbors(:, randi(size(neighbors, 2))); %Random neighbor
+                    deadType = obj.matrix(v(1), v(2));
+                    ind = sub2ind(size(obj.matrix), v(1), v(2));
+                    obj.changeMatrix(ind, chosenType);
+                elseif obj.matrixOn
                     %choose a cell of the birthed type, and find the
                     %nearest cell to it of the kill type and fill that cell
                     %with the birthed type
-                    if obj.spatialOn && (deadType ~= chosenType)
-                        [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
-                        ind = obj.getNearestOfType(a, b, deadType);
-                        assert(ind > 0, sprintf('ERROR: getNearestOfType is returning %d', ind));
-                        obj.changeMatrix(ind, chosenType);
-                    else %if dead type and chosen type are equal, then we just reset the age of a random organism of that type. 
-                        ind = obj.getRandomOfType(deadType);
-                        assert(ind > 0, 'ERROR: getRandomOfType returned -1');
-                        obj.changeMatrix(ind, chosenType);
-                    end
+                    deadType = obj.weightedSelection(tempVec);
+                    ind = obj.getRandomOfType(deadType);
+                    assert(ind > 0, 'ERROR: getRandomOfType returned -1');
+                    obj.changeMatrix(ind, chosenType);
+                else %nonPlotting
+                	deadType = obj.weightedSelection(tempVec);
                 end
+                tempVec(deadType) = tempVec(deadType) - 1;
+                
             end
             obj.totalCount(:, obj.timestep + 1) = tempVec;
             [mat, changed, t, h] = obj.getNextCleanup();

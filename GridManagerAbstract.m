@@ -197,6 +197,49 @@ classdef (Abstract) GridManagerAbstract < handle
             assert(obj.matrixOn == 1);
             ind = getNearestOfType(obj, i, j, 0);
         end
+        
+        %Returns the non-diagonal neighboring squares of i,j
+        % indices(1,:) = row
+        % indices(2,:) = column
+        %     4
+        %   1 x 3
+        %     2
+        function indices = getNeighbors(obj, i, j)
+            assert(obj.matrixOn == 1);
+            s = sqrt(obj.maxSize);
+            %unchanged
+            indices(1,1) = i;
+            indices(1,3) = i;
+            indices(2,2) = j;
+            indices(2,4) = j;
+            %changed
+            indices(2,1) = j - 1;
+            indices(2,3) = j + 1;
+            indices(1,2) = i + 1;
+            indices(1,4) = i - 1;
+            if ~obj.edgesOn
+            	indices(2,1) = mod(indices(2,1) - 1, s) + 1;
+                indices(2,3) = mod(indices(2,3) - 1, s) + 1;
+                indices(1,2) = mod(indices(1,2) - 1, s) + 1;
+                indices(1,4) = mod(indices(1,4) - 1, s) + 1;
+            else
+                remove = [];
+                if indices(2,1) <= 0 || indices(2,1) > s
+                    remove = [remove 1];
+                end
+                if indices(2,3) <= 0 || indices(2,3) > s
+                    remove = [remove 3];
+                end
+                if indices(1,2) <= 0 || indices(1,2) > s
+                    remove = [remove 2];
+                end
+                if indices(1,4) <= 0 || indices(1,4) > s
+                    remove = [remove 4];
+                end
+                indices(:,remove) = [];
+            end
+            assert(length(indices) >= 2 && length(indices) <= 4, 'ERROR: Number of Neighbors is incorrect');
+        end
 
         %Gets the center cell in the matrix
         function ind = getCenter(obj)
@@ -226,6 +269,23 @@ classdef (Abstract) GridManagerAbstract < handle
             end
         end
                 
+        %Returns an index in the vector vec, weighted by the contents of
+        %vec
+        function [ind, num] = weightedSelection(obj, vec)
+            num = rand()*sum(vec);
+            ind = 0;
+            while num > 0
+                ind = ind + 1;
+                num = num - vec(ind);
+            end
+        end
+        
+        
+        %Returns a random type from among the valid types for this matrix
+        function type = getRandomType(obj)
+            type = randi(obj.num_types);
+        end
+       
         %Changes an element in the matrix and resets the age
         function changeMatrix(obj, ind, new)
             assert(obj.matrixOn == 1);
@@ -282,6 +342,7 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.ageStructure{obj.timestep} = hist(ages, max(ages))./length(ages);
             end            
         end
+        
         
         
     end
