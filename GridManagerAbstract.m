@@ -128,7 +128,7 @@ classdef (Abstract) GridManagerAbstract < handle
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not the model should halt
-        function [mat, changed, t, h] = getNextCleanup(obj)
+        function [changed, h] = getNextCleanup(obj)
             obj.timestep = obj.timestep + 1;
             obj.mutationManager.mutate(obj);
             obj.mutationManager.recombination(obj);
@@ -295,12 +295,17 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns an index in the vector vec, weighted by the contents of
         %vec
         function [ind, num] = weightedSelection(obj, vec)
-            vec = vec + min(vec);
+            %account for negative weights
+            if min(vec) < 0
+                vec = vec + abs(min(vec));
+            end
+            num = rand()*sum(vec);
+            %account for flat weights
             if sum(vec) == 0
                 ind = randi(length(vec));
                 return;
             end
-            num = rand()*sum(vec);
+            %do weighted selection
             ind = 0;
             while num > 0
                 ind = ind + 1;
@@ -385,7 +390,7 @@ classdef (Abstract) GridManagerAbstract < handle
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        [mat, changed, t, h] = getNext(obj)
+        [changed, h] = getNext(obj)
     end
     
     

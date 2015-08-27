@@ -68,9 +68,9 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     
     matCell = {};
     for iter = 1:p.Results.maxIterations
-    	[matrix, c, t, halt] = gridManager.getNext();
+    	[c, halt] = gridManager.getNext();
         if strcmp(p.Results.returnType, 'matrix')
-            matCell{iter} = matrix;
+            matCell{iter} = gridManager.matrix;
         end
         if halt
             break;

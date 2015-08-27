@@ -27,7 +27,7 @@ classdef GridManagerMoran < GridManagerAbstract
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [mat, changed, t, h] = getNext(obj)
+        function [changed, h] = getNext(obj)
             %pick a cell at random, kill it, then pick a type in proportion
             %to birth rate and replace killed cell with that type
             tempVec = obj.totalCount(:, obj.timestep);
@@ -61,7 +61,7 @@ classdef GridManagerMoran < GridManagerAbstract
                 
             end
             obj.totalCount(:, obj.timestep + 1) = tempVec;
-            [mat, changed, t, h] = obj.getNextCleanup();
+            [changed, h] = obj.getNextCleanup();
         end
         
 

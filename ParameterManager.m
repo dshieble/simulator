@@ -140,7 +140,7 @@ classdef ParameterManager < handle
         
         function updateNumTypes(obj)
             %Updates the number of types and then update the boxes to type 1
-            num = min(obj.maxTypes, str2double(obj.handles.numTypes_box.String));
+            num = min(obj.maxTypes, str2double(obj.handles.num_types_box.String));
             if isnumeric(num)
                 if num < obj.numTypes && num > 0
                     obj.handles.types_popup.String(num+1:end) = [];
@@ -176,17 +176,22 @@ classdef ParameterManager < handle
                 obj.handles.types_popup.Value = 1;
                 obj.updateBoxes();
             end
-            obj.handles.numTypes_box.String = num2str(obj.numTypes);
+            obj.handles.num_types_box.String = num2str(obj.numTypes);
             obj.updateMultipleLoci();
         end
         
 
-        function updateMultipleLoci(obj) 
+        function message = updateMultipleLoci(obj) 
         	%Updates the numLoci box and resets the default
             %frequencies vector
-            num_l = str2double(obj.handles.loci_box.String);
-            if isnumeric(num_l)
-                obj.numLoci = max(1,num_l);
+            message = '';
+            numLociTemp = str2double(obj.handles.loci_box.String);
+            if isnumeric(numLociTemp) && ~isnan(numLociTemp) && (numLociTemp<=obj.maxNumLoci) &&...
+                    (round(numLociTemp) == numLociTemp) && (numLociTemp > 0)
+                obj.numLoci = max(1,numLociTemp);
+            else
+                message = sprintf('Number of Loci must be a positive integer less than %d', obj.maxNumLoci + 1); 
+                return;
             end
             if obj.numLoci == 1
                 num_a = obj.numTypes;
@@ -214,7 +219,7 @@ classdef ParameterManager < handle
             %updateStructs)
             type = obj.handles.types_popup.Value;
             if obj.numLoci > 1 && obj.mutating
-                obj.handles.numTypes_box.String = 2;
+                obj.handles.num_types_box.String = sprintf('%d', 2^obj.numLoci);
                 obj.handles.param_1_box.String = obj.s;
                 obj.handles.param_2_box.String = obj.e;
                 if ~obj.classConstants(obj.currentModel).atCapacity
@@ -224,7 +229,7 @@ classdef ParameterManager < handle
                 end
                 obj.handles.loci_box.String = obj.numLoci;
             else
-                obj.handles.numTypes_box.String = obj.numTypes;
+                obj.handles.num_types_box.String = obj.numTypes;
                 obj.handles.param_1_box.String = obj.modelParameters(obj.currentModel).Param1(type);
                 obj.handles.param_2_box.String = obj.modelParameters(obj.currentModel).Param2(type);
                 obj.handles.init_pop_box.String = obj.modelParameters(obj.currentModel).Ninit(type);
@@ -334,7 +339,7 @@ classdef ParameterManager < handle
             ok = ~(isnan(str2double(obj.handles.param_1_box.String)) || ...
                isnan(str2double(obj.handles.param_2_box.String)) || ...
                isnan(str2double(obj.handles.init_pop_box.String)) || ...
-               isnan(str2double(obj.handles.numTypes_box.String)) || ...
+               isnan(str2double(obj.handles.num_types_box.String)) || ...
                isnan(str2double(obj.handles.population_box.String)));
         end
 

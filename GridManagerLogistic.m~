@@ -22,27 +22,26 @@ classdef GridManagerLogistic < GridManagerAbstract
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [changed, h] = getNext(obj)
+        function [mat, changed, t, h] = getNext(obj)
             tempVec = obj.totalCount(:, obj.timestep);
             for i = 1:sum(tempVec)
                 birthRates = obj.Param1.*(1-sum(tempVec)/obj.maxSize);
                 %perform death events
-                while max(tempVec) > 0
+                while 1
+                    if min(tempVec) == 0
+                        break;
+                    end
                     totRates = tempVec.*(birthRates + obj.Param2);
-                    [chosenType, num] = obj.weightedSelection(totRates);
+                    chosenType = obj.weightedSelection(totRates);
                     if num + birthRates(chosenType)*tempVec(chosenType) > 0 && sum(tempVec) < obj.maxSize
                         %no death event
                         break;
-                    else
-                        %perform death event
+                    else %perform death event
                         if obj.matrixOn && tempVec(chosenType) > 0
                             obj.changeMatrix(obj.getRandomOfType(chosenType), 0);
                         end
                         tempVec(chosenType) = max(0, tempVec(chosenType) - 1);
                     end
-                end
-                if max(tempVec) == 0
-                    break;
                 end
                 %perform birth events
                 if obj.matrixOn
@@ -69,7 +68,7 @@ classdef GridManagerLogistic < GridManagerAbstract
             end
             %then, include all computation updates
             obj.totalCount(:, obj.timestep + 1) = tempVec;
-            [changed, h] = obj.getNextCleanup();
+            [mat, changed, t, h] = obj.getNextCleanup();
         end
         
         %Overriden method to account for fact that fitness is determined by

@@ -63,7 +63,11 @@ function run_button_Callback(hObject, eventdata, handles)
 if handles.f.UserData.stepping
     return;
 end
-if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && handles.f.UserData.verifyParameters(handles)
+errorMessage = handles.f.UserData.verifyParameters(handles);
+if ~isempty(errorMessage)
+    warndlg(errorMessage);
+end
+if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && isempty(errorMessage)
     handles.f.UserData.run(handles, 0);
 elseif ~handles.f.UserData.evolving && handles.f.UserData.paused %continue
     handles.f.UserData.continueRunning(handles);
@@ -245,21 +249,15 @@ end
 function genetics_button_Callback(hObject, eventdata, handles)
 % Executes on button press in genetics_button.
 handles.f.UserData.parameterManager.updateBasicParameters();
-if handles.genetics_button.Value
-    handles.f.UserData.toggleVisible(handles);
-    handles.mutation_panel.Visible = 'on';
-    handles.num_types_string.String = 'Number of Alleles:';
-    handles.params_string.String =  'Parameters For Allele:';
-else
-    handles.f.UserData.toggleVisible(handles);
-    handles.mutation_panel.Visible = 'off';
-    handles.num_types_string.String = 'Number of Types:';
-    handles.params_string.String =  'Parameters For Type:';
-end 
+handles.f.UserData.toggleVisible(handles);
 
 function loci_box_Callback(hObject, eventdata, handles)
 % Executes when number of loci is changed
-handles.f.UserData.parameterManager.updateMultipleLoci();
+m = handles.f.UserData.parameterManager.updateMultipleLoci();
+if ~isempty(m)
+    warndlg(m);
+    return;
+end
 handles.f.UserData.toggleVisible(handles);
 handles.f.UserData.parameterManager.updateBoxes();
 
@@ -282,7 +280,7 @@ if ~handles.f.UserData.stepping && ~handles.f.UserData.evolving
         handles.reset_button.BackgroundColor = [.25 .25 .25];
         handles.step_button.BackgroundColor = [.25 .25 .25];
         drawnow;
-        [matrix, c, t, halt] = handles.f.UserData.gridManager.getNext();
+        [c, halt] = handles.f.UserData.gridManager.getNext();
         handles.f.UserData.drawIteration(c, handles, 0);
         handles.f.UserData.stepping = 0;
         handles.run_button.Enable = 'on';

@@ -119,25 +119,25 @@ classdef GUIHelper < handle
 
         end
 
-        function parametersClear = verifyParameters(obj, handles)
+        function message = verifyParameters(obj, handles)
             %This function makes sure that all of the input boxes are aligned with the
             %expected inputs. This function is called only when the run button is
             %pressed
             
-            parametersClear = 0;
             if obj.parameterManager.mutating && (obj.parameterManager.numLoci > obj.parameterManager.maxNumLoci)
-                obj.parameterManager.numLoci = obj.parameterManager.maxNumLoci;
-                warndlg(sprintf('ERROR: The number of loci must be no greater than %d.', obj.parameterManager.maxNumLoci));
+                message = sprintf('ERROR: The number of loci must be no greater than %d.', obj.parameterManager.maxNumLoci);
             elseif ~obj.parameterManager.updateMatrixProperties()
-                warndlg(sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than 25,000. Population size must be at least 16.', obj.parameterManager.maxPopSize));
+                message = sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than %d. Population size must be at least 16.', obj.parameterManager.maxPlottingPopSize, obj.parameterManager.maxPopSize);
             elseif ~obj.parameterManager.verifyAllBoxesClean();
-                warndlg('ERROR: All input must be numerical.');
+                message = 'ERROR: All input must be numerical.';
             elseif obj.parameterManager.mutating && obj.parameterManager.numLoci > 1 && obj.parameterManager.s < -1;
-                warndlg('ERROR: S must be no less than -1!');
+                message = 'ERROR: S must be no less than -1!';
             elseif ~obj.parameterManager.verifySizeOk()
-                warndlg(sprintf('ERROR: Initial Populations must sum to %d for constant size models (Moran, Wright-Fisher), and must be no greater than %d for non-constant size models (Exponential, Logistic)', obj.parameterManager.popSize, obj.parameterManager.popSize));
-            else    
-                parametersClear = 1;
+                message = sprintf('ERROR: Initial Populations must sum to %d for constant size models (Moran, Wright-Fisher), and must be no greater than %d for non-constant size models (Exponential, Logistic)', obj.parameterManager.popSize, obj.parameterManager.popSize);
+            elseif (handles.plot_button_age.Value && ~obj.parameterManager.matrixOn) || (handles.plot_button_age.Value && obj.parameterManager.getNumTypes() > 16)
+                message = 'ERROR: In order to plot the age distribution, you need to turn the Petri Dish on. You cannot turn the Petri Dish on if the number of types is at least 16.';
+            else
+                message = '';
             end
         end
 
@@ -191,12 +191,25 @@ classdef GUIHelper < handle
             %the current input state
             assert(nargin == 2);
             handles.recombination_panel.Visible = 'off';
-            if (obj.parameterManager.numLoci > 1) && obj.parameterManager.mutating
+            
+            %mutating or not
+            if obj.parameterManager.mutating               
+                handles.mutation_panel.Visible = 'on';
+                handles.num_types_string.String = 'Number of Alleles:';
+                handles.params_string.String =  'Parameters For Allele:';
+            else
+                handles.mutation_panel.Visible = 'off';
+                handles.num_types_string.String = 'Number of Types:';
+                handles.params_string.String =  'Parameters For Type:';
+            end
+            %numLoci > 1 or not
+            if obj.parameterManager.mutating && (obj.parameterManager.numLoci > 1)
                 %popup
                 handles.types_popup.Visible = 'off';
                 handles.params_string.Visible=  'off';
                 %num_types
                 handles.num_types_box.Style = 'text';
+                handles.num_types_string.String = 'Number of Types:';
                 handles.init_pop_box.Style = 'text';
                 %initial frequencies
                 handles.initial_frequencies_button.Visible = 'on';
@@ -331,12 +344,12 @@ classdef GUIHelper < handle
             end
             drawnow;
             while obj.evolving
-               [matrix, c, t, halt] = obj.gridManager.getNext();
+               [c, halt] = obj.gridManager.getNext();
                obj.drawIteration(c, handles, firstRun);
                firstRun = 0;
-                if runOnce || halt
-                    break
-                end
+               if runOnce || halt
+                   break;
+               end
             end
         end
 
@@ -349,7 +362,7 @@ classdef GUIHelper < handle
                 for p = perm
                     %Change the color of the rectangle objects
                     %appropriately.
-                    [i, j] = ind2sub(sqrt(numel(obj.gridManager.matrix)), p);
+                    [i, j] = ind2sub(size(obj.gridManager.matrix), p);
                     if obj.gridManager.matrix(i,j) == 0
                         obj.rects{i,j}.Visible = 'off';
                     else
@@ -437,11 +450,7 @@ classdef GUIHelper < handle
             %This function executes the simulation and is called directly
             %by the run button callback
             
-            %We cannnot run age_dist mode if we are not also in matrixOn mode
-            if (handles.plot_button_age.Value && ~obj.parameterManager.matrixOn) || (handles.plot_button_age.Value && obj.parameterManager.getNumTypes() > 16)
-                warndlg('ERROR: In order to plot the age distribution, you need to turn the Petri Dish on. You cannot turn the Petri Dish on if the number of types is at least 16.');
-                return;
-            end
+
             %If the number of types is greater than 16, turn petri dish off
             if obj.parameterManager.getNumTypes() > 16
                 handles.page_button.Enable = 'on';

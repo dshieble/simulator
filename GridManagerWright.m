@@ -26,7 +26,7 @@ classdef GridManagerWright < GridManagerAbstract
         %changed - entries in matrix that have changed
         %t - the timestep
         %h - whether or not we should halt
-        function [mat, changed, t, h] = getNext(obj)
+        function [changed, h] = getNext(obj)
             %For each cell, replace it with a multinomially chosen type where 
             %probabilities are determined based on Param1 and current count.
             %Updates are based on the obj.totalCount parameter
@@ -44,7 +44,7 @@ classdef GridManagerWright < GridManagerAbstract
                 obj.resetMatrix(reshape(long_mat, size(obj.matrix,1), size(obj.matrix,2)));
             end
             obj.totalCount(:, obj.timestep + 1) = new_counts;
-            [mat, changed, t, h] = obj.getNextCleanup();
+            [changed, h] = obj.getNextCleanup();
         end
        
 

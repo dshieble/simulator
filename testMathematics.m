@@ -27,7 +27,7 @@ function moranTest1()
             moranManager = GridManagerMoran(popSize, [(1) (popSize - 1)], MM, matrixOn, spatialOn, edgesOn, birthRate, 0);
             h = 0;
             while ~h
-                [~, ~, t, h] = moranManager.getNext();
+                [c, h] = moranManager.getNext();
             end
             moranResult(i) = find(moranManager.totalCount(:,end));
         end
@@ -52,7 +52,7 @@ function wrightTest1()
             wrightManager = GridManagerWright(popSize, [(1) (popSize - 1)], MM, matrixOn, spatialOn, edgesOn,  fitness, 0);
             h = 0;
             while ~h
-                [~, ~, ~, h] = wrightManager.getNext();
+                [c, h] = wrightManager.getNext();
             end
             wrightResult(i) = find(wrightManager.totalCount(:,end));
         end
@@ -83,7 +83,7 @@ function wrightTest2()
                     wrightManager = GridManagerWright(N(j), [(1) (N(j) - 1)], MM, matrixOn, spatialOn, edgesOn, f, 0);
                     h = 0;
                     while ~h
-                        [~, ~, ~, h] = wrightManager.getNext();
+                        [c, h] = wrightManager.getNext();
                     end
                     count = count + (wrightManager.totalCount(1, wrightManager.timestep)>0);
                 end
@@ -120,7 +120,7 @@ function moranTest2()
                     moranManager = GridManagerMoran(N(j), [(1) (N(j) - 1)], MM, matrixOn, spatialOn, edgesOn, b, 0);
                     h = 0;
                     while ~h
-                        [~, ~, ~, h] = moranManager.getNext();
+                        [c, h] = moranManager.getNext();
                     end
                     count = count + (moranManager.totalCount(1, moranManager.timestep)>0);
                 end
@@ -154,7 +154,8 @@ function expTest()
             counts{i} = [];
             t = 1;
             while ~h && t<30
-                [~, ~, t, h] = expManager.getNext();
+                [c, h] = expManager.getNext();
+                t = expManager.timestep;
                 counts{i} = [counts{i} sum(expManager.totalCount(:,t))];
             end
         end
@@ -196,7 +197,8 @@ function logTest()
             counts{i} = [];
             t = 1;
             for iter = 1:num_iter %doesn't terminate right now
-                [~, ~, t, h] = logManager.getNext();
+                [c, h] = logManager.getNext();
+                t = logManager.timestep;
                 counts{i} = [counts{i} sum(logManager.totalCount(:,t))];
             end
         end
