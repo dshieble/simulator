@@ -22,85 +22,63 @@ classdef MutationManager < handle
             obj.numLoci = numLoci;
             obj.recombining = recombination;
             obj.recombinationNumber = recombinationNumber;
-            assert(all(sum(obj.mutationMatrix) == 1), 'ASSERTION ERROR: Columns of Mutation Matrix must sum to 1.');
+            assert(all(sum(obj.mutationMatrix)-1 < 10e3), 'ASSERTION ERROR: Columns of Mutation Matrix must sum to 1.');
             if obj.numLoci > 1 && obj.mutating
             	assert(all(size(obj.mutationMatrix) == [2 2]), 'ASSERTION ERROR: If numLoci > 1, Mutation Matrix must be 2x2');
             end
 
         end
+
         
-        %TODO: Simplify this function
-        %TODO: Add more comments to the below functions
         %Accepts a gridManager, updates the matrix and totalCount
         %parameters of the gridManager based on the mutation parameters
-        function mutate(obj, gridManager)
+        function mutateGeneration(obj, gridManager)
             if obj.mutating
-                if gridManager.matrixOn %Mutate each cell individually
-                    for i = 1:numel(gridManager.matrix)
-                        type = gridManager.matrix(i)-1;
-                        newType = 0;
-                        if type >= 0
-                            if obj.numLoci == 1 %choose new type with weighted random selection
-                                num = rand();
-                                while num > 0
-                                    newType = newType + 1;
-                                    num = num - obj.mutationMatrix(newType, gridManager.matrix(i));
-                                end
-                            else %mutate each allele seperately
-                                for j = 0:(obj.numLoci-1)
-                                    allele = obj.getNthAllele(type, j);
-                                    num = rand();
-                                    newAllele = -1;
-                                    while num > 0
-                                        newAllele = newAllele + 1;
-                                        num = num - obj.mutationMatrix(newAllele + 1, allele + 1);
-                                    end
-                                    newType = newType + newAllele*(2^j);
-                                end
-                                newType = newType + 1;
-                            end
-                            gridManager.mutateMatrix(i, newType);
-                        end
+                if gridManager.matrixOn %plotting
+                    for index = 1:numel(gridManager.matrix)
+                        obj.atomicMutation(gridManager, index, gridManager.matrix(index));
                     end
-                    tempVec = zeros(1,gridManager.numTypes);
-                    for i = 1:gridManager.numTypes
-                        tempVec(i) = numel(find(gridManager.matrix == i));
-                    end
-                    gridManager.setTotalCount(tempVec);
                 else %non-plotting
-                    tempVec = zeros(1, gridManager.numTypes);
-                    if obj.numLoci == 1
-                        for i = 1:gridManager.numTypes
-                            tempVec = tempVec + ...
-                                mnrnd(gridManager.totalCount(i, gridManager.timestep), obj.mutationMatrix(:,i));
-                        end
-                        
-                    elseif obj.numLoci > 1 %currently written with the assumption that 2^numLoci is close to numel(population)
-                        tempVec = gridManager.totalCount(:, gridManager.timestep);
-                        for i = 1:gridManager.numTypes
-                            for j = 1:gridManager.totalCount(i, gridManager.timestep)
-                                organism = i - 1;
-                                for k = 1:log2(gridManager.numTypes)
-                                    if bitget(organism, k) %if allele is 1
-                                        if rand() < obj.mutationMatrix(1,2)
-                                            organism = bitset(organism, k,0);
-                                        end
-                                    else %if allele is 0
-                                        if rand() < obj.mutationMatrix(2,1)
-                                            organism = bitset(organism, k, 1);
-                                        end
-                                    end
-                                end
-                                assert(organism<=gridManager.numTypes);
-                                tempVec(i) = tempVec(i) - 1;
-                                tempVec(organism + 1) = tempVec(organism + 1) + 1;
-                            end
+                    for type = 1:gridManager.numTypes
+                        for o = 1:gridManager.totalCount(type, gridManager.timestep)
+                            obj.atomicMutation(gridManager, 0, type);
                         end
                     end
-                    gridManager.setTotalCount(tempVec);
                 end
             end
         end
+        
+        %Performs an atomic mutation
+        function atomicMutation(obj, gridManager, ind, oldType)
+            if obj.mutating
+                newType = 0;
+                if obj.numLoci == 1 %choose new type with weighted random selection
+                    num = rand();
+                    while num > 0
+                        newType = newType + 1;
+                        num = num - obj.mutationMatrix(newType, oldType);
+                    end
+                else %mutate each allele seperately
+                    for i = 0:(obj.numLoci-1)
+                        allele = obj.getNthAllele(oldType - 1, i);
+                        num = rand();
+                        newAllele = -1;
+                        while num > 0
+                            newAllele = newAllele + 1;
+                            num = num - obj.mutationMatrix(newAllele + 1, allele + 1);
+                        end
+                        newType = newType + newAllele*(2^i);
+                    end
+                    newType = newType + 1;
+                end
+                gridManager.mutate(ind, oldType, newType)
+            end
+        end
+        
+
+
+            
+        
         
         %Performs a generational recombination
         function recombination(obj, gridManager)

@@ -1,12 +1,15 @@
-classdef GridManagerLogistic < GridManagerAbstract
+classdef GridManagerLogistic < GridManagerLogExpAbstract
 %This class is an implementation of the GridManager class for the Logistic
 %model
+%The meat of this class is in the GridManagerLogExpAbstract file
     
-    properties (Constant) %See GridManagerAbstract for description
+    properties (Constant)
         Name = 'Logistic';
         OverlappingGenerations = 1;
         ParamName1 = 'Birth Rate';
         ParamName2 = 'Death Rate';
+        ParamBounds1 = [0 1];
+        ParamBounds2 = [0 1];
         atCapacity = 0;
         plottingEnabled = 1;
     end
@@ -14,74 +17,11 @@ classdef GridManagerLogistic < GridManagerAbstract
     methods (Access = public)
         
         function obj = GridManagerLogistic(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d)
-            obj@GridManagerAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
-        end
-        
-        %See GridManagerAbstract
-        %mat - new updated matrix
-        %changed - entries in matrix that have changed
-        %t - the timestep
-        %h - whether or not we should halt
-        function [changed, h] = getNext(obj)
-            tempVec = obj.totalCount(:, obj.timestep);
-            for i = 1:sum(tempVec)
-                birthRates = obj.Param1.*(1-sum(tempVec)/obj.maxSize);
-                %perform death events
-                while max(tempVec) > 0
-                    totRates = tempVec.*(birthRates + obj.Param2);
-                    [chosenType, num] = obj.weightedSelection(totRates);
-                    if num + birthRates(chosenType)*tempVec(chosenType) > 0 && sum(tempVec) < obj.maxSize
-                        %no death event
-                        break;
-                    else
-                        %perform death event
-                        if obj.matrixOn && tempVec(chosenType) > 0
-                            obj.changeMatrix(obj.getRandomOfType(chosenType), 0);
-                        end
-                        tempVec(chosenType) = max(0, tempVec(chosenType) - 1);
-                    end
-                end
-                if max(tempVec) == 0
-                    break;
-                end
-                %perform birth events
-                if obj.matrixOn
-                    %Choose a cell of the chosen type, get the
-                    %neighbors of that cell. If any neighbor is
-                    %free, select. Otherwise, randomly select a
-                    %neighbor weighted by death rate. Replace the
-                    %neighbor cell with the chosen type
-                    if obj.spatialOn
-                        [a, b] = ind2sub(size(obj.matrix), obj.getRandomOfType(chosenType));
-                        v = obj.getNeighborWeighted(a, b, obj.Param2);
-                        ind = sub2ind(size(obj.matrix), v(1), v(2));
-                        deadType = obj.matrix(ind);
-                        if deadType ~= 0
-                            tempVec(deadType) = tempVec(deadType) - 1;
-                        end
-                        obj.changeMatrix(ind, chosenType);
-                    else
-                        %Change a free cell to the chosen type
-                        obj.changeMatrix(obj.getFree(), chosenType);
-                    end
-                end
-                tempVec(chosenType) = tempVec(chosenType) + 1;
-            end
-            %then, include all computation updates
-            obj.totalCount(:, obj.timestep + 1) = tempVec;
-            [changed, h] = obj.getNextCleanup();
-        end
-        
-        %Overriden method to account for fact that fitness is determined by
-        %difference between birth and death rates here
-        function updateParams(obj)
-            updateParams@GridManagerAbstract(obj);
-            meanFitness = zeros(1,obj.numTypes);
-            for i = 1:obj.numTypes
-                meanFitness(i) = (obj.Param1(i)-obj.Param2(i))*obj.percentCount(i, obj.timestep); 
-            end
-            obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
+            obj@GridManagerLogExpAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
 
+        function birthRates = getBirthRates(obj)
+        	birthRates = obj.Param1.*(1-sum(obj.totalCount(:,obj.timestep))/obj.maxSize) + 1e-6; %necessary for weighted selection
+        end
     end
 end

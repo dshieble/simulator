@@ -47,6 +47,8 @@ classdef GUIHelper < handle
                         obj.getConstantProperty(names{i}, 'OverlappingGenerations');
                         obj.getConstantProperty(names{i}, 'ParamName1');
                         obj.getConstantProperty(names{i}, 'ParamName2');
+                        obj.getConstantProperty(names{i}, 'ParamBounds1');
+                        obj.getConstantProperty(names{i}, 'ParamBounds2');
                         obj.getConstantProperty(names{i}, 'atCapacity');
                         obj.getConstantProperty(names{i}, 'plottingEnabled');
                     catch e
@@ -69,6 +71,8 @@ classdef GUIHelper < handle
                 'OverlappingGenerations', repmat({[]}, 1, length(classNames)),...
                 'ParamName1', repmat({[]}, 1, length(classNames)),...
                 'ParamName2', repmat({[]}, 1, length(classNames)),...
+                'ParamBounds1', repmat({[]}, 1, length(classNames)),...
+                'ParamBounds2', repmat({[]}, 1, length(classNames)),...
                 'atCapacity', repmat({[]}, 1, length(classNames)),...
                 'plottingEnabled', repmat({[]}, 1, length(classNames))...
             );
@@ -78,6 +82,8 @@ classdef GUIHelper < handle
                 classConstants(i).OverlappingGenerations = obj.getConstantProperty(classNames{i}, 'OverlappingGenerations');
                 classConstants(i).ParamName1 = obj.getConstantProperty(classNames{i}, 'ParamName1');
                 classConstants(i).ParamName2 = obj.getConstantProperty(classNames{i}, 'ParamName2');
+                classConstants(i).ParamBounds1 = obj.getConstantProperty(classNames{i}, 'ParamBounds1');
+                classConstants(i).ParamBounds2 = obj.getConstantProperty(classNames{i}, 'ParamBounds2');
                 classConstants(i).atCapacity = obj.getConstantProperty(classNames{i}, 'atCapacity');
                 classConstants(i).plottingEnabled = obj.getConstantProperty(classNames{i}, 'plottingEnabled');
             end
@@ -406,7 +412,7 @@ classdef GUIHelper < handle
                 vec = obj.gridManager.ageStructure{end};
                 y_axis_label = 'Proportion of Organisms';
             else
-                vec = obj.gridManager.overall_mean_fitness(:)';
+                vec = obj.gridManager.overallMeanFitness(:)';
                 y_axis_label = 'Mean Fitness';
             end
             %Handle logistic plotting

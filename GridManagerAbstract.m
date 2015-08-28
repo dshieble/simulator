@@ -75,7 +75,7 @@ classdef (Abstract) GridManagerAbstract < handle
                     i = 1;
                     for type = 1:length(Ninit)
                         n = Ninit(type);
-                        obj.changeMatrix(r(i:n+i-1), type);
+                        obj.matrix(r(i:n+i-1)) =  type;
                         i = i + n;
                     end
                 else %non-static models, place founding cells in center
@@ -86,7 +86,7 @@ classdef (Abstract) GridManagerAbstract < handle
                     origVec = origVec(randperm(length(origVec)));
                     ind = obj.getCenter();
                     for i = 1:length(origVec)
-                        obj.changeMatrix(ind, origVec(i));
+                        obj.matrix(ind) = origVec(i);
                         [a, b] = ind2sub(size(obj.matrix), ind);
                         ind = obj.getNearestFree(a,b);
                     end
@@ -120,18 +120,48 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.updateParams();
         end
       
-        %This function is called at the end of getNext by all of the child
-        %classes. It instantiates the output variables and increments the
-        %timestep. 
-        %
-        %mat - new updated matrix
+        %A method implemented by all of the child GridManager class.
+        %This method updates obj.totalCount for the new timestep, and, if
+        %matrixOn is enabled, also updates the GridManager's petri dish
         %changed - entries in matrix that have changed
-        %t - the timestep
-        %h - whether or not the model should halt
-        function [changed, h] = getNextCleanup(obj)
+        %h - whether or not we should halt
+        function [changed, h] = getNext(obj)
+            assert(obj.OverlappingGenerations == 1, 'ERROR: getNext not overriden by a non-Overlapping Generations class');
+            obj.getNextSetup();
+            for i = 1:sum(obj.totalCount(:, obj.timestep))
+                obj.reproductiveEvent();
+                if max(obj.totalCount(:, obj.timestep)) == 0
+                    break;
+                end
+            end
+            %then, include all computation updates
+            [changed, h] = obj.getNextCleanup();
+        end  
+        
+        %A method that should be left unimplemented in any
+        %non-OverlappingGenerations class, and should be implemented in any
+        %OverlappingGenerations class
+        function reproductiveEvent(obj)
+            assert(obj.OverlappingGenerations == 0, 'ERROR: reproductiveEvent called in an OverlappingGenerations class');
+        end
+        
+        
+        %Called at the beginning of the getNext method to set up and
+        %increment the timestep
+        function getNextSetup(obj)
+            assert(min(obj.totalCount(:, obj.timestep)) >= 0);
+            obj.totalCount(:, obj.timestep + 1) = obj.totalCount(:, obj.timestep);
             obj.timestep = obj.timestep + 1;
-            obj.mutationManager.mutate(obj);
-            obj.mutationManager.recombination(obj);
+        end
+            
+        
+        %This function is called at the end of getNext by all of the child
+        %classes. It instantiates the output variables and performs some cleanup 
+        % changed - entries in matrix that have changed
+        % h - whether or not the model should halt
+        function [changed, h] = getNextCleanup(obj)
+%             obj.mutationManager.mutate(obj);
+%             obj.mutationManager.recombination(obj);
             if ~obj.matrixOn
                 changed = [];
             else
@@ -142,8 +172,6 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.saveData.totalCount = obj.totalCount;
             obj.saveData.totalCount = obj.totalCount;
             obj.saveData.ageStructure = obj.ageStructure;
-            mat = obj.matrix;
-            t = obj.timestep;
             h = max(obj.totalCount(:, obj.timestep))>=obj.maxSize;
             h = h && ~obj.mutationManager.mutating || (sum(obj.totalCount(:, obj.timestep)) == 0);
         end
@@ -249,7 +277,7 @@ classdef (Abstract) GridManagerAbstract < handle
         %to the chance of killing each type
         function RowCol = getNeighborWeighted(obj, a, b, typeWeighting)
             neighbors = obj.getNeighbors(a, b);
-            neighbors = neighbors(:, randperm(length(neighbors))); %prevent preferential treatment
+            neighbors = neighbors(:, randperm(size(neighbors, 2))); %prevent preferential treatment
             weights = zeros(1, length(neighbors));
             for w = 1:length(weights)
                 t = obj.matrix(neighbors(1,w), neighbors(2,w));
@@ -260,7 +288,11 @@ classdef (Abstract) GridManagerAbstract < handle
                     weights(w) = typeWeighting(t);
                 end
             end
-            index = obj.weightedSelection(weights);
+            if all(weights == 0)
+                index = randi(length(weights));
+            else
+                index = obj.weightedSelection(weights);
+            end
             RowCol = [neighbors(1,index), neighbors(2,index)];
         end
 
@@ -295,17 +327,9 @@ classdef (Abstract) GridManagerAbstract < handle
         %Returns an index in the vector vec, weighted by the contents of
         %vec
         function [ind, num] = weightedSelection(obj, vec)
-            %account for negative weights
-            if min(vec) < 0
-                vec = vec + abs(min(vec));
-            end
-            num = rand()*sum(vec);
-            %account for flat weights
-            if sum(vec) == 0
-                ind = randi(length(vec));
-                return;
-            end
+            %TODO: Make sure that weights are never negative or all zero
             %do weighted selection
+            num = rand()*sum(vec);
             ind = 0;
             while num > 0
                 ind = ind + 1;
@@ -313,51 +337,87 @@ classdef (Abstract) GridManagerAbstract < handle
             end
         end
         
-        
         %Returns a random type from among the valid types for this matrix
         function type = getRandomType(obj)
             type = randi(obj.num_types);
         end
        
-        %Changes an element in the matrix and resets the age
-        function changeMatrix(obj, ind, new)
-            assert(obj.matrixOn == 1);
-            assert(numel(new) == 1);
-            assert((new >= 0) && (new <= obj.numTypes) && (round(new) == new), 'ERROR: New type must be an integer between 0 and numTypes');
-            obj.matrix(ind) = new;
-            if new > 0
+        %Externally facing Birthing function
+        % - Adds an organism to matrix
+        % - Updates ageMatrix
+        % - Performs mutation
+        % - Updates totalCount for current timestep
+        % - If matrixOn and the place that we are birthing to is occupied,
+        %   then this function calls kill
+        % ind - index in matrix to place the new cell
+        % type - new type
+        function birth(obj, ind, type)
+            assert((ind == 0 && ~obj.matrixOn) || (ind > 0 && obj.matrixOn), sprintf('index: %d type: %d', ind, type));
+            assert((type > 0) && (type <= obj.numTypes) && (round(type) == type), 'ERROR: New type must be an integer between 1 and numTypes');
+            obj.totalCount(type, obj.timestep) = obj.totalCount(type,obj.timestep) + 1;
+            if obj.matrixOn
+                %If cell is occupied, kill whats currently in it
+                if obj.matrix(ind) ~= 0
+                    obj.kill(ind, obj.matrix(ind));
+                end
+                obj.matrix(ind) = type;
                 obj.ageMatrix(ind) = 0;
-            else
+            end
+            obj.mutationManager.atomicMutation(obj, ind, type);
+        end
+        
+        % Externally facing Killing function
+        % - Removes an organism from matrix
+        % - Updates ageMatrix
+        % - Updates totalCount for current timestep
+        % ind - index in matrix of dead cell (0 if ~matrixOn) 
+        % type - dead type
+        function kill(obj, ind, type)
+            assert((ind == 0 && ~obj.matrixOn) || (ind > 0 && obj.matrixOn && obj.matrix(ind) == type));
+            assert((type > 0) && (type <= obj.numTypes) && (round(type) == type), 'ERROR: Kill type must be an integer between 1 and numTypes');
+            assert(obj.totalCount(type, obj.timestep) > 0, 'ERROR: Total count matrix is already 0 at the kill type');
+            obj.totalCount(type, obj.timestep) = obj.totalCount(type,obj.timestep) - 1;
+            if obj.matrixOn
+                obj.matrix(ind) = 0;
                 obj.ageMatrix(ind) = -1;
             end
         end
         
-        %Mutates an element in the matrix (changes it without changing its
-        %age)
-        function mutateMatrix(obj, ind, new)
-            assert(obj.matrixOn == 1);
-            assert(numel(new) == 1);
-            assert(obj.matrix(ind) ~= 0, 'ERROR: Cannot mutate an element that is currently zero');
-            assert(new ~= 0, 'ERROR: Cannot mutate an element to become zero');
-            assert(new >= 0 && new <= obj.numTypes && round(new) == new, 'ERROR: New type must be an integer between 0 and numTypes');
-            obj.matrix(ind) = new;
+        
+        %Externally facing mutating function - called by MutationManager
+        %functions
+        % - Changes cell in matrix
+        % - Updates totalCount for current timestep
+        % ind - index in matrix of mutating cell (0 if ~matrixOn) 
+        % oldType - current type of mutating cell
+        % newType - new type of mutating cell
+        function mutate(obj, ind, oldType, newType)
+            assert((ind == 0 && ~obj.matrixOn) || (ind > 0 && obj.matrixOn && obj.matrix(ind) == oldType));
+            assert((oldType > 0) && (oldType <= obj.numTypes) && (round(oldType) == oldType), 'ERROR: Old type must be an integer between 1 and numTypes');
+            assert((newType > 0) && (newType <= obj.numTypes) && (round(newType) == newType), 'ERROR: New type must be an integer between 1 and numTypes');
+            assert(obj.totalCount(oldType, obj.timestep) > 0, 'ERROR: There are no cells of the oldType');
+            obj.totalCount(oldType, obj.timestep) = obj.totalCount(oldType,obj.timestep) - 1;
+            obj.totalCount(newType, obj.timestep) = obj.totalCount(newType,obj.timestep) + 1;
+            if obj.matrixOn
+                obj.matrix(ind) = newType;
+            end
         end
         
-        %Resets the matrix to the input
-        function resetMatrix(obj, newMat)
-            assert(obj.matrixOn == 1);
-            assert(all(size(obj.matrix) == size(newMat)), 'ERROR: Dimensions of newMat are wrong');
-            assert(all(newMat(:) >= 0) && all(newMat(:) <= obj.numTypes) && all(round(newMat(:)) == newMat(:)), 'ERROR: newMat has invalid elements');
-            obj.matrix = newMat;
-            obj.ageMatrix = zeros(sqrt(obj.maxSize));
-            obj.ageMatrix(newMat == 0) = -1;
-        end
-        
-        %Sets the total count variable
-        function setTotalCount(obj, new)
-            assert(sum(new) <= obj.maxSize);
-            assert(all(new >= 0));
-            obj.totalCount(:, obj.timestep) = new;
+        % Resets the matrix and total count to the input
+        % Resets the age matrixc
+        % Mutates the matrix
+        function newMatVec(obj, newMat, newVec)
+            assert(sum(newVec) <= obj.maxSize, 'ERROR: The sum of newVecs elements is too large');
+            assert(all(newVec >= 0), 'ERROR: newVec has negative elements');
+            if obj.matrixOn
+                assert(all(size(obj.matrix) == size(newMat)), 'ERROR: Dimensions of newMat are wrong');
+                assert(all(newMat(:) >= 0) && all(newMat(:) <= obj.numTypes) && all(round(newMat(:)) == newMat(:)), 'ERROR: newMat has invalid elements');
+                obj.matrix = newMat;
+                obj.ageMatrix = zeros(sqrt(obj.maxSize));
+                obj.ageMatrix(newMat == 0) = -1;
+            end
+            obj.totalCount(:, obj.timestep) = newVec;
+            obj.mutationManager.mutateGeneration(obj);
         end
                     
         %Updates the totalCount, the percentCount, the overallMeanFitness and
@@ -365,7 +425,7 @@ classdef (Abstract) GridManagerAbstract < handle
         function updateParams(obj)
             meanFitness = zeros(1,obj.numTypes);
             for i = 1:obj.numTypes
-                obj.percentCount(i, obj.timestep) = obj.totalCount(i, obj.timestep)./numel(obj.matrix);
+                obj.percentCount(i, obj.timestep) = obj.totalCount(i, obj.timestep)./obj.maxSize;
                 meanFitness(i) = (obj.Param1(i))*obj.percentCount(i, obj.timestep); 
             end
             obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
@@ -375,23 +435,12 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.ageStructure{obj.timestep} = hist(ages, max(ages))./length(ages);
             end            
         end
-        
-        
-        
+
     end
     
     
     
-    methods (Abstract)        
-        %A method implemented by all of the child GridManager class.
-        %This method updates obj.totalCount for the new timestep, and, if
-        %matrixOn is enabled, also updates the GridManager's petri dish
-        %mat - new updated matrix
-        %changed - entries in matrix that have changed
-        %t - the timestep
-        %h - whether or not we should halt
-        [changed, h] = getNext(obj)
-    end
+
     
     
 end

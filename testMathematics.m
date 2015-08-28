@@ -3,11 +3,11 @@ function testMathematics()
     % This file is the analytical testing wrapper for the population dynamics
     % simulator. The tests contained in this file examine whether the Models
     % produce the expected theoretical behavior.
-    moranTest1();
-    wrightTest1();
-    wrightTest2();
-    moranTest2();
-    expTest();
+%     moranTest1();
+%     wrightTest1();
+%     wrightTest2();
+%     moranTest2();
+%     expTest();
     logTest();
 end
 
@@ -148,7 +148,7 @@ function expTest()
     death = [0.01 0.01];
     counts = cell(1,100);
     for matrixOn = 0:1
-        for i = 1:100
+        for i = 1:10
             expManager = GridManagerExp(Ntot, Ninit, MM, matrixOn, spatialOn, edgesOn, birth, death);
             h = 0;
             counts{i} = [];
@@ -187,7 +187,7 @@ function logTest()
     Ntot = 225;
     birth = [1 1];
     death = [0.01 0.01];
-    num_lines = 100;
+    num_lines = 3;
     counts = cell(1,num_lines);
     num_iter = 10;
     for matrixOn = 0:1

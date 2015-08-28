@@ -130,11 +130,20 @@ handles.f.UserData.parameterManager.updateStructs();
 
 function param_1_box_Callback(hObject, eventdata, handles)
 % Executes when parameter 1 is changed
-handles.f.UserData.parameterManager.updateStructs();
+m = handles.f.UserData.parameterManager.updateStructs();
+if ~isempty(m)
+    warndlg(m);
+    return;
+end
+
 
 function param_2_box_Callback(hObject, eventdata, handles)
 % Executes when parameter 2 is changed
-handles.f.UserData.parameterManager.updateStructs();
+m = handles.f.UserData.parameterManager.updateStructs();
+if ~isempty(m)
+    warndlg(m);
+    return;
+end
 
 function save_button_Callback(hObject, eventdata, handles)
 % Executes on button press in save_button.

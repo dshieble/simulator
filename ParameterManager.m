@@ -109,13 +109,21 @@ classdef ParameterManager < handle
         end
             
         
-        function updateStructs(obj)
+        function message = updateStructs(obj)
             %Updates the stored parameters to the box values
+            message = '';
             type = obj.handles.types_popup.Value;
             %logistic
             ninit_temp = str2double(obj.handles.init_pop_box.String);
             param_1_temp = str2double(obj.handles.param_1_box.String);
             param_2_temp = str2double(obj.handles.param_2_box.String);
+            if param_1_temp < obj.classConstants(obj.currentModel).ParamBounds1(1) || ...
+               param_1_temp > obj.classConstants(obj.currentModel).ParamBounds1(2)
+                message = sprintf('ERROR: %s must be betwen %d and %d',obj.classConstants(obj.currentModel).ParamName1, obj.classConstants(obj.currentModel).ParamBounds1(1),obj.classConstants(obj.currentModel).ParamBounds1(2));
+            elseif param_2_temp < obj.classConstants(obj.currentModel).ParamBounds2(1) || ...
+                   param_2_temp > obj.classConstants(obj.currentModel).ParamBounds2(2)
+                message = sprintf('ERROR: %s must be betwen %d and %d',obj.classConstants(obj.currentModel).ParamName2, obj.classConstants(obj.currentModel).ParamBounds2(1),obj.classConstants(obj.currentModel).ParamBounds2(2));            
+            end
             if obj.mutating && obj.numLoci > 1
                 if isnumeric(param_1_temp)
                     obj.s = param_1_temp;
@@ -127,10 +135,10 @@ classdef ParameterManager < handle
                 if isnumeric(ninit_temp)
                     obj.modelParameters(obj.currentModel).Ninit(type) = round(ninit_temp);
                 end
-                if isnumeric(param_1_temp)
+                if isnumeric(param_1_temp) && isempty(message)
                     obj.modelParameters(obj.currentModel).Param1(type) = param_1_temp;
                 end
-                if isnumeric(param_2_temp)
+                if isnumeric(param_2_temp) && isempty(message)
                     obj.modelParameters(obj.currentModel).Param2(type) = param_2_temp;
                 end
             end

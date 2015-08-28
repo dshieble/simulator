@@ -20,7 +20,7 @@ function testGridManagerAbstract(testCase)
            
     %edges on
     gridManager = GridManagerLogistic(25, [1 0 0 0 0], MM, 1, 1, 1, ones(1,5), zeros(1,5));
-    gridManager.resetMatrix(mat);
+    gridManager.newMatVec(mat,  hist(mat(mat~=0),5));
     
     verifyEqual(testCase,gridManager.matrix(gridManager.getFree), 0);
     verifyEqual(testCase,gridManager.matrix(gridManager.getRandomOfType(2)), 2);
@@ -40,13 +40,13 @@ function testGridManagerAbstract(testCase)
 
     %edges off
     gridManager = GridManagerLogistic(25, [1 0 0 0 0], MM, 1, 1, 0, ones(1,5), zeros(1,5));
-    gridManager.resetMatrix(mat);    
+    gridManager.newMatVec(mat,   hist(mat(mat~=0),5));
     verifyEqual(testCase,gridManager.getNearestOfType(2,1,4), 22);
     verifyEqual(testCase,gridManager.matrixDistance(7, 15), 3);
     verifyEqual(testCase,gridManager.isHomogenous(), false);
 
-    gridManager.resetMatrix(ones(5));    
-    verifyEqual(testCase,gridManager.isHomogenous(), false);
+    gridManager.newMatVec(ones(5), [25 0 0 0 0] );
+    verifyEqual(testCase,gridManager.isHomogenous(), true);
     
     verifyEqual(testCase,gridManager.getNeighbors(5,3), [5 1 5 4;2 3 4 3]);
     verifyEqual(testCase,gridManager.getNeighbors(1,1), [1 2 1 5;5 1 2 1]);
@@ -71,6 +71,19 @@ function testAutomatedSimulator(testCase)
     AutomatedSimulator('GridManagerExp', [4 0 0 0], [1 1 1 1], [0 0 0 0], 'totalPopSize', 16, 'matrixOn', 1, 'spatialOn', 1, 'edgesOn', 0);
     %Mutation
     AutomatedSimulator('GridManagerExp', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1);
+    for i = 1:3
+        M = rand(5); M = M./repmat(sum(M),5,1);
+        if all(sum(M)-1 < 10e3)
+            AutomatedSimulator('GridManagerExp', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 0);
+            AutomatedSimulator('GridManagerLogistic', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 0);
+            AutomatedSimulator('GridManagerMoran', [101 0 0 0 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 0);
+            AutomatedSimulator('GridManagerWright', [20 20 20 21 20], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 0);
+            AutomatedSimulator('GridManagerExp', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 100, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 1);
+            AutomatedSimulator('GridManagerLogistic', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 100, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 1);
+            AutomatedSimulator('GridManagerMoran', [100 0 0 0 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 100, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 1);
+            AutomatedSimulator('GridManagerWright', [20 20 20 20 20], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 100, 'mutating', 1, 'mutationMatrix', M, 'matrixOn', 1);
+        end
+    end
     AutomatedSimulator('GridManagerLogistic', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', ones(5)/5);
     AutomatedSimulator('GridManagerWright', [100 0 0 0], [1 1 0 0], [0 0 0 0], 'matrixOn', 1, 'totalPopSize', 100, 'mutating', 1, 'numLoci', 2);
     AutomatedSimulator('GridManagerMoran', [303 0 0 0], [1 1 0 0], [0 0 0 0], 'totalPopSize', 303, 'mutating', 1, 'numLoci', 2, 'mutationMatrix', ones(2)./2);
@@ -84,6 +97,13 @@ function testAutomatedSimulator(testCase)
     AutomatedSimulator('GridManagerMoran', [100 0], [1 1], [0.01 0.01], 'totalPopSize', 100, 'returnType', 'ageDist', 'matrixOn', 1);
     AutomatedSimulator('GridManagerWright', [0 0 6 30], [1 1 0 1], [0 0 0 0], 'totalPopSize', 36, 'returnType', 'ageDist', 'mutating', 1, 'matrixOn', 1, 'numLoci', 2);
     AutomatedSimulator('GridManagerExp', [1 1], [1 1], [0.01 0.01], 'totalPopSize', 100, 'returnType', 'ageDist', 'matrixOn', 1);
+    %Basic Log and Exp Behavior
+    out = AutomatedSimulator('GridManagerExp', [1 1], [0 1], [0.01 0.01], 'totalPopSize', 16, 'returnType', 'totalCount');
+    verifyEqual(testCase,out(end,end) == 15 || out(end,end) == 16, true);
+    out = AutomatedSimulator('GridManagerLogistic', [1 1], [0 1], [0.01 0.01], 'totalPopSize', 16, 'returnType', 'totalCount');
+    verifyEqual(testCase,out(end,end) == 15 || out(end,end) == 16, true);
+
+    
     
     %Expected Error Tests
     caughtError = @(e) ~isempty(strfind(e.message, 'ASSERTION ERROR')) || ~isempty(strfind(e.identifier, 'InputParser'));
@@ -123,8 +143,8 @@ function testAutomatedSimulator(testCase)
     	verifyEqual(testCase,caughtError(e7), true);
     end
 end
-
-function testGUICallbacks(testCase)
-    
-end
+% 
+% function testGUICallbacks(testCase)
+%     
+% end
 
