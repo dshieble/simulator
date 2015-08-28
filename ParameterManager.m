@@ -76,7 +76,7 @@ classdef ParameterManager < handle
             obj.initialFrequencies = [1 0];
             obj.numLoci = 1;
             obj.recombining = 0;
-            obj.recombinationNumber = 0;
+            obj.recombinationNumber = 1;
 
             %multiple loci params
             obj.s = -0.5;
@@ -92,10 +92,10 @@ classdef ParameterManager < handle
             %input values
             obj.mutating = obj.handles.genetics_button.Value;
             obj.recombining = obj.handles.recombination_check.Value;
-            obj.recombinationNumber = obj.handles.recombination_box.Value;
             obj.spatialOn = obj.handles.spatial_structure_check.Value;
             obj.edgesOn = ~obj.handles.remove_edges_check.Value;
-            
+            obj.recombinationNumber = obj.handles.recombination_box.Value;
+
             %current model
             if obj.handles.model1_button.Value
                 obj.currentModel = 1;

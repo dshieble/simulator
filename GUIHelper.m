@@ -274,6 +274,7 @@ classdef GUIHelper < handle
             handles.genetics_button.Enable = s;
             handles.spatial_structure_check.Enable = s;
             handles.recombination_check.Enable = s;
+            handles.recombination_box.Enable = s;
             handles.remove_edges_check.Enable = s;
             handles.model1_button.Enable = s;
             handles.model2_button.Enable = s;

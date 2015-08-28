@@ -88,6 +88,8 @@ function testAutomatedSimulator(testCase)
     AutomatedSimulator('GridManagerWright', [100 0 0 0], [1 1 0 0], [0 0 0 0], 'matrixOn', 1, 'totalPopSize', 100, 'mutating', 1, 'numLoci', 2);
     AutomatedSimulator('GridManagerMoran', [303 0 0 0], [1 1 0 0], [0 0 0 0], 'totalPopSize', 303, 'mutating', 1, 'numLoci', 2, 'mutationMatrix', ones(2)./2);
     %Recombination
+    AutomatedSimulator('GridManagerExp', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'Recombination', 1, 'matrixOn', 1);
+    AutomatedSimulator('GridManagerMoran', [303 0 0 0], [1 1 0 0], [0 0 0 0], 'totalPopSize', 303, 'mutating', 1, 'numLoci', 2, 'mutationMatrix', ones(2)./2,  'Recombination', 1, 'RecombinationNumber', 0.7, 'matrixOn', 1);
     AutomatedSimulator('GridManagerExp', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'Recombination', 1);
     AutomatedSimulator('GridManagerLogistic', [1 1 0 1 0], [1 1 0 0 0], [0.01 0.01 0.1 0.01 0.01], 'totalPopSize', 101, 'mutating', 1, 'mutationMatrix', ones(5)/5,  'Recombination', 1, 'RecombinationNumber', 0.3);
     AutomatedSimulator('GridManagerWright', [100 0 0 0], [1 1 0 0], [0 0 0 0], 'matrixOn', 1, 'totalPopSize', 100, 'mutating', 1, 'numLoci', 2,  'Recombination', 1);

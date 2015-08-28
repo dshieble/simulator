@@ -168,15 +168,6 @@ classdef (Abstract) GridManagerAbstract < handle
             assert(obj.OverlappingGenerations == 0, 'ERROR: reproductiveEvent called in an OverlappingGenerations class');
         end
 
-            
-        
-        %This function is called at the end of getNext by all of the child
-        %classes. It instantiates the output variables and performs some cleanup 
-        % changed - entries in matrix that have changed
-        % h - whether or not the model should halt
-        function [changed, h] = getNextCleanup(obj)
-
-        end
 
         
         %Returns a free square in the matrix
@@ -270,6 +261,17 @@ classdef (Abstract) GridManagerAbstract < handle
             end
             assert(length(indices) >= 2 && length(indices) <= 4, 'ERROR: Number of Neighbors is incorrect');
         end
+        
+        
+        %Get an occupied neighbor of the input cell.
+        function RowCol = getNeighborOccupied(obj, a, b)
+            neighbors = obj.getNeighbors(a, b);
+            neighbors = neighbors(:, randperm(size(neighbors, 2))); %prevent preferential treatment
+            weights = zeros(1, length(neighbors));
+            index = obj.weightedSelection(weights);
+            RowCol = [neighbors(1,index), neighbors(2,index)];
+        end
+        
         
         %Get the neighbors of the input cell. If any neighbor is
         %free, select it. Otherwise, randomly select a
@@ -366,6 +368,7 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.ageMatrix(ind) = 0;
             end
             obj.mutationManager.atomicMutation(obj, ind, type);
+            obj.mutationManager.atomicRecombination(obj, ind, type);
         end
         
         % Externally facing Killing function
@@ -420,6 +423,7 @@ classdef (Abstract) GridManagerAbstract < handle
             end
             obj.totalCount(:, obj.timestep) = newVec;
             obj.mutationManager.mutateGeneration(obj);
+            obj.mutationManager.recombineGeneration(obj);
         end
                     
         %Updates the totalCount, the percentCount, the overallMeanFitness and

@@ -14,7 +14,6 @@ classdef MutationManager < handle
     end
     
     methods (Access = public)
-        %% mutation
         
         %Basic Constructor for the MutationManager class
         function obj = MutationManager(mutating, mutationMatrix, numLoci, recombination, recombinationNumber)
@@ -76,46 +75,18 @@ classdef MutationManager < handle
             end
         end
         
-        
-        %% recombination
-        
-        %Performs a generational recombination
-        function recombineGeneration(obj, gridManager)
-            if obj.mutating && obj.recombining
-                if gridManager.matrixOn %plotting
-                    for index = 1:numel(gridManager.matrix)
-                        obj.atomicRecombination(gridManager, index, gridManager.matrix(index));
-                    end
-                else %non-plotting
-                    for type = 1:gridManager.numTypes
-                        for o = 1:gridManager.totalCount(type, gridManager.timestep)
-                            obj.atomicRecombination(gridManager, 0, type);
-                        end
-                    end
-                end
-            end
-        end
-        
-        
-        
+
         %Performs an atomic recombination by selecting a sister cell/sister
         %type and recombining the two
         function atomicRecombination(obj, gridManager, ind, oldType)
-            if obj.mutating && obj.recombining && (rand() < obj.recombinationNumber)
-                if gridManager.matrixOn && gridManager.spatialOn %limit possible recombination targets to neighbors
+            if obj.mutating && obj.recombining
+                if obj.matrixOn && obj.spatialOn
                     [a, b] = ind2sub(size(gridManager.matrix), ind);
-                    neighbors = gridManager.getNeighbors(a, b);
+                    neighbors = obj.getNeighbors(a, b);
                     for i = 1:size(neighbors,2)
-                        %remove all unoccupied neighbors
-                        if gridManager.matrix(neighbors(1,i), neighbors(2,i)) == 0
-                            neighbors = [neighbors(:,1:i-1) neighbors(:,i+1:end)];
-                        end
-                        if isempty(neighbors)
-                            return; %abort if no non-0 neighbors
-                        end
-                        neighbor = neighbors(:, randi(size(neighbors,2)));
-                        otherType = gridManager.matrix(neighbor(1), neighbor(2));
+                        if obj.mat
                     end
+                    
                 else
                 	otherType = gridManager.weightedSelection(gridManager.totalCount(:,end));
                 end
@@ -149,9 +120,73 @@ classdef MutationManager < handle
                 otherType = newNum1 + 1;
             end
         end
-
+        
+        
+        
+        %Performs a generational recombination
+        function recombineGeneration(obj, gridManager)
             
-          
+            
+            
+            
+            
+            if obj.mutating && obj.recombining && obj.numLoci > 1
+                if gridManager.matrixOn
+                    matrix = gridManager.matrix;
+                else
+                    matrix = [];
+                    for i = 1:gridManager.numTypes
+                        matrix = [matrix repmat(i, 1, gridManager.totalCount(i, gridManager.timestep))];
+                    end
+                    matrix = [matrix zeros(1,numel(gridManager.matrix) - sum(gridManager.totalCount(:, gridManager.timestep)))];
+                end
+                
+                indices = 1:numel(matrix);
+                indices = indices(matrix(:) > 0);
+                indices = indices(randperm(numel(indices)));
+                if mod(numel(indices),2) == 1
+                    indices(end) = [];
+                end
+                for i = 1:2:numel(indices)
+                    if rand() < obj.recombinationNumber
+                        ind1 = indices(i); ind2 = indices(i+1);
+                        assert((matrix(ind1)>0) && (matrix(ind2)>0))
+                        num1 = matrix(ind1) - 1; 
+                        num2 = matrix(ind2) - 1;
+                        if num1 ~= num2
+                            newNum1 = 0; newNum2 = 0;
+                            crossover = randi(obj.numLoci);
+                            for bit = 1:obj.numLoci
+                                if bit < crossover
+                                    %crossover!
+                                    newNum1 = bitset(newNum1, bit, bitget(num2, bit));
+                                    newNum2 = bitset(newNum2, bit, bitget(num1, bit));
+                                else
+                                    newNum1 = bitset(newNum1, bit, bitget(num1, bit));
+                                    newNum2 = bitset(newNum2, bit, bitget(num2, bit));
+                                end
+                            end
+                        else
+                            newNum1 = num1; newNum2 = num2;
+                        end
+                        %Change the fake Matrix as well as the actual
+                        %gridManager matrix
+                        matrix(ind1) = newNum1 + 1;
+                        matrix(ind2) = newNum2 + 1;
+                        if gridManager.matrixOn
+                            gridManager.mutateMatrix(ind1, newNum1 + 1);
+                            gridManager.mutateMatrix(ind2, newNum2 + 1);
+                        end
+                    end
+                end
+                tempVec = zeros(1,gridManager.numTypes);
+                for i = 1:gridManager.numTypes
+                    tempVec(i) = numel(find(gridManager.matrix == i));
+                end
+                gridManager.setTotalCount(tempVec);
+            end
+        end
+        
         %get the nth allele in a type (whether nth bit of number is 0 or 1)
         function [val] = getNthAllele(obj, x, n)
             val = bitand(bitshift(x,-n),1);
