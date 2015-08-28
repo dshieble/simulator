@@ -347,6 +347,11 @@ function remove_edges_check_Callback(hObject, eventdata, handles)
 % Executes on button press in remove_edges_check.
 handles.f.UserData.parameterManager.updateBasicParameters();
 
+function plot_button_log_Callback(hObject, eventdata, handles)
+% Executes on button press in plot_button_log.
+cla(handles.f.UserData.parameterManager.updateBasicParameters();
+
+
 %
 %
 %

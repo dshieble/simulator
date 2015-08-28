@@ -24,12 +24,9 @@ classdef GridManagerWright < GridManagerAbstract
         end
         
         %See GridManagerAbstract
-        %mat - new updated matrix
         %changed - entries in matrix that have changed
-        %t - the timestep
         %h - whether or not we should halt
-        function [changed, h] = getNext(obj)
-            obj.getNextSetup();
+        function getNextGeneration(obj)
             %For each cell, replace it with a multinomially chosen type where 
             %probabilities are determined based on Param1 and current count.
             %Updates are based on the obj.totalCount parameter
@@ -48,7 +45,6 @@ classdef GridManagerWright < GridManagerAbstract
                 newMat = reshape(longMat, size(obj.matrix,1), size(obj.matrix,2));
             end
             obj.newMatVec(newMat, newCounts);
-            [changed, h] = obj.getNextCleanup();
         end
        
 

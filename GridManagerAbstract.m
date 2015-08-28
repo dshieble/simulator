@@ -120,48 +120,19 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.updateParams();
         end
       
-        %A method implemented by all of the child GridManager class.
+                
+        
         %This method updates obj.totalCount for the new timestep, and, if
         %matrixOn is enabled, also updates the GridManager's petri dish
         %changed - entries in matrix that have changed
         %h - whether or not we should halt
         function [changed, h] = getNext(obj)
-            assert(obj.OverlappingGenerations == 1, 'ERROR: getNext not overriden by a non-Overlapping Generations class');
-            obj.getNextSetup();
-            for i = 1:sum(obj.totalCount(:, obj.timestep))
-                obj.reproductiveEvent();
-                if max(obj.totalCount(:, obj.timestep)) == 0
-                    break;
-                end
-            end
-            %then, include all computation updates
-            [changed, h] = obj.getNextCleanup();
-        end  
-        
-        %A method that should be left unimplemented in any
-        %non-OverlappingGenerations class, and should be implemented in any
-        %OverlappingGenerations class
-        function reproductiveEvent(obj)
-            assert(obj.OverlappingGenerations == 0, 'ERROR: reproductiveEvent called in an OverlappingGenerations class');
-        end
-        
-        
-        %Called at the beginning of the getNext method to set up and
-        %increment the timestep
-        function getNextSetup(obj)
             assert(min(obj.totalCount(:, obj.timestep)) >= 0);
             obj.totalCount(:, obj.timestep + 1) = obj.totalCount(:, obj.timestep);
             obj.timestep = obj.timestep + 1;
-        end
-            
-        
-        %This function is called at the end of getNext by all of the child
-        %classes. It instantiates the output variables and performs some cleanup 
-        % changed - entries in matrix that have changed
-        % h - whether or not the model should halt
-        function [changed, h] = getNextCleanup(obj)
-%             obj.mutationManager.mutate(obj);
-%             obj.mutationManager.recombination(obj);
+            obj.getNextGeneration();
+            %             obj.mutationManager.mutate(obj);
+            %             obj.mutationManager.recombination(obj);
             if ~obj.matrixOn
                 changed = [];
             else
@@ -174,6 +145,37 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.saveData.ageStructure = obj.ageStructure;
             h = max(obj.totalCount(:, obj.timestep))>=obj.maxSize;
             h = h && ~obj.mutationManager.mutating || (sum(obj.totalCount(:, obj.timestep)) == 0);
+        end
+        
+        
+        %The default implementation for getNextGeneration for an
+        %OverlappingGeneration models
+        function getNextGeneration(obj)
+            assert(obj.OverlappingGenerations == 1, 'ERROR: getNext not overriden by a non-Overlapping Generations class');
+            for i = 1:sum(obj.totalCount(:, obj.timestep))
+                obj.reproductiveEvent();
+                if max(obj.totalCount(:, obj.timestep)) == 0
+                    break;
+                end
+            end
+            %then, include all computation updates
+        end  
+        
+        %A method that should be left unimplemented in any
+        %non-OverlappingGenerations class, and should be implemented in any
+        %OverlappingGenerations class
+        function reproductiveEvent(obj)
+            assert(obj.OverlappingGenerations == 0, 'ERROR: reproductiveEvent called in an OverlappingGenerations class');
+        end
+
+            
+        
+        %This function is called at the end of getNext by all of the child
+        %classes. It instantiates the output variables and performs some cleanup 
+        % changed - entries in matrix that have changed
+        % h - whether or not the model should halt
+        function [changed, h] = getNextCleanup(obj)
+
         end
 
         

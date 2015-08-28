@@ -351,10 +351,7 @@ classdef GUIHelper < handle
             drawnow;
             while obj.evolving
                if ~firstRun
-                   [c, halt] = obj.gridManager.getNext();
-               else
-                   halt = 0;
-                   c = find(obj.gridManager.matrix);
+               [c, halt] = obj.gridManager.getNext();
                end
                obj.drawIteration(c, handles, firstRun);
                firstRun = 0;
