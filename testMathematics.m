@@ -147,8 +147,9 @@ function expTest()
     birth = [1 1];
     death = [0.01 0.01];
     counts = cell(1,100);
+    num_lines = 3;
     for matrixOn = 0:1
-        for i = 1:10
+        for i = 1:num_lines
             expManager = GridManagerExp(Ntot, Ninit, MM, matrixOn, spatialOn, edgesOn, birth, death);
             h = 0;
             counts{i} = [];
@@ -184,7 +185,7 @@ function logTest()
     spatialOn = 0;
     edgesOn = randi(2) - 1;
     Ninit = [1 0];
-    Ntot = 225;
+    Ntot = 196;
     birth = [1 1];
     death = [0.01 0.01];
     num_lines = 3;

@@ -433,12 +433,12 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
             if obj.matrixOn
                 obj.ageMatrix(obj.ageMatrix ~= -1) = obj.ageMatrix(obj.ageMatrix ~= -1) + 1;
-                maxAge = max(1, max(obj.ageMatrix(:)) + 1);
-                obj.ageStructure{obj.timestep} = zeros(obj.numTypes, maxAge);
+                obj.ageStructure{obj.timestep} = zeros(obj.numTypes, max(obj.ageMatrix));
                 for i = 1:obj.numTypes
                     ages = obj.ageMatrix(obj.ageMatrix ~= -1 & obj.matrix == i);
                     ageHist = hist(ages, max(ages))./length(ages);
-                    obj.ageStructure{obj.timestep}(i,:) = [ageHist zeros(1,maxAge - length(ageHist))];
+                    ageHist = [ageHist zeros(1,length()   )]
+                    obj.ageStructure{obj.timestep}(i) = ;
                 end
             end            
         end

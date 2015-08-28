@@ -20,8 +20,8 @@ classdef GridManagerLogistic < GridManagerLogExpAbstract
             obj@GridManagerLogExpAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
 
-        function birthRates = getBirthRates(obj)
-        	birthRates = obj.Param1.*(1-sum(obj.totalCount(:,obj.timestep))/obj.maxSize) + 1e-6; %necessary for weighted selection
+        function isSuccess = isSuccess(obj)
+        	isSuccess = rand() > sum(obj.totalCount(:,obj.timestep))/obj.maxSize;
         end
     end
 end

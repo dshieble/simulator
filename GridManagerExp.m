@@ -20,10 +20,9 @@ classdef GridManagerExp < GridManagerLogExpAbstract
             obj@GridManagerLogExpAbstract(dim, Ninit, mutation_manager, matrixOn, spatialOn, edgesOn, b, d);
         end
 
-        function birthRates = getBirthRates(obj)
-        	birthRates = obj.Param1 + 1e-4;
+        function isSuccess = isSuccess(obj)
+        	isSuccess = 1;
         end
-
     end
 end
 

@@ -13,10 +13,9 @@ classdef (Abstract) GridManagerLogExpAbstract < GridManagerAbstract
         function reproductiveEvent(obj)
             %perform death events
             while max(obj.totalCount(:, obj.timestep)) > 0
-                birthRates = obj.getBirthRates();
-                totRates = obj.totalCount(:, obj.timestep).*(birthRates + obj.Param2);
+                totRates = obj.totalCount(:, obj.timestep).*(obj.Param1 + obj.Param2);
                 chosenType = obj.weightedSelection(totRates);
-                death = (rand()*(obj.Param1(chosenType)+obj.Param2(chosenType))) < obj.Param2(chosenType);
+                death = obj.isSuccess() && (rand()*(obj.Param1(chosenType)+obj.Param2(chosenType))) < obj.Param2(chosenType);
                 if sum(obj.totalCount(:, obj.timestep)) < obj.maxSize && ~death
                     %no death event, abort
                     break;
@@ -71,7 +70,7 @@ classdef (Abstract) GridManagerLogExpAbstract < GridManagerAbstract
     
     methods (Abstract)        
         %Gets the birth rate for an iteration
-        birthRates = getBirthRates(obj)
+        isSuccess = isSuccess(obj);
     end
     
         

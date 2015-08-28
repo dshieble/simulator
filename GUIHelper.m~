@@ -325,6 +325,7 @@ classdef GUIHelper < handle
             handles.step_button.BackgroundColor = [0 0 1];
             handles.save_button.BackgroundColor = [0 1 1];
             handles.reset_button.BackgroundColor = [1 0 0];
+            handles.generationLabel.String = 'Generation: 0';
         end
 
 
@@ -351,7 +352,10 @@ classdef GUIHelper < handle
             drawnow;
             while obj.evolving
                if ~firstRun
-               [c, halt] = obj.gridManager.getNext();
+                   [c, halt] = obj.gridManager.getNext();
+               else
+                   halt = 0;
+                   c = find(obj.gridManager.matrix);
                end
                obj.drawIteration(c, handles, firstRun);
                firstRun = 0;
@@ -379,6 +383,7 @@ classdef GUIHelper < handle
                     end
                 end
             end
+            handles.generationLabel.String = sprintf('Generation: %d', obj.gridManager.timestep);
             %Draw the plot to the lower axis
             obj.drawPage(handles, firstRun);
             drawnow;
@@ -405,32 +410,33 @@ classdef GUIHelper < handle
             range = obj.group:min(obj.group + 15, obj.gridManager.numTypes);
             %Plot the parameters on the graph
             if handles.plot_button_count.Value
-                vec = obj.gridManager.totalCount(range, :);
+                mat = obj.gridManager.totalCount(range, :);
                 y_axis_label = 'Population Count';
             elseif handles.plot_button_percent.Value
-                vec = obj.gridManager.percentCount(range, :);
+                mat = obj.gridManager.percentCount(range, :);
                 y_axis_label = 'Percent Population Size';
             elseif handles.plot_button_age.Value
-                vec = obj.gridManager.ageStructure{end};
+                mat = obj.gridManager.ageStructure{}(range, :);
                 y_axis_label = 'Proportion of Organisms';
             else
-                vec = obj.gridManager.overallMeanFitness(:)';
+                mat = obj.gridManager.overallMeanFitness(:)';
                 y_axis_label = 'Mean Fitness';
             end
             %Handle logistic plotting
             if handles.plot_button_log.Value
-                vec = log10(vec);
+                mat = log10(mat);
                 y_axis_label = sprintf('log10(%s)', y_axis_label);
             end
             %Actually plots the line or bar graph
-            for i = 1:size(vec,1)
+            for i = 1:size(mat,1)
                 hold on;
-                if ~handles.plot_button_age.Value
-                    plot(1:obj.gridManager.timestep, vec(i,:), 'Parent', handles.axes_graph, 'Color', obj.gridManager.getColor(i));
-                else
-                    cla(handles.axes_graph);
-                    bar(1:length(vec), vec, 'Parent', handles.axes_graph);
-                end
+                plot(1:obj.gridManager.timestep, mat(i,:), 'Parent', handles.axes_graph, 'Color', obj.gridManager.getColor(i));
+
+%                 if ~handles.plot_button_age.Value
+% %                 else
+% %                     cla(handles.axes_graph);
+% %                     bar(1:length(mat), mat, 'Parent', handles.axes_graph);
+%                 end
             end
             %draws the correct xlabel
             if ~handles.plot_button_age.Value
@@ -440,7 +446,7 @@ classdef GUIHelper < handle
             end
             ylabel(y_axis_label, 'Parent', handles.axes_graph);
             %There is no legend in the one line or age cases
-            if firstRun && ~handles.plot_button_age.Value && ~handles.plot_button_fitness.Value
+            if firstRun && ~handles.plot_button_fitness.Value
                 legendInput = {};
                 for i = range
                     if obj.parameterManager.numLoci > 1 && obj.parameterManager.mutating
