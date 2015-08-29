@@ -322,11 +322,6 @@ classdef GUIHelper < handle
             handles.step_button.Enable = s;
             handles.reset_button.Enable = s;
             handles.preview_button.Enable = s;
-            if obj.parameterManager.getNumTypes() > 16
-                handles.page_button.Enable = s;
-            else
-                handles.page_button.Enable = 'off';
-            end
         end
 
         
@@ -454,14 +449,14 @@ classdef GUIHelper < handle
                 xlabel('Age', 'Parent', handles.axes_graph);
             end
             ylabel(y_axis_label, 'Parent', handles.axes_graph);
-            obj.drawLegend(handles, range, firstRun);
+            %There is no legend in the one line or age cases
+            d
         end
         
         
-        function drawLegend(obj, handles, range, firstRun)
-            %Draws the legend to the screen
+        function drawLegend(obj, handles)
+            legendInput = {};
             if ~handles.plot_button_fitness.Value
-                legendInput = {};
                 for i = range
                     if obj.parameterManager.numLoci > 1 && obj.parameterManager.mutating
                         legendInput = [legendInput sprintf('Type %s', dec2bin(i - 1, log2(obj.gridManager.numTypes)))];
@@ -470,9 +465,9 @@ classdef GUIHelper < handle
                     end
                 end
 %                 L = findobj('type','legend');
-                if firstRun
+%                 if firstRun
                     legend(legendInput, 'Location', 'northwest', 'Parent', handles.f);
-                end
+%                 end
             end
             
         end
@@ -484,6 +479,7 @@ classdef GUIHelper < handle
  
             %If the number of types is greater than 16, turn petri dish off
             if obj.parameterManager.getNumTypes() > 16
+                handles.page_button.Enable = 'on';
                 handles.matrixOn_button.Value = 0;
                 obj.parameterManager.updateBoxValues();
             end

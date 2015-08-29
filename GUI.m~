@@ -37,8 +37,11 @@ function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for GUI
 handles.output = hObject;
 
+
+
 % Attach global variables to handles object
 handles.f.UserData = GUIHelper(handles, varargin);
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -49,6 +52,10 @@ guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = GUI_OutputFcn(hObject, eventdata, handles)
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 varargout{1} = handles.output;
 
 % --- Executes on button press in run_button.
@@ -77,50 +84,66 @@ if ~handles.f.UserData.paused && ~handles.f.UserData.evolving;
     drawnow;
 end
 
+% --------------------------------------------------------------------
+function OpenMenuItem_Callback(hObject, eventdata, handles)
+% hObject    handle to OpenMenuItem (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+file = uigetfile('*.fig');
+if ~isequal(file, 0)
+    open(file);
+end
+
+% --------------------------------------------------------------------
+function PrintMenuItem_Callback(hObject, eventdata, handles)
+% hObject    handle to PrintMenuItem (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+printdlg(handles.f)
+
+% --------------------------------------------------------------------
+function CloseMenuItem_Callback(hObject, eventdata, handles)
+% hObject    handle to CloseMenuItem (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+selection = questdlg(['Close ' get(handles.f,'Name') '?'],...
+                     ['Close ' get(handles.f,'Name') '...'],...
+                     'Yes','No','Yes');
+if strcmp(selection,'No')
+    return;
+end
+delete(handles.f)
 
 
 
 function types_popup_Callback(hObject, eventdata, handles)
 % Executes on selection change in types_popup.
-handles.f.UserData.parameterManager.writeBoxes();
-
+handles.f.UserData.parameterManager.updateBoxes();
 
 function numTypes_box_Callback(hObject, eventdata, handles)
 % Executes when number of types is changed
-handles.types_popup.Value = 1;
-m = handles.f.UserData.parameterManager.updateBoxValues();
-if ~isempty(m)
-    warndlg(m);
-end
-handles.f.UserData.parameterManager.updateDefaultNinit();
-handles.f.UserData.toggleVisible(handles);
-
+handles.f.UserData.parameterManager.updateNumTypes();
 
 function init_pop_box_Callback(hObject, eventdata, handles)
 % Executes when initial population is changed
-m = handles.f.UserData.parameterManager.updateBoxValues();
-if ~isempty(m)
-    warndlg(m);
-end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateStructs();
 
 function param_1_box_Callback(hObject, eventdata, handles)
 % Executes when parameter 1 is changed
-m = handles.f.UserData.parameterManager.updateBoxValues();
+m = handles.f.UserData.parameterManager.updateStructs();
 if ~isempty(m)
     warndlg(m);
+    return;
 end
-handles.f.UserData.toggleVisible(handles);
 
 
 function param_2_box_Callback(hObject, eventdata, handles)
 % Executes when parameter 2 is changed
-m = handles.f.UserData.parameterManager.updateBoxValues();
+m = handles.f.UserData.parameterManager.updateStructs();
 if ~isempty(m)
     warndlg(m);
+    return;
 end
-handles.f.UserData.toggleVisible(handles);
-
 
 function save_button_Callback(hObject, eventdata, handles)
 % Executes on button press in save_button.
@@ -151,43 +174,43 @@ end
 
 function model1_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model1_button.
-handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateBasicParameters()
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
+handles.f.UserData.updateParametersDisplay(handles);
+handles.f.UserData.toggleVisible(handles);
 
 
 function model2_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model2_button.
-handles.f.UserData.parameterManager.writeBoxes();
+handles.f.UserData.parameterManager.updateBasicParameters()
+handles.model_name_banner.String = ...
+    handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
+handles.f.UserData.updateParametersDisplay(handles);
 handles.f.UserData.toggleVisible(handles);
-handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
 
 function model3_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model3_button.
-handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateBasicParameters()
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
+handles.f.UserData.updateParametersDisplay(handles);
+handles.f.UserData.toggleVisible(handles);
 
 
 function model4_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model4_button.
-handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateBasicParameters()
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
+handles.f.UserData.updateParametersDisplay(handles);
+handles.f.UserData.toggleVisible(handles);
 
 function population_box_Callback(hObject, eventdata, handles)
 % Executes on changing the population
-m = handles.f.UserData.parameterManager.updateBoxValues();
-if ~isempty(m)
-    warndlg(m);
-end
-handles.f.UserData.parameterManager.updateDefaultNinit();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateMatrixProperties();
     
 
 function matrixOn_button_Callback(hObject, eventdata, handles)
 % Executes on button press in matrixOn_button.
-handles.f.UserData.parameterManager.writeBoxes();
+handles.f.UserData.parameterManager.setMatrixOn(handles.matrixOn_button.Value);
 handles.f.UserData.toggleVisible(handles);
 
 
@@ -234,26 +257,23 @@ end
 
 function genetics_button_Callback(hObject, eventdata, handles)
 % Executes on button press in genetics_button.
-handles.f.UserData.parameterManager.writeBoxes();
+handles.f.UserData.parameterManager.updateBasicParameters();
 handles.f.UserData.toggleVisible(handles);
 
 function loci_box_Callback(hObject, eventdata, handles)
 % Executes when number of loci is changed
-m = handles.f.UserData.parameterManager.updateBoxValues();
+m = handles.f.UserData.parameterManager.updateMultipleLoci();
 if ~isempty(m)
     warndlg(m);
+    return;
 end
 handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.updateParametersDisplay(handles);
 
 function step_button_Callback(hObject, eventdata, handles)
 % Executes on button press in step_button.
 if ~handles.f.UserData.stepping && ~handles.f.UserData.evolving
     if ~handles.f.UserData.paused
-        m = handles.f.UserData.verifyParameters();
-        if ~isempty(m)
-            warndlg(m);
-            return;
-        end
         handles.f.UserData.run(handles,1)
         handles.f.UserData.pauseRunning(handles);
     else
@@ -290,24 +310,20 @@ end
 
 function spatial_structure_check_Callback(hObject, eventdata, handles)
 % Executes on button press in spatial_structure_check.
-handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.parameterManager.updateBasicParameters();
+
 
 
 function recombination_check_Callback(hObject, eventdata, handles)
 % Executes on button press in recombination_check.
-handles.f.UserData.parameterManager.writeBoxes();
+handles.f.UserData.parameterManager.updateBasicParameters();
 handles.f.UserData.toggleVisible(handles);
 
 
 
 function recombination_box_Callback(hObject, eventdata, handles)
-% Executes on changing value in recombination_box.
-m = handles.f.UserData.parameterManager.updateBoxValues();
-if ~isempty(m)
-    warndlg(m);
-end
-handles.f.UserData.toggleVisible(handles);
+% Executes on button press in recombination_box.
+handles.f.UserData.parameterManager.updateBasicParameters();
 
 
 
@@ -317,7 +333,7 @@ function page_button_Callback(hObject, eventdata, handles)
 if isempty(handles.f.UserData.gridManager)
     return
 end
-if ~handles.f.UserData.stepping && ...
+if ~handles.f.UserData.stepping &&...
         handles.f.UserData.gridManager.numTypes > 16
     handles.f.UserData.group = handles.f.UserData.group + 16;
     if handles.f.UserData.group > handles.f.UserData.gridManager.numTypes
@@ -329,74 +345,42 @@ end
 
 function remove_edges_check_Callback(hObject, eventdata, handles)
 % Executes on button press in remove_edges_check.
-handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
+handles.f.UserData.parameterManager.updateBasicParameters();
 
-
-% --------------------------------------------------------------------
-function OpenMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to OpenMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-file = uigetfile('*.fig');
-if ~isequal(file, 0)
-    open(file);
-end
-
-% --------------------------------------------------------------------
-function PrintMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to PrintMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-printdlg(handles.f)
-
-% --------------------------------------------------------------------
-function CloseMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to CloseMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-selection = questdlg(['Close ' get(handles.f,'Name') '?'],...
-                     ['Close ' get(handles.f,'Name') '...'],...
-                     'Yes','No','Yes');
-if strcmp(selection,'No')
-    return;
-end
-delete(handles.f)
-
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
 
 % --- Executes during object creation, after setting all properties.
 function init_pop_box_wright_CreateFcn(hObject, eventdata, handles)

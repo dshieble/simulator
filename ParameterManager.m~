@@ -162,8 +162,9 @@ classdef ParameterManager < handle
                 message = sprintf('ERROR: Number of Loci must be a positive integer\n');
             end
             %Population Size
-            if (obj.matrixOn && ParameterManager.isPositiveIntegerWithin(tempPopulation, 16, obj.maxPlottingPopSize) && floor(sqrt(tempPopulation))^2 == tempPopulation) || ...
+            if obj.matrixOn && ParameterManager.isPositiveIntegerWithin(tempPopulation, 16, obj.maxPlottingPopSize) && || ...
                 ~obj.matrixOn && ParameterManager.isPositiveIntegerWithin(tempPopulation, 16, obj.maxPopSize);
+                obj.updatePopulation(tempPopulation);
                 obj.popSize = tempPopulation;
             else
             	message = sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than %d. Population size must be at least 16.\n', obj.maxPlottingPopSize, obj.maxPopSize);
@@ -209,10 +210,10 @@ classdef ParameterManager < handle
             end
             
             %Ninit
-            if ParameterManager.isPositiveInteger(ninitTemp)
+            if ParameterManager.isPositiveIntegerWithin(ninitTemp, 0, obj.popSize)
                 obj.modelParameters(obj.currentModel).Ninit(obj.currentType) = ninitTemp;
             else
-                message = sprintf('ERROR: Initial Population must be a positive integer or all types.\n');
+                message = sprintf('ERROR: Initial Population must be a number between 0 and %d for all types.\n', ninitTemp);
             end
             %Num Types
             if ParameterManager.isPositiveIntegerWithin(numTypesTemp, 0, obj.maxTypes)
@@ -291,17 +292,17 @@ classdef ParameterManager < handle
 
         
 
-        function updateDefaultNinit(obj)
+        function updatePopulation(obj, num)
         	%Updates the size of the matrix/population based on the input to the
             %population box string
             for i = 1:length(obj.classConstants)
                 if obj.classConstants(i).atCapacity
                     obj.modelParameters(i).Ninit = zeros(1,obj.numTypes);
                     for j = 1:(obj.numTypes-1)
-                        obj.modelParameters(i).Ninit(j) = floor(obj.popSize/obj.numTypes);
-                        obj.modelParameters(i).Ninit(j) = floor(obj.popSize/obj.numTypes);
+                        obj.modelParameters(i).Ninit(j) = floor(num/obj.numTypes);
+                        obj.modelParameters(i).Ninit(j) = floor(num/obj.numTypes);
                     end
-                    obj.modelParameters(i).Ninit(obj.numTypes) = obj.popSize - sum(obj.modelParameters(i).Ninit);
+                    obj.modelParameters(i).Ninit(obj.numTypes) = num - sum(obj.modelParameters(i).Ninit);
                 end
             end
         end

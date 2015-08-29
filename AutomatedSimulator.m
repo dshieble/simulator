@@ -16,20 +16,20 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     p = inputParser;
 
     addRequired(p,'GridManagerClass',@(s) exist(s, 'file'));
-    addRequired(p,'Ninit',@isPositiveInteger);
-    addRequired(p,'p1',@isNumber);
-    addRequired(p,'p2',@isNumber);
+    addRequired(p,'Ninit',@ParameterManager.isPositiveInteger);
+    addRequired(p,'p1',@ParameterManager.isNumber);
+    addRequired(p,'p2',@ParameterManager.isNumber);
 
     addParameter(p,'mutating', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'mutationMatrix', [], @(M) size(M,1) == size(M,2) && isPositiveNumber(M));
-    addParameter(p,'numLoci', 1, @isPositiveInteger);
-    addParameter(p,'recombinationNumber', 0, @isPositiveNumber);
+    addParameter(p,'mutationMatrix', [], @(M) size(M,1) == size(M,2) && ParameterManager.isPositiveNumber(M));
+    addParameter(p,'numLoci', 1, @ParameterManager.isPositiveInteger);
+    addParameter(p,'recombinationNumber', 0, @ParameterManager.isPositiveNumber);
     addParameter(p,'matrixOn', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'totalPopSize', 2500, @isPositiveInteger);
+    addParameter(p,'totalPopSize', 2500, @ParameterManager.isPositiveInteger);
     addParameter(p,'returnType', 'totalCount', @(x) any(validatestring(x,{'totalCount', 'matrix', 'ageDist'})));
     addParameter(p,'spatialOn', 0, @(x) x == 0 || x == 1);
     addParameter(p,'edgesOn', 0, @(x) x == 0 || x == 1);
-    addParameter(p,'maxIterations', 25,  @isPositiveInteger);
+    addParameter(p,'maxIterations', 25,  @ParameterManager.isPositiveInteger);
 
     parse(p,GridManagerClass, Ninit, p1, p2, varargin{:})
     assert(length(p.Results.Ninit) == length(p.Results.p1) && length(p.Results.p1) == length(p.Results.p2), 'ASSERTION ERROR: Lengths of Ninit, p1 and p2 must be the same!');
@@ -86,37 +86,6 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
         	out = matCell;
         case 'ageDist'
             out = gridManager.ageStructure;
-    end
-
-
-    function out = isNumber(n)
-        %verifies that input is a vector of numbers
-        out = 1;
-        if any(~isnumeric(n))
-            out = 0;
-        elseif any(isnan(n))
-            out = 0;
-        end
-    end
-
-    function out = isPositiveNumber(n)
-        %verifies that input is a vector of positive numbers
-        out = 1;
-        if ~isNumber(n)
-            out = 0;
-        elseif any(n < 0) %negative
-            out = 0;
-        end 
-    end
-
-    function out = isPositiveInteger(n)
-        %verifies that input is a vector of positive integers
-        out = 1;
-        if ~isPositiveNumber(n)
-            out = 0;
-        elseif any(round(n) ~= n) %non-integer
-            out = 0;
-        end 
     end
 
     function mm = generateMutationMatrix(dim)
