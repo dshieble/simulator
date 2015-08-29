@@ -50,7 +50,8 @@ classdef MutationManager < handle
         end
         
         %Performs an atomic mutation
-        function atomicMutation(obj, gridManager, ind, oldType)
+        function out = atomicMutation(obj, gridManager, ind, oldType)
+            out = oldType;
             if obj.mutating
                 newType = 0;
                 if obj.numLoci == 1 %choose new type with weighted random selection
@@ -72,7 +73,8 @@ classdef MutationManager < handle
                     end
                     newType = newType + 1;
                 end
-                gridManager.mutate(ind, oldType, newType)
+                gridManager.mutate(ind, oldType, newType);
+                out = newType;
             end
         end
         
@@ -100,7 +102,8 @@ classdef MutationManager < handle
         
         %Performs an atomic recombination by selecting a sister cell/sister
         %type and recombining the two
-        function atomicRecombination(obj, gridManager, ind, oldType)
+        function out = atomicRecombination(obj, gridManager, ind, oldType)
+            out = oldType;
             if obj.mutating && obj.recombining && (rand() < obj.recombinationNumber)
                 if gridManager.matrixOn && gridManager.spatialOn %limit possible recombination targets to neighbors
                     [a, b] = ind2sub(size(gridManager.matrix), ind);
@@ -120,7 +123,8 @@ classdef MutationManager < handle
                 	otherType = gridManager.weightedSelection(gridManager.totalCount(:,end));
                 end
                 newType = obj.recombine(oldType, otherType);
-                gridManager.mutate(ind, oldType, newType)
+                gridManager.mutate(ind, oldType, newType);
+                out = newType;
             end
         end
         

@@ -367,8 +367,8 @@ classdef (Abstract) GridManagerAbstract < handle
                 obj.matrix(ind) = type;
                 obj.ageMatrix(ind) = 0;
             end
-            newType = obj.mutationManager.atomicMutation(obj, ind, type);
-            obj.mutationManager.atomicRecombination(obj, ind, newType);
+            obj.mutationManager.atomicMutation(obj, ind, type);
+            obj.mutationManager.atomicRecombination(obj, ind, type);
         end
         
         % Externally facing Killing function
@@ -397,8 +397,8 @@ classdef (Abstract) GridManagerAbstract < handle
         % oldType - current type of mutating cell
         % newType - new type of mutating cell
         function mutate(obj, ind, oldType, newType)
-            assert((ind == 0 && ~obj.matrixOn) || (ind > 0 && obj.matrixOn), 'ERROR: ind not 0 on matrix off or  ind 0 on matrix on');
-            assert(~obj.matrixOn || obj.matrix(ind) == oldType, 'ERROR: ind and oldType dont match up');
+            assert(ind == 0 && ~obj.matrixOn, 'ERROR: ind not 0 on ');
+            assert(ind > 0 && obj.matrixOn && obj.matrix(ind) == oldType));
             assert((oldType > 0) && (oldType <= obj.numTypes) && (round(oldType) == oldType), 'ERROR: Old type must be an integer between 1 and numTypes');
             assert((newType > 0) && (newType <= obj.numTypes) && (round(newType) == newType), 'ERROR: New type must be an integer between 1 and numTypes');
             assert(obj.totalCount(oldType, obj.timestep) > 0, 'ERROR: There are no cells of the oldType');

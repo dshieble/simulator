@@ -234,33 +234,35 @@ classdef ParameterManager < handle
         function updateNumTypes(obj, num)
             %Called when number of types in increased
             %Updates the parameters for all of the models
-            if num < obj.numTypes
-                obj.handles.types_popup.String(num+1:end) = [];
-                for model = 1:length(obj.classConstants)
-                    obj.modelParameters(model).Ninit(num+1:end) = [];
-                    obj.modelParameters(model).Param1(num+1:end) = [];
-                    obj.modelParameters(model).Param2(num+1:end) = [];
-                end
-            elseif num > obj.numTypes
-                for i = obj.numTypes+1:num
-                    obj.handles.types_popup.String{i} = i;
+            if num ~= obj.numTypes
+                if num < obj.numTypes
+                    obj.handles.types_popup.String(num+1:end) = [];
                     for model = 1:length(obj.classConstants)
-                        obj.modelParameters(model).Ninit(i) = obj.modelParameters(model).Ninit_default;
-                        obj.modelParameters(model).Param1(i) = obj.modelParameters(model).Param1_default;
-                        obj.modelParameters(model).Param2(i) = obj.modelParameters(model).Param2_default;
+                        obj.modelParameters(model).Ninit(num+1:end) = [];
+                        obj.modelParameters(model).Param1(num+1:end) = [];
+                        obj.modelParameters(model).Param2(num+1:end) = [];
+                    end
+                elseif num > obj.numTypes
+                    for i = obj.numTypes+1:num
+                        obj.handles.types_popup.String{i} = i;
+                        for model = 1:length(obj.classConstants)
+                            obj.modelParameters(model).Ninit(i) = obj.modelParameters(model).Ninit_default;
+                            obj.modelParameters(model).Param1(i) = obj.modelParameters(model).Param1_default;
+                            obj.modelParameters(model).Param2(i) = obj.modelParameters(model).Param2_default;
+                        end
                     end
                 end
-            end
-            %adjust birth and death rates accordingly
-            if num ~= obj.numTypes
-                for i = 1:length(obj.classConstants)
-                    if obj.classConstants(i).atCapacity
-                        obj.modelParameters(i).Ninit = zeros(1,num);
-                        for j = 1:(num-1)
-                            obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
-                            obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
+                %adjust birth and death rates accordingly
+                if num ~= obj.numTypes
+                    for i = 1:length(obj.classConstants)
+                        if obj.classConstants(i).atCapacity
+                            obj.modelParameters(i).Ninit = zeros(1,num);
+                            for j = 1:(num-1)
+                                obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
+                                obj.modelParameters(i).Ninit(j) = floor(obj.popSize/num);
+                            end
+                            obj.modelParameters(i).Ninit(num) = obj.popSize - sum(obj.modelParameters(i).Ninit);
                         end
-                        obj.modelParameters(i).Ninit(num) = obj.popSize - sum(obj.modelParameters(i).Ninit);
                     end
                 end
             end
@@ -270,23 +272,25 @@ classdef ParameterManager < handle
         function updateNumLoci(obj, num) 
         	%Performs te necessary updates in response to the numLoci box being changed
             %Also sets the default frequencies vector
-            if num == 1
-                numAlleles = obj.numTypes;
-            else
-                numAlleles = 2;
-            end
-            %reinitialize mutation matrix
-            obj.mutationMatrix = zeros(numAlleles);
-            for i = 1:numAlleles
-                for j = 1:numAlleles
-                    if i == j
-                        obj.mutationMatrix(i,j) = 1 - 0.01*(numAlleles-1);
-                    else
-                        obj.mutationMatrix(i,j) = 0.01;
-                    end
+            if num ~= obj.numLoci
+                if num == 1
+                    numAlleles = obj.numTypes;
+                else
+                    numAlleles = 2;
                 end
-            end  
-            obj.initialFrequencies = [1 zeros(1,2.^num - 1)];
+                %reinitialize mutation matrix
+                obj.mutationMatrix = zeros(numAlleles);
+                for i = 1:numAlleles
+                    for j = 1:numAlleles
+                        if i == j
+                            obj.mutationMatrix(i,j) = 1 - 0.01*(numAlleles-1);
+                        else
+                            obj.mutationMatrix(i,j) = 0.01;
+                        end
+                    end
+                end  
+                obj.initialFrequencies = [1 zeros(1,2.^num - 1)];
+            end
         end
 
         
