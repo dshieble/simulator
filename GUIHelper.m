@@ -17,6 +17,7 @@ classdef GUIHelper < handle
     %than destroying them
     
     properties
+        handles; %The struct that stores handles to all of the graphical objects
         group; %The group of 16 types that we are displaying on the plot_axes. This is always 1 if numTypes <= 16
         parameterManager; %The ParameterManager object that stores and verifies the user inputted parameters
         rects; %The matrix of rectangle objects that are drawn or changed every iteration
@@ -41,7 +42,7 @@ classdef GUIHelper < handle
             %The constructor for the GUIHelper class. 
             % names - The input to the Main function, which is either empty
             % or a list of class names
-            
+            obj.handles = handles;
             classNames = {'GridManagerLogistic', 'GridManagerExp', 'GridManagerMoran', 'GridManagerWright'};
 
             % Verify the Class Names input
@@ -94,19 +95,19 @@ classdef GUIHelper < handle
                 classConstants(i).plottingEnabled = obj.getConstantProperty(classNames{i}, 'plottingEnabled');
             end
             % Set text based on the classNames and classConstants
-            handles.model_name_banner.String = classConstants(1).Name;
+            obj.handles.model_name_banner.String = classConstants(1).Name;
             for i = 1:4 
                 if i <= length(classNames)
                     %Set the text on the button to be the model name
-                    eval(sprintf('handles.model%s_button.String = ''%s'';',num2str(i), classConstants(i).Name));
+                    eval(sprintf('obj.handles.model%s_button.String = ''%s'';',num2str(i), classConstants(i).Name));
                 else
                     %Otherwise, hide the button
-                    eval(['handles.model' num2str(i) '_button.Visible = ''off'';']);        
+                    eval(['obj.handles.model' num2str(i) '_button.Visible = ''off'';']);        
                 end
             end
             
             %Initialize the basic parameters
-            obj.parameterManager = ParameterManager(handles, classConstants);
+            obj.parameterManager = ParameterManager(obj.handles, classConstants);
             obj.group = 1;
             obj.evolving = 0;
             obj.rects = [];
@@ -115,23 +116,23 @@ classdef GUIHelper < handle
             obj.stepping = 0;
             
             %Temp_axes stuff
-            obj.temp_axes = axes('Parent',handles.params_panel, 'Units', 'characters', 'Position', handles.param_2_text.Position);
+            obj.temp_axes = axes('Parent',obj.handles.params_panel, 'Units', 'characters', 'Position', obj.handles.param_2_text.Position);
             obj.temp_axes.Visible = 'off';
-            fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', handles.axes_grid);
-            set(handles.axes_grid,'XTick',[]);
-            set(handles.axes_grid,'YTick',[]);
-            handles.axes_grid.XLim = [1 sqrt(obj.parameterManager.popSize)];
-            handles.axes_grid.YLim = [1 sqrt(obj.parameterManager.popSize)];
+            fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', obj.handles.axes_grid);
+            set(obj.handles.axes_grid,'XTick',[]);
+            set(obj.handles.axes_grid,'YTick',[]);
+            obj.handles.axes_grid.XLim = [1 sqrt(obj.parameterManager.popSize)];
+            obj.handles.axes_grid.YLim = [1 sqrt(obj.parameterManager.popSize)];
 
 
             %Fill the boxes properly
-            obj.toggleVisible(handles)
+            obj.toggleVisible()
 
         end
 
         
         
-        function message = verifyParameters(obj, handles)
+        function message = verifyParameters(obj)
             %This function makes sure that all of the input boxes are aligned with the
             %expected inputs. This function is called only when the run button is
             %pressed
@@ -144,7 +145,7 @@ classdef GUIHelper < handle
                 message = 'ERROR: S must be no less than -1!';
             elseif ~obj.parameterManager.verifySizeOk()
                 message = sprintf('ERROR: Initial Populations must sum to %d for constant size models (Moran, Wright-Fisher), and must be no greater than %d for non-constant size models (Exponential, Logistic)', obj.parameterManager.popSize, obj.parameterManager.popSize);
-            elseif (handles.plot_button_age.Value && ~obj.parameterManager.matrixOn) || (handles.plot_button_age.Value && obj.parameterManager.getNumTypes() > 16)
+            elseif (obj.handles.plot_button_age.Value && ~obj.parameterManager.matrixOn) || (obj.handles.plot_button_age.Value && obj.parameterManager.getNumTypes() > 16)
                 message = 'ERROR: In order to plot the age distribution, you need to turn the Petri Dish on. You cannot turn the Petri Dish on if the number of types is at least 16.';
             else
                 message = '';
@@ -152,45 +153,44 @@ classdef GUIHelper < handle
         end
 
 
-        function adjustText(obj, handles)
+        function adjustText(obj)
             %This function adjusts the text in Population Demographics box
             %where the user inputs the Ninit and values for param1 and
             %param2. 
-            assert(nargin == 2);
-            cla(handles.formula_axes);
+            cla(obj.handles.formula_axes);
             cla(obj.temp_axes);
             obj.temp_axes.Visible = 'off';
             if obj.parameterManager.mutating && obj.parameterManager.numLoci > 1
-                handles.param_1_text.String = 'S:';
-                text(handles.param_2_text.Position(3) - 1.75, 0.5,'$$\epsilon$$:','FontSize',15,...
+                obj.handles.param_1_text.String = 'S:';
+                text(obj.handles.param_2_text.Position(3) - 1.75, 0.5,'$$\epsilon$$:','FontSize',15,...
                     'Interpreter','latex', 'Parent', obj.temp_axes, 'Units', 'characters');
                 set(obj.temp_axes,...
                     'XGrid', 'off', 'YGrid', 'off', 'ZGrid', 'off', ...
                     'Color', 'none', 'Visible', 'on', ...
                     'XColor','none','YColor','none')
-                handles.param_2_text.Visible = 'off';
-                handles.param_2_box.Visible = 'on';
+                obj.handles.param_2_text.Visible = 'off';
+                obj.handles.param_2_box.Visible = 'on';
                 %Draw the formula for param1 computation when numLoci > 1
                 if obj.parameterManager.classConstants(obj.parameterManager.currentModel).OverlappingGenerations
                     str = 'Birth Rate: $$1+sk^{1-\epsilon}$$';
-                    text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+                    text(0,0.5,str,'FontSize',15, 'Interpreter','latex', 'Parent', obj.handles.formula_axes);
                 else
                     str = 'Fitness: $$  e^{sk^{1-\epsilon}} $$';
-                    text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', handles.formula_axes);
+                    text(0,0.5,str,'FontSize',18, 'Interpreter','latex', 'Parent', obj.handles.formula_axes);
                 end
                 if ~isempty(obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName2)
                     str2 = 'Death Rate: 0.01';
-                    text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', handles.formula_axes);
+                    text(0,0.2,str2,'FontSize',15, 'Interpreter','latex', 'Parent', obj.handles.formula_axes);
                 end
             else
-                handles.param_1_text.String = [obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName1 ':'];        
+                obj.handles.param_1_text.String = [obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName1 ':'];        
                 if ~isempty(obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName2)
-                    handles.param_2_text.String = [obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName2 ':'];  
-                    handles.param_2_text.Visible = 'on';
-                    handles.param_2_box.Visible = 'on';
+                    obj.handles.param_2_text.String = [obj.parameterManager.classConstants(obj.parameterManager.currentModel).ParamName2 ':'];  
+                    obj.handles.param_2_text.Visible = 'on';
+                    obj.handles.param_2_box.Visible = 'on';
                 else 
-                    handles.param_2_text.Visible = 'off';
-                    handles.param_2_box.Visible = 'off';
+                    obj.handles.param_2_text.Visible = 'off';
+                    obj.handles.param_2_box.Visible = 'off';
                 end
             end
         end
@@ -198,156 +198,155 @@ classdef GUIHelper < handle
 
 
 
-        function adjustDisplay(obj, handles)
+        function adjustDisplay(obj)
         	%Updates the initial popBox and numLoci based on the parameter
             %manager contents
             if obj.parameterManager.numLoci > 1 && obj.parameterManager.mutating
-                handles.num_types_box.String = sprintf('%d', 2^obj.parameterManager.numLoci);
+                obj.handles.num_types_box.String = sprintf('%d', 2^obj.parameterManager.numLoci);
                 if ~obj.parameterManager.classConstants(obj.parameterManager.currentModel).atCapacity
-                    handles.init_pop_box.String = 1;
+                    obj.handles.init_pop_box.String = 1;
                 else
-                    handles.init_pop_box.String = obj.parameterManager.popSize;
+                    obj.handles.init_pop_box.String = obj.parameterManager.popSize;
                 end
             end
         end
         
         
-        function toggleVisible(obj, handles)
+        function toggleVisible(obj)
             %Adjust which of the buttons and knobs the user sees, based on
             %the current input state. Should only be called AFTER the
             %parameterManager updateAll function
-            assert(nargin == 2);
-            obj.adjustDisplay(handles);
-            handles.recombination_panel.Visible = 'off';
+            obj.adjustDisplay();
+            obj.handles.recombination_panel.Visible = 'off';
             %mutating or not
             if obj.parameterManager.mutating               
-                handles.mutation_panel.Visible = 'on';
-                handles.num_types_string.String = 'Number of Alleles:';
-                handles.params_string.String =  'Parameters For Allele:';
+                obj.handles.mutation_panel.Visible = 'on';
+                obj.handles.num_types_string.String = 'Number of Alleles:';
+                obj.handles.params_string.String =  'Parameters For Allele:';
             else
-                handles.mutation_panel.Visible = 'off';
-                handles.num_types_string.String = 'Number of Types:';
-                handles.params_string.String =  'Parameters For Type:';
+                obj.handles.mutation_panel.Visible = 'off';
+                obj.handles.num_types_string.String = 'Number of Types:';
+                obj.handles.params_string.String =  'Parameters For Type:';
             end
             %numLoci > 1 or not
             if obj.parameterManager.mutating && (obj.parameterManager.numLoci > 1)
                 %popup
-                handles.types_popup.Visible = 'off';
-                handles.params_string.Visible=  'off';
+                obj.handles.types_popup.Visible = 'off';
+                obj.handles.params_string.Visible=  'off';
                 %num_types
-                handles.num_types_box.Style = 'text';
-                handles.num_types_string.String = 'Number of Types:';
-                handles.init_pop_box.Style = 'text';
+                obj.handles.num_types_box.Style = 'text';
+                obj.handles.num_types_string.String = 'Number of Types:';
+                obj.handles.init_pop_box.Style = 'text';
                 %initial frequencies
-                handles.initial_frequencies_button.Visible = 'on';
+                obj.handles.initial_frequencies_button.Visible = 'on';
                 %matrixOn
-                handles.recombination_check.Visible = 'on';
+                obj.handles.recombination_check.Visible = 'on';
                 if obj.parameterManager.recombining == 1
-                    handles.recombination_panel.Visible = 'on';
+                    obj.handles.recombination_panel.Visible = 'on';
                 end
             else
                 %popup
-                handles.types_popup.Visible = 'on';
-                handles.params_string.Visible= 'on';
+                obj.handles.types_popup.Visible = 'on';
+                obj.handles.params_string.Visible= 'on';
                 %num_types
-                handles.num_types_box.Style = 'edit';
-                handles.init_pop_box.Style = 'edit';
-                handles.recombination_check.Visible = 'off';
+                obj.handles.num_types_box.Style = 'edit';
+                obj.handles.init_pop_box.Style = 'edit';
+                obj.handles.recombination_check.Visible = 'off';
                 %initial frequencies
-                handles.initial_frequencies_button.Visible = 'off';
+                obj.handles.initial_frequencies_button.Visible = 'off';
             end
             if obj.parameterManager.classConstants(obj.parameterManager.currentModel).plottingEnabled &&...
                     (~obj.parameterManager.mutating || obj.parameterManager.numLoci <= 16) %don't plot if too many loci or not plotting enabled
-                handles.matrixOn_button.Enable = 'on';
+                obj.handles.matrixOn_button.Enable = 'on';
             else
-                handles.matrixOn_button.Value = 0;
-                handles.matrixOn_button.Enable = 'off';
+                obj.handles.matrixOn_button.Value = 0;
+                obj.handles.matrixOn_button.Enable = 'off';
             end
             if obj.parameterManager.matrixOn && ~strcmp(obj.parameterManager.classConstants(obj.parameterManager.currentModel).Name, 'Wright-Fisher')
-                handles.spatial_structure_check.Visible = 'on';
-                handles.remove_edges_check.Visible = 'on';
+                obj.handles.spatial_structure_check.Visible = 'on';
+                obj.handles.remove_edges_check.Visible = 'on';
             else
-                handles.spatial_structure_check.Visible = 'off';
-                handles.remove_edges_check.Visible = 'off';
+                obj.handles.spatial_structure_check.Visible = 'off';
+                obj.handles.remove_edges_check.Visible = 'off';
             end
-            obj.adjustText(handles);
+            obj.adjustText();
         end
 
 
 
-        function enableInputs(obj, handles, on)
+        function enableInputs(obj, on)
             %This function either enables or disables all of the user
             %inputs that affect parameters or display. This is called when
             %the user presses run or clear/reset.
-            obj.toggleVisible(handles);
+            obj.toggleVisible();
             if on
                 s = 'on';
             else
                 s = 'off';
             end
-            handles.matrixOn_button.Enable = s;
-            handles.population_box.Enable = s;
-            handles.genetics_button.Enable = s;
-            handles.spatial_structure_check.Enable = s;
-            handles.recombination_check.Enable = s;
-            handles.recombination_box.Enable = s;
-            handles.remove_edges_check.Enable = s;
-            handles.model1_button.Enable = s;
-            handles.model2_button.Enable = s;
-            handles.model3_button.Enable = s;
-            handles.model4_button.Enable = s;
-            handles.num_types_box.Enable = s;
-            handles.types_popup.Enable = s;
-            handles.init_pop_box.Enable = s;
-            handles.loci_box.Enable = s;
-            handles.param_1_box.Enable = s;
-            handles.param_2_box.Enable = s;
-            handles.plot_button_count.Enable = s;
-            handles.plot_button_percent.Enable = s;
-            handles.plot_button_fitness.Enable = s;
-            handles.plot_button_age.Enable = s;
-            handles.mutation_matrix_button.Enable = s;
-            handles.initial_frequencies_button.Enable = s;
+            obj.handles.matrixOn_button.Enable = s;
+            obj.handles.population_box.Enable = s;
+            obj.handles.genetics_button.Enable = s;
+            obj.handles.spatial_structure_check.Enable = s;
+            obj.handles.recombination_check.Enable = s;
+            obj.handles.recombination_box.Enable = s;
+            obj.handles.remove_edges_check.Enable = s;
+            obj.handles.model1_button.Enable = s;
+            obj.handles.model2_button.Enable = s;
+            obj.handles.model3_button.Enable = s;
+            obj.handles.model4_button.Enable = s;
+            obj.handles.num_types_box.Enable = s;
+            obj.handles.types_popup.Enable = s;
+            obj.handles.init_pop_box.Enable = s;
+            obj.handles.loci_box.Enable = s;
+            obj.handles.param_1_box.Enable = s;
+            obj.handles.param_2_box.Enable = s;
+            obj.handles.plot_button_count.Enable = s;
+            obj.handles.plot_button_percent.Enable = s;
+            obj.handles.plot_button_fitness.Enable = s;
+            obj.handles.plot_button_age.Enable = s;
+            obj.handles.mutation_matrix_button.Enable = s;
+            obj.handles.initial_frequencies_button.Enable = s;
         end
 
         
-        function enableButtons(obj, handles, on)
+        function enableButtons(obj, on)
             %Enable or Disable the pause/save/step buttons
             if on
                 s = 'on';
             else
                 s = 'off';
             end
-            handles.save_button.Enable = s;
-            handles.step_button.Enable = s;
-            handles.reset_button.Enable = s;
-            handles.preview_button.Enable = s;
+            obj.handles.save_button.Enable = s;
+            obj.handles.step_button.Enable = s;
+            obj.handles.reset_button.Enable = s;
+            obj.handles.preview_button.Enable = s;
             if obj.parameterManager.getNumTypes() > 16
-                handles.page_button.Enable = s;
+                obj.handles.page_button.Enable = s;
             else
-                handles.page_button.Enable = 'off';
+                obj.handles.page_button.Enable = 'off';
             end
         end
 
         
-        function cleanup(obj, handles)
+        function cleanup(obj)
             %Responsible for resetting all of the things on the screen to their
             %defaults. Called when the user presses clear/reset
-            obj.enableInputs(handles, 1)
-            obj.enableButtons(handles, 1)
+            obj.enableInputs(1)
+            obj.enableButtons(1)
             obj.paused = 0;
             obj.evolving = 0;
             obj.stepping = 0;
-            handles.run_button.String = 'Run';
-            handles.run_button.BackgroundColor = [0 1 0];
-            handles.step_button.BackgroundColor = [0 0 1];
-            handles.save_button.BackgroundColor = [0 1 1];
-            handles.reset_button.BackgroundColor = [1 0 0];
-            handles.generationLabel.String = 'Generation: 0';
+            obj.handles.run_button.String = 'Run';
+            obj.handles.run_button.BackgroundColor = [0 1 0];
+            obj.handles.step_button.BackgroundColor = [0 0 1];
+            obj.handles.save_button.BackgroundColor = [0 1 1];
+            obj.handles.reset_button.BackgroundColor = [1 0 0];
+            obj.handles.generationLabel.String = 'Generation: 0';
         end
 
 
-        function runLoop(obj, firstRun, handles, runOnce)
+        function runLoop(obj, firstRun, runOnce)
             %This function runs the actual simulation in a while loop
             %TODO: MAYBE change to a timer? Ctrl-C is useful though
             if isempty(obj.gridManager)
@@ -363,7 +362,7 @@ classdef GUIHelper < handle
                 [i, j] = ind2sub(sqrt(numel(obj.gridManager.matrix)), ind);
                 mult = 50/sqrt(numel(obj.gridManager.matrix));
                 obj.rects{i,j} = rectangle(...
-                    'Parent', handles.axes_grid,...
+                    'Parent', obj.handles.axes_grid,...
                     'Position',[mult*i-mult mult*j-mult mult*1 mult*1], ...
                     'Visible', 'off');
             end
@@ -375,7 +374,7 @@ classdef GUIHelper < handle
                    halt = 0;
                    c = find(obj.gridManager.matrix);
                end
-               obj.drawIteration(c, handles, firstRun);
+               obj.drawIteration(c, firstRun);
                firstRun = 0;
                if runOnce || halt
                    break;
@@ -384,7 +383,7 @@ classdef GUIHelper < handle
         end
 
         
-        function drawIteration(obj, c, handles, firstRun)
+        function drawIteration(obj, c, firstRun)
             %A single iteration of the simulation loop
             if obj.gridManager.matrixOn 
                 %Draw the matrix
@@ -401,20 +400,20 @@ classdef GUIHelper < handle
                     end
                 end
             end
-            handles.generationLabel.String = sprintf('Generation: %d', obj.gridManager.timestep);
+            obj.handles.generationLabel.String = sprintf('Generation: %d', obj.gridManager.timestep);
             %Draw the plot to the lower axis
-            obj.drawPage(handles, firstRun);
+            obj.drawPage(firstRun);
             drawnow;
         end
             
 
 
 
-        function drawPage(obj, handles, firstRun)
+        function drawPage(obj, firstRun)
             %Fills in the legendInput, draws the legend and parameter plots to the screen. Draws all
             %types in the interval [obj.group, (obj.group + 16)]
-            axes(handles.axes_graph); %make the axes_graph the active axes
-            cla(handles.axes_graph);
+            axes(obj.handles.axes_graph); %make the axes_graph the active axes
+            cla(obj.handles.axes_graph);
             if isempty(obj.gridManager)
                 fprintf('ERROR: Grid Manager Empty\n')
                 return
@@ -424,13 +423,13 @@ classdef GUIHelper < handle
             end
             range = obj.group:min(obj.group + 15, obj.gridManager.numTypes);
             %Plot the parameters on the graph
-            if handles.plot_button_count.Value
+            if obj.handles.plot_button_count.Value
                 mat = obj.gridManager.totalCount(range, :);
                 y_axis_label = 'Population Count';
-            elseif handles.plot_button_percent.Value
+            elseif obj.handles.plot_button_percent.Value
                 mat = obj.gridManager.percentCount(range, :);
                 y_axis_label = 'Percent Population Size';
-            elseif handles.plot_button_age.Value
+            elseif obj.handles.plot_button_age.Value
                 mat = obj.gridManager.ageStructure{obj.gridManager.timestep}(range, :);
                 y_axis_label = 'Proportion of Organisms';
             else
@@ -438,29 +437,29 @@ classdef GUIHelper < handle
                 y_axis_label = 'Mean Fitness';
             end
             %Handle logistic plotting
-            if handles.plot_button_log.Value
+            if obj.handles.plot_button_log.Value
                 mat = log10(mat);
                 y_axis_label = sprintf('log10(%s)', y_axis_label);
             end
             %Actually plots the line or bar graph
             for i = 1:size(mat,1)
                 hold on;
-                plot(1:length(mat(i,:)), mat(i,:), 'Parent', handles.axes_graph, 'Color', obj.gridManager.getColor(i));
+                plot(1:length(mat(i,:)), mat(i,:), 'Parent', obj.handles.axes_graph, 'Color', obj.gridManager.getColor(i));
             end
             %draws the correct xlabel
-            if ~handles.plot_button_age.Value
-                xlabel('Generations', 'Parent', handles.axes_graph);
+            if ~obj.handles.plot_button_age.Value
+                xlabel('Generations', 'Parent', obj.handles.axes_graph);
             else
-                xlabel('Age', 'Parent', handles.axes_graph);
+                xlabel('Age', 'Parent', obj.handles.axes_graph);
             end
-            ylabel(y_axis_label, 'Parent', handles.axes_graph);
-            obj.drawLegend(handles, range, firstRun);
+            ylabel(y_axis_label, 'Parent', obj.handles.axes_graph);
+            obj.drawLegend(range, firstRun);
         end
         
         
-        function drawLegend(obj, handles, range, firstRun)
+        function drawLegend(obj, range, firstRun)
             %Draws the legend to the screen
-            if ~handles.plot_button_fitness.Value
+            if ~obj.handles.plot_button_fitness.Value
                 legendInput = {};
                 for i = range
                     if obj.parameterManager.numLoci > 1 && obj.parameterManager.mutating
@@ -471,82 +470,82 @@ classdef GUIHelper < handle
                 end
 %                 L = findobj('type','legend');
                 if firstRun
-                    legend(legendInput, 'Location', 'northwest', 'Parent', handles.f);
+                    legend(legendInput, 'Location', 'northwest', 'Parent', obj.handles.f);
                 end
             end
             
         end
         
         
-        function run(obj, handles, runOnce)
+        function run(obj, runOnce)
             %This function executes the simulation and is called directly
             %by the run button callback
  
             %If the number of types is greater than 16, turn petri dish off
             if obj.parameterManager.getNumTypes() > 16
-                handles.matrixOn_button.Value = 0;
+                obj.handles.matrixOn_button.Value = 0;
                 obj.parameterManager.updateBoxValues();
             end
             obj.group = 1;
-            handles.run_button.String = 'Calculating...';
+            obj.handles.run_button.String = 'Calculating...';
             obj.evolving = 1;
-            obj.toggleVisible(handles)
+            obj.toggleVisible()
             %Turn off the boxes on the screens and recolor the buttons
-            obj.enableInputs(handles, 0);
-            obj.enableButtons(handles, 0);
-            handles.run_button.String = 'Pause';
-            handles.run_button.BackgroundColor = [1 0 0];
-            handles.save_button.BackgroundColor = [.25 .25 .25];
-            handles.reset_button.BackgroundColor = [.25 .25 .25];
-            handles.step_button.BackgroundColor = [.25 .25 .25];
+            obj.enableInputs(0);
+            obj.enableButtons(0);
+            obj.handles.run_button.String = 'Pause';
+            obj.handles.run_button.BackgroundColor = [1 0 0];
+            obj.handles.save_button.BackgroundColor = [.25 .25 .25];
+            obj.handles.reset_button.BackgroundColor = [.25 .25 .25];
+            obj.handles.step_button.BackgroundColor = [.25 .25 .25];
             drawnow;
             %make the obj.gridManager and run the simulation
-            obj.initializeGridManager(handles);
-            obj.runLoop(1, handles, runOnce);
+            obj.initializeGridManager();
+            obj.runLoop(1, runOnce);
             %when the simulation terminates
             obj.evolving = 0;
             %if the termination is not a pause
             if ~obj.paused
-                obj.cleanup(handles)
+                obj.cleanup()
             end
         end
 
-        function continueRunning(obj, handles)
+        function continueRunning(obj)
             %Break the pause and continue running the simulation. This
             %function is called by the run button callback from the
             %continue state
             obj.evolving = 1;
             obj.paused = 0;
-            obj.enableInputs(handles, 0);
-            obj.enableButtons(handles, 0)
-            handles.run_button.String = 'Pause';
-            handles.run_button.BackgroundColor = [1 0 0];
-            handles.save_button.BackgroundColor = [.25 .25 .25];
-            handles.reset_button.BackgroundColor = [.25 .25 .25];
-            handles.step_button.BackgroundColor = [.25 .25 .25];
+            obj.enableInputs(0);
+            obj.enableButtons(0)
+            obj.handles.run_button.String = 'Pause';
+            obj.handles.run_button.BackgroundColor = [1 0 0];
+            obj.handles.save_button.BackgroundColor = [.25 .25 .25];
+            obj.handles.reset_button.BackgroundColor = [.25 .25 .25];
+            obj.handles.step_button.BackgroundColor = [.25 .25 .25];
             drawnow;
-            obj.runLoop(0, handles, 0);
+            obj.runLoop(0, 0);
             obj.evolving = 0;
             if ~obj.paused
-                obj.cleanup(handles)
+                obj.cleanup()
             end
         end
 
-        function pauseRunning(obj, handles)
+        function pauseRunning(obj)
             %Pause the simulation. 
             obj.evolving = 0;
             obj.paused = 1;
-            obj.enableInputs(handles, 0);
-            obj.enableButtons(handles, 1);
-            handles.run_button.String = 'Continue';
-            handles.run_button.BackgroundColor = [0 1 0];
-            handles.step_button.BackgroundColor = [0 0 1];
-            handles.save_button.BackgroundColor = [0 1 1];
-            handles.reset_button.BackgroundColor = [1 0 0];
+            obj.enableInputs(0);
+            obj.enableButtons(1);
+            obj.handles.run_button.String = 'Continue';
+            obj.handles.run_button.BackgroundColor = [0 1 0];
+            obj.handles.step_button.BackgroundColor = [0 0 1];
+            obj.handles.save_button.BackgroundColor = [0 1 1];
+            obj.handles.reset_button.BackgroundColor = [1 0 0];
             drawnow;
         end
 
-        function initializeGridManager(obj, handles)
+        function initializeGridManager(obj)
             %Initialize the grid manager object based on the parameterManager's parameters and the
             %current model
             MM = MutationManager(obj.parameterManager.mutating,...
@@ -566,8 +565,8 @@ classdef GUIHelper < handle
                 obj.parameterManager.getField('Param2')};
             constructor = str2func(obj.parameterManager.classConstants(obj.parameterManager.currentModel).className);
             obj.gridManager = constructor(constructorArguements{:});
-            cla(handles.axes_grid);
-            cla(handles.axes_graph);
+            cla(obj.handles.axes_grid);
+            cla(obj.handles.axes_graph);
             obj.rects = cell(sqrt(numel(obj.gridManager.matrix)));
         end
 

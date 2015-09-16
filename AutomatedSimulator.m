@@ -1,16 +1,29 @@
 function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     % This file is an automated front end for the simulator program
-    % mutating - 0
-    % numLoci - 0
-    % mutationMatrix - [0.99 0.01; 0.01 0.99]
-    % recombinationNumber - 0
-    % matrixOn - 0
-    % totalPopSize - 2500
-    % spatialOn - 1
-    % edgesOn - 1
-    % maxIterations - 25
-    % return - totalCount, matrix, ageDist
     
+%     Required Inputs
+%     GridManagerClass - The model used for the simulation (e.g. GridManagerLogistic, GridManagerMoran) 
+%     Ninit - The vector of initial populations
+%     p1 - The vector of initial parameter 1s
+%     p2 - The vector of initial parameter 2s
+% 
+%     
+%     Optional Inputs
+%     mutating - (whether or not mutation is enabled, Default 0)
+%     numLoci - (the number of loci, Default 1)
+%     mutationMatrix - (the mutation matrix, Default [0.99 0.01; 0.01 0.99])
+%     recombinationNumber - (whether or not recombination is enabled,
+%     Default 0)
+%     matrixOn - (whether or not the petri_dish_on method is used, Default 0) 
+%     totalPopSize - (the maximum population size, Default 2500)
+%     spatialOn - (whether or not spatial structure is enabled, Default 1)
+%     edgesOn - (whether or not edges are enabled. If 0, grid is actually a
+%     torus, Default 1)
+%     maxIterations - (maximum number of iterations before the
+%     simulation is halted, Default 25)
+%     return - (The type of data returned, Default totalCount, options are
+%     totalCount, matrix, ageDist)
+%     
     %Example: 
     %AutomatedSimulator('GridManagerMoran', [450 450], [1 1], [0.01 0.01], 'totalPopSize', 900)
     p = inputParser;

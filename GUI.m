@@ -56,16 +56,16 @@ function run_button_Callback(hObject, eventdata, handles)
 if handles.f.UserData.stepping
     return;
 end
-errorMessage = handles.f.UserData.verifyParameters(handles);
+errorMessage = handles.f.UserData.verifyParameters();
 if ~isempty(errorMessage)
     warndlg(errorMessage);
 end
 if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && isempty(errorMessage)
-    handles.f.UserData.run(handles, 0);
+    handles.f.UserData.run(0);
 elseif ~handles.f.UserData.evolving && handles.f.UserData.paused %continue
-    handles.f.UserData.continueRunning(handles);
+    handles.f.UserData.continueRunning();
 elseif handles.f.UserData.evolving && ~handles.f.UserData.paused %pause
-    handles.f.UserData.pauseRunning(handles);
+    handles.f.UserData.pauseRunning();
 end
 if ~handles.f.UserData.paused && ~handles.f.UserData.evolving;
     handles.run_button.String = 'Run';
@@ -93,7 +93,7 @@ if ~isempty(m)
     warndlg(m);
 end
 handles.f.UserData.parameterManager.updateDefaultNinit();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 function init_pop_box_Callback(hObject, eventdata, handles)
@@ -102,7 +102,7 @@ m = handles.f.UserData.parameterManager.updateBoxValues();
 if ~isempty(m)
     warndlg(m);
 end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 function param_1_box_Callback(hObject, eventdata, handles)
 % Executes when parameter 1 is changed
@@ -110,7 +110,7 @@ m = handles.f.UserData.parameterManager.updateBoxValues();
 if ~isempty(m)
     warndlg(m);
 end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 function param_2_box_Callback(hObject, eventdata, handles)
@@ -119,7 +119,7 @@ m = handles.f.UserData.parameterManager.updateBoxValues();
 if ~isempty(m)
     warndlg(m);
 end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 function save_button_Callback(hObject, eventdata, handles)
@@ -139,40 +139,40 @@ end
 function reset_button_Callback(hObject, eventdata, handles)
 % Executes on button press in reset_button.
 if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping
-    handles.f.UserData.cleanup(handles)
+    handles.f.UserData.cleanup()
     cla(handles.axes_grid);
     cla(handles.axes_graph);
     handles.f.UserData.rects = cell(sqrt(numel(handles.f.UserData.gridManager.matrix)));
     drawnow;
     handles.page_button.Enable = 'off';
-    handles.f.UserData.toggleVisible(handles);
+    handles.f.UserData.toggleVisible();
 end
 
 
 function model1_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model1_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
 
 
 function model2_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model2_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
 
 function model3_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model3_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
 
 
 function model4_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model4_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
 
 function population_box_Callback(hObject, eventdata, handles)
@@ -182,13 +182,13 @@ if ~isempty(m)
     warndlg(m);
 end
 handles.f.UserData.parameterManager.updateDefaultNinit();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
     
 
 function matrixOn_button_Callback(hObject, eventdata, handles)
 % Executes on button press in matrixOn_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 function preview_button_Callback(hObject, eventdata, handles)
@@ -235,7 +235,7 @@ end
 function genetics_button_Callback(hObject, eventdata, handles)
 % Executes on button press in genetics_button.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 function loci_box_Callback(hObject, eventdata, handles)
 % Executes when number of loci is changed
@@ -243,7 +243,7 @@ m = handles.f.UserData.parameterManager.updateBoxValues();
 if ~isempty(m)
     warndlg(m);
 end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 function step_button_Callback(hObject, eventdata, handles)
 % Executes on button press in step_button.
@@ -254,15 +254,15 @@ if ~handles.f.UserData.stepping && ~handles.f.UserData.evolving
             warndlg(m);
             return;
         end
-        handles.f.UserData.run(handles,1)
-        handles.f.UserData.pauseRunning(handles);
+        handles.f.UserData.run(1)
+        handles.f.UserData.pauseRunning();
     else
         if isempty(handles.f.UserData.gridManager)
             fprintf('ERROR: Grid Manager Empty')
             return
         end
         handles.f.UserData.stepping = 1;
-        handles.f.UserData.enableButtons(handles, 0)
+        handles.f.UserData.enableButtons(0)
         handles.run_button.Enable = 'off';
         handles.run_button.BackgroundColor = [.25 .25 .25];
         handles.save_button.BackgroundColor = [.25 .25 .25];
@@ -270,20 +270,20 @@ if ~handles.f.UserData.stepping && ~handles.f.UserData.evolving
         handles.step_button.BackgroundColor = [.25 .25 .25];
         drawnow;
         [c, halt] = handles.f.UserData.gridManager.getNext();
-        handles.f.UserData.drawIteration(c, handles, 0);
+        handles.f.UserData.drawIteration(c, 0);
         handles.f.UserData.stepping = 0;
         handles.run_button.Enable = 'on';
         handles.run_button.BackgroundColor = [0 1 0];
         handles.save_button.BackgroundColor = [0 1 1];
         handles.reset_button.BackgroundColor = [1 0 0];
         handles.step_button.BackgroundColor = [0 0 1]; 
-        handles.f.UserData.enableButtons(handles, 1)
+        handles.f.UserData.enableButtons(1)
         if halt
-            handles.f.UserData.cleanup(handles)
+            handles.f.UserData.cleanup()
         end
     end
-    handles.f.UserData.enableInputs(handles, 0);
-    handles.f.UserData.enableButtons(handles, 1);
+    handles.f.UserData.enableInputs(0);
+    handles.f.UserData.enableButtons(1);
 end
     
 
@@ -291,13 +291,13 @@ end
 function spatial_structure_check_Callback(hObject, eventdata, handles)
 % Executes on button press in spatial_structure_check.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 function recombination_check_Callback(hObject, eventdata, handles)
 % Executes on button press in recombination_check.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 
@@ -307,7 +307,7 @@ m = handles.f.UserData.parameterManager.updateBoxValues();
 if ~isempty(m)
     warndlg(m);
 end
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 
 
 
@@ -323,14 +323,14 @@ if ~handles.f.UserData.stepping && ...
     if handles.f.UserData.group > handles.f.UserData.gridManager.numTypes
         handles.f.UserData.group = 1;
     end
-    handles.f.UserData.drawPage(handles, 1);
+    handles.f.UserData.drawPage(1);
 end
 
 
 function remove_edges_check_Callback(hObject, eventdata, handles)
 % Executes on button press in remove_edges_check.
 handles.f.UserData.parameterManager.writeBoxes();
-handles.f.UserData.toggleVisible(handles);
+handles.f.UserData.toggleVisible();
 %
 %
 %

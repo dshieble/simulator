@@ -265,6 +265,7 @@ classdef ParameterManager < handle
                         end
                     end
                 end
+                obj.initializeMutationMatrix(num); 
             end
         end
         
@@ -278,17 +279,7 @@ classdef ParameterManager < handle
                 else
                     numAlleles = 2;
                 end
-                %reinitialize mutation matrix
-                obj.mutationMatrix = zeros(numAlleles);
-                for i = 1:numAlleles
-                    for j = 1:numAlleles
-                        if i == j
-                            obj.mutationMatrix(i,j) = 1 - 0.01*(numAlleles-1);
-                        else
-                            obj.mutationMatrix(i,j) = 0.01;
-                        end
-                    end
-                end  
+                obj.initializeMutationMatrix(numAlleles);  
                 obj.initialFrequencies = [1 zeros(1,2.^num - 1)];
             end
         end
@@ -310,8 +301,21 @@ classdef ParameterManager < handle
             end
         end
        
+        function initializeMutationMatrix(obj, numAlleles)
+            %reinitialize mutation matrix
+            obj.mutationMatrix = zeros(numAlleles);
+            for i = 1:numAlleles
+                for j = 1:numAlleles
+                    if i == j
+                        obj.mutationMatrix(i,j) = 1 - 0.01*(numAlleles-1);
+                    else
+                        obj.mutationMatrix(i,j) = 0.01;
+                    end
+                end
+            end
+        end
         
-
+        
         function out = getField(obj, param)
         	%Provides an interface for accessing parameters that does not
             %require the user to know whether the numLoci > 1, or what the

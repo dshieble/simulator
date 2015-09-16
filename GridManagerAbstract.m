@@ -116,7 +116,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.overallMeanFitness = [];
             obj.ageStructure = {};
             obj.mutationManager = mutationManager;
-            obj.saveData = struct('Param1', p1, 'Param2', p2);
+            obj.saveData = struct('Param1', p1, 'Param2', p2, 'matrix', obj.matrix);
             obj.updateParams();
         end
       
@@ -143,6 +143,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.saveData.totalCount = obj.totalCount;
             obj.saveData.totalCount = obj.totalCount;
             obj.saveData.ageStructure = obj.ageStructure;
+            obj.saveData.matrix = cat(3, obj.saveData.matrix, obj.matrix);
             h = max(obj.totalCount(:, obj.timestep))>=obj.maxSize;
             h = h && ~obj.mutationManager.mutating || (sum(obj.totalCount(:, obj.timestep)) == 0);
         end

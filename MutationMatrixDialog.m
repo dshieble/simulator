@@ -1,7 +1,6 @@
 %this function creates the popup dialog that allows us to edit the mutation
 %matrix
 function matrix = MutationMatrixDialog(current, numLoci)
-
     %Start Script
     d = dialog('Position',[100 100 1100 600],'Name','Mutation Matrix');
     matrix = [];
