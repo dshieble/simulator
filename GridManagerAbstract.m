@@ -433,7 +433,11 @@ classdef (Abstract) GridManagerAbstract < handle
         function updateParams(obj)
             meanFitness = zeros(1,obj.numTypes);
             for i = 1:obj.numTypes
-                obj.percentCount(i, obj.timestep) = obj.totalCount(i, obj.timestep)./obj.maxSize;
+                if sum(obj.totalCount(:, obj.timestep)) == 0
+                    obj.percentCount(i, obj.timestep) = 0;
+                else
+                    obj.percentCount(i, obj.timestep) = obj.totalCount(i, obj.timestep)./sum(obj.totalCount(:, obj.timestep));
+                end
                 meanFitness(i) = (obj.Param1(i))*obj.percentCount(i, obj.timestep); 
             end
             obj.overallMeanFitness(obj.timestep) = dot(meanFitness, obj.totalCount(:,obj.timestep));
