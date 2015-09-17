@@ -151,6 +151,7 @@ end
 
 function model1_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model1_button.
+111
 handles.f.UserData.parameterManager.writeBoxes();
 handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
@@ -158,6 +159,8 @@ handles.model_name_banner.String = handles.f.UserData.parameterManager.classCons
 
 function model2_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model2_button.
+222
+
 handles.f.UserData.parameterManager.writeBoxes();
 handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
