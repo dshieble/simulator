@@ -18,7 +18,7 @@ classdef GUIHelper < handle
     
     properties
         handles; %The struct that stores handles to all of the graphical objects
-        group; %The group of 16 types that we are displaying on the plot_axes. This is always 1 if numTypes <= 16
+        group; %The group of 8 types that we are displaying on the plot_axes. This is always 1 if numTypes <= 16
         parameterManager; %The ParameterManager object that stores and verifies the user inputted parameters
         rects; %The matrix of rectangle objects that are drawn or changed every iteration
         gridManager; %The GridManager object that runs the simulation
@@ -321,7 +321,7 @@ classdef GUIHelper < handle
             obj.handles.step_button.Enable = s;
             obj.handles.reset_button.Enable = s;
             obj.handles.preview_button.Enable = s;
-            if obj.parameterManager.getNumTypes() > 16
+            if obj.parameterManager.getNumTypes() > 8
                 obj.handles.page_button.Enable = s;
             else
                 obj.handles.page_button.Enable = 'off';
@@ -411,7 +411,7 @@ classdef GUIHelper < handle
 
         function drawPage(obj, firstRun)
             %Fills in the legendInput, draws the legend and parameter plots to the screen. Draws all
-            %types in the interval [obj.group, (obj.group + 16)]
+            %types in the interval [obj.group, (obj.group + 8)]
             axes(obj.handles.axes_graph); %make the axes_graph the active axes
             cla(obj.handles.axes_graph);
             if isempty(obj.gridManager)
@@ -421,7 +421,7 @@ classdef GUIHelper < handle
             if obj.group > obj.gridManager.numTypes
                 obj.group = 1;
             end
-            range = obj.group:min(obj.group + 15, obj.gridManager.numTypes);
+            range = obj.group:min(obj.group + 7, obj.gridManager.numTypes);
             %Plot the parameters on the graph
             if obj.handles.plot_button_count.Value
                 mat = obj.gridManager.totalCount(range, :);

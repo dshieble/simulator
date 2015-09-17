@@ -320,8 +320,8 @@ if isempty(handles.f.UserData.gridManager)
     return
 end
 if ~handles.f.UserData.stepping && ...
-        handles.f.UserData.gridManager.numTypes > 16
-    handles.f.UserData.group = handles.f.UserData.group + 16;
+        handles.f.UserData.gridManager.numTypes > 8
+    handles.f.UserData.group = handles.f.UserData.group + 8;
     if handles.f.UserData.group > handles.f.UserData.gridManager.numTypes
         handles.f.UserData.group = 1;
     end
