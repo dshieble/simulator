@@ -125,7 +125,7 @@ classdef ParameterManager < handle
                         4*obj.handles.model4_button.Value;
             if newModel ~= obj.currentModel
                 obj.currentModel = newModel;
-                obj.initializeInitialCounts(obj.numLoci, obj.popSize);
+                obj.initializeInitialCounts(obj.numLoci);
             end
         end
         
@@ -163,7 +163,7 @@ classdef ParameterManager < handle
             %Population Size
             if (obj.matrixOn && ParameterManager.isPositiveIntegerWithin(tempPopulation, 16, obj.maxPlottingPopSize) && floor(sqrt(tempPopulation))^2 == tempPopulation) || ...
                 ~obj.matrixOn && ParameterManager.isPositiveIntegerWithin(tempPopulation, 16, obj.maxPopSize);
-                obj.initializeInitialCounts(obj.numLoci, tempPopulation);   
+                obj.initializeInitialCounts(obj.numLoci, );   
                 obj.popSize = tempPopulation;
             else
             	message = sprintf('ERROR: If plotting is enabled, then population size must be a perfect square and less than %d. If plotting is not enabled, then population size must be less than %d. Population size must be at least 16.\n', obj.maxPlottingPopSize, obj.maxPopSize);
@@ -285,7 +285,7 @@ classdef ParameterManager < handle
                     numAlleles = 2;
                 end
                 obj.initializeMutationMatrix(numAlleles);
-                obj.initializeInitialCounts(num, obj.popSize);
+                obj.initializeInitialCounts(num);
             end
         end
 
@@ -306,19 +306,11 @@ classdef ParameterManager < handle
             end
         end
        
-        
-        function updatePopulation(obj, pop)
-        	%Updates some parameters based on the input to the max
-        	%population box
-            obj.initializeInitialCounts(obj.numLoci, pop)
-        end
-       
-        
-        function initializeInitialCounts(obj, num, pop)
+        function initializeInitialCounts(obj, num)
             %Initializes the initial counts vector to have all of the
             %initial organisms be of the first type
             if obj.classConstants(obj.currentModel).atCapacity
-                obj.initialCounts = [pop zeros(1,2.^num - 1)];
+                obj.initialCounts = [obj.popSize zeros(1,2.^num - 1)];
             else
                 obj.initialCounts = [1 zeros(1,2.^num - 1)];
             end

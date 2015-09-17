@@ -1,9 +1,9 @@
 %this function creates the popup dialog that allows us to edit the mutation
 %matrix
-function new = InitialFrequenciesDialog(current, numLoci)
+function new = InitialCountsDialog(current, numLoci, total, capacity)
 
     %Start Script
-    d = dialog('Position',[100 100 400 400],'Name','Initial Frequencies For Static (Moran, Wright-Fisher) Population Models');
+    d = dialog('Position',[100 100 400 400],'Name','Initial Counts');
     new = [];
 
     
@@ -20,7 +20,7 @@ function new = InitialFrequenciesDialog(current, numLoci)
        
     btn3 = uicontrol('Parent',d,...
            'Position',[150 125 100 25],...
-           'String','Homogenize',...
+           'String','Equal Counts',...
            'Callback',@makeUniform);  
        
     
@@ -38,7 +38,7 @@ function new = InitialFrequenciesDialog(current, numLoci)
         'ColumnWidth', widths);
     table.Data = num2cell(table.Data);
     rowname = cell(1, 2^numLoci);
-    colname = {'Frequency'};
+    colname = {'Count'};
     for i = 1:(2^numLoci)
         rowname{i} = sprintf('Type %s', dec2bin(i - 1, numLoci));
     end
@@ -62,19 +62,28 @@ function new = InitialFrequenciesDialog(current, numLoci)
        if any(isnan(data)) || ~isnumeric(data) || any(data < 0)
            warndlg('ERROR: All entries must be non-negative numbers!');
            return;
-       end
-       if sum(data) ~= 1
-           warndlg('ERROR: All columns must sum to 1!');
+       elseif sum(data) ~= total && capacity
+           warndlg(sprintf('ERROR: The sum of the counts must be %d!', total));
+           return;
+       elseif sum(data) > total && ~capacity
+           warndlg(sprintf('ERROR: The sum of the counts must be no greater than %d!', total));
            return;
        end
-        new = data';
-        uiresume;
-        delete(gcf);
+       new = data';
+       uiresume;
+       delete(gcf);
     end
 
     function makeUniform(~,~)
-        for j = 1:length(table.Data)
-            table.Data{j} = 1/length(table.Data);
+        if capacity
+            for j = 2:length(table.Data)
+                table.Data{j} = floor(total/length(table.Data));
+            end
+            table.Data{1} = 
+        else
+            for j = 1:length(table.Data)
+                table.Data{j} = 1;
+            end
         end
     end
 

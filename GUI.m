@@ -151,7 +151,6 @@ end
 
 function model1_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model1_button.
-111
 handles.f.UserData.parameterManager.writeBoxes();
 handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
@@ -159,8 +158,6 @@ handles.model_name_banner.String = handles.f.UserData.parameterManager.classCons
 
 function model2_button_Callback(hObject, eventdata, handles)
 % Executes on button press in model2_button.
-222
-
 handles.f.UserData.parameterManager.writeBoxes();
 handles.f.UserData.toggleVisible();
 handles.model_name_banner.String = handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).Name;
@@ -228,10 +225,12 @@ if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping &&...
     	warndlg('Number of Loci must be less than 12 to edit initial frequencies');
         return;
     end
-    f = InitialFrequenciesDialog(handles.f.UserData.parameterManager.initialFrequencies,...
-        handles.f.UserData.parameterManager.numLoci);
+    f = InitialCountsDialog(handles.f.UserData.parameterManager.initialCounts,...
+        handles.f.UserData.parameterManager.numLoci,...
+        handles.f.UserData.parameterManager.popSize,...
+        handles.f.UserData.parameterManager.classConstants(handles.f.UserData.parameterManager.currentModel).atCapacity);
     if ~isempty(f) 
-        handles.f.UserData.parameterManager.setInitialFrequencies(f);
+        handles.f.UserData.parameterManager.setInitialCounts(f);
     end
 end
 
