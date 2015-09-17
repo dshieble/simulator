@@ -142,7 +142,7 @@ if ~handles.f.UserData.evolving && ~handles.f.UserData.stepping
     handles.f.UserData.cleanup()
     cla(handles.axes_grid);
     cla(handles.axes_graph);
-    handles.f.UserData.rects = cell(sqrt(numel(handles.f.UserData.gridManager.matrix)));
+    %handles.f.UserData.rects = cell(sqrt(parameterManager.popSize));
     drawnow;
     handles.page_button.Enable = 'off';
     handles.f.UserData.toggleVisible();
