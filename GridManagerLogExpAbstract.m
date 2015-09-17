@@ -15,7 +15,7 @@ classdef (Abstract) GridManagerLogExpAbstract < GridManagerAbstract
             while max(obj.totalCount(:, obj.timestep)) > 0
                 totRates = obj.totalCount(:, obj.timestep).*(obj.Param1 + obj.Param2);
                 chosenType = obj.weightedSelection(totRates);
-                death = obj.isSuccess() && (rand()*(obj.Param1(chosenType)+obj.Param2(chosenType))) < obj.Param2(chosenType);
+                death = ~obj.isSuccess() || (rand()*(obj.Param1(chosenType)+obj.Param2(chosenType))) < obj.Param2(chosenType);
                 if sum(obj.totalCount(:, obj.timestep)) < obj.maxSize && ~death
                     %no death event, abort
                     break;
