@@ -116,7 +116,7 @@ classdef GUIHelper < handle
             obj.stepping = 0;
             
             %Temp_axes stuff
-            obj.temp_axes = axes('Parent',obj.handles.params_panel, 'Units', 'characters', 'Position', obj.handles.param_2_text.Position);
+            obj.temp_axes = axes('Parent',obj.handles.params_panel, 'Position', obj.handles.param_2_text.Position);
             obj.temp_axes.Visible = 'off';
             fill([0,0,0,0], [0,0,0,0], 'w', 'Parent', obj.handles.axes_grid);
             set(obj.handles.axes_grid,'XTick',[]);
@@ -162,8 +162,8 @@ classdef GUIHelper < handle
             obj.temp_axes.Visible = 'off';
             if obj.parameterManager.mutating && obj.parameterManager.numLoci > 1
                 obj.handles.param_1_text.String = 'S:';
-                text(obj.handles.param_2_text.Position(3) - 1.75, 0.5,'$$\epsilon$$:','FontSize',15,...
-                    'Interpreter','latex', 'Parent', obj.temp_axes, 'Units', 'characters');
+                text(obj.handles.param_2_text.Position(3) + .5, 0.5,'$$\epsilon$$:','FontSize',15,...
+                    'Interpreter','latex', 'Parent', obj.temp_axes);
                 set(obj.temp_axes,...
                     'XGrid', 'off', 'YGrid', 'off', 'ZGrid', 'off', ...
                     'Color', 'none', 'Visible', 'on', ...

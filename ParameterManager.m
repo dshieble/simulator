@@ -265,7 +265,12 @@ classdef ParameterManager < handle
                         end
                     end
                 end
-                obj.initializeMutationMatrix(num); 
+                if obj.numLoci == 1
+                    numAlleles = num;
+                else
+                    numAlleles = 2;
+                end
+                obj.initializeMutationMatrix(numAlleles); 
             end
         end
         
