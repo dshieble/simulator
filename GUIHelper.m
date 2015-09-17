@@ -470,7 +470,7 @@ classdef GUIHelper < handle
                 end
 %                 L = findobj('type','legend');
                 if firstRun
-                    legend(legendInput, 'Location', 'northwest', 'Parent', obj.handles.bottom_panel, 'FontName', 'default');
+                    legend(legendInput, 'Location', 'northwest', 'Parent', obj.handles.bottom_panel, 'FontName', 'default', 'Units', 'normalized');
                 end
             end
             
