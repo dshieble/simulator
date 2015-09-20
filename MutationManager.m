@@ -21,7 +21,7 @@ classdef MutationManager < handle
             obj.mutating =  mutating;
             obj.mutationMatrix =  mutationMatrix;
             obj.numLoci = numLoci;
-            obj.recombining = recombination;
+            obj.recombining = recombination && obj.numLoci > 1;
             obj.recombinationNumber = recombinationNumber;
             assert(all(sum(obj.mutationMatrix)-1 < 10e3), 'ASSERTION ERROR: Columns of Mutation Matrix must sum to 1.');
             if obj.numLoci > 1 && obj.mutating

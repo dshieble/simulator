@@ -236,7 +236,7 @@ classdef GUIHelper < handle
                 %num_types
                 obj.handles.num_types_box.Style = 'text';
                 obj.handles.num_types_string.String = 'Number of Types:';
-                obj.handles.init_pop_box.Style = 'text';
+                obj.handles.init_pop_box.Visible = 'off';
                 %initial frequencies
                 obj.handles.initial_frequencies_button.Visible = 'on';
                 %matrixOn
@@ -250,7 +250,7 @@ classdef GUIHelper < handle
                 obj.handles.params_string.Visible= 'on';
                 %num_types
                 obj.handles.num_types_box.Style = 'edit';
-                obj.handles.init_pop_box.Style = 'edit';
+                obj.handles.init_pop_box.Visible = 'on';
                 obj.handles.recombination_check.Visible = 'off';
                 %initial frequencies
                 obj.handles.initial_frequencies_button.Visible = 'off';
