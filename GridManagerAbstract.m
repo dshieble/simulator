@@ -29,7 +29,7 @@ classdef (Abstract) GridManagerAbstract < handle
         ageMatrix; %stores how old each organism in the matrix is 
         ageStructure; %cell array, each cell is a timestep storing a vector that stores the frequency of each age
         saveData; %The data that is exported to a .mat file when the user presses save
-        timestep; %The number of steps since the beginning of the simulation
+        timestep; %The number of steps since the beginning of the simulation. This serves as an index into the arrays that are updated every generation (i.e. totalCount), and is therefore one larger than the generation because of matlab indexing
         numTypes; %The number of different types in the simulation
         colors; %The vector of each type's color
 
