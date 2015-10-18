@@ -82,8 +82,6 @@ classdef ParameterManager < handle
             %multiple loci params
             obj.s = -0.5;
             obj.e = 0;
-
-
         end
         
         
@@ -115,7 +113,7 @@ classdef ParameterManager < handle
             obj.currentType = obj.handles.types_popup.Value;
             obj.mutating = obj.handles.genetics_button.Value;
             obj.recombining = obj.handles.recombination_check.Value;
-            obj.spatialOn = obj.handles.spatial_structure_check.Value;
+            obj.spatialOn = ~obj.handles.spatial_structure_check.Value;
             obj.matrixOn = obj.handles.matrixOn_button.Value;
             obj.edgesOn = ~obj.handles.remove_edges_check.Value;
             %current model

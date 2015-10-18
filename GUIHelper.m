@@ -234,8 +234,9 @@ classdef GUIHelper < handle
                 obj.handles.types_popup.Visible = 'off';
                 obj.handles.params_string.Visible=  'off';
                 %num_types
-                obj.handles.num_types_box.Style = 'text';
-                obj.handles.num_types_string.String = 'Number of Types:';
+                
+                obj.handles.num_types_box.Visible = 'off';
+                obj.handles.num_types_string.Visible = 'off';
                 obj.handles.init_pop_box.Visible = 'off';
                 %initial frequencies
                 obj.handles.initial_frequencies_button.Visible = 'on';
@@ -249,7 +250,8 @@ classdef GUIHelper < handle
                 obj.handles.types_popup.Visible = 'on';
                 obj.handles.params_string.Visible= 'on';
                 %num_types
-                obj.handles.num_types_box.Style = 'edit';
+                obj.handles.num_types_box.Visible = 'on';
+                obj.handles.num_types_string.Visible = 'on';
                 obj.handles.init_pop_box.Visible = 'on';
                 obj.handles.recombination_check.Visible = 'off';
                 %initial frequencies
@@ -444,7 +446,12 @@ classdef GUIHelper < handle
             %Actually plots the line graph
             for i = 1:size(mat,1)
                 hold on;
-                plot(0:length(mat(i,:))-1, mat(i,:), 'o-', 'MarkerFaceColor', obj.gridManager.getColor(i), 'Parent', obj.handles.axes_graph, 'Color', obj.gridManager.getColor(i));
+                if obj.handles.plot_button_age.Value
+                    marker = 'o';
+                else
+                    marker = 'o-';
+                end
+                plot(0:length(mat(i,:))-1, mat(i,:), marker, 'MarkerFaceColor', obj.gridManager.getColor(i), 'Parent', obj.handles.axes_graph, 'Color', obj.gridManager.getColor(i));
             end
             %draws the correct xlabel
             if ~obj.handles.plot_button_age.Value
