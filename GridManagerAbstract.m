@@ -116,7 +116,7 @@ classdef (Abstract) GridManagerAbstract < handle
             obj.overallMeanFitness = [];
             obj.ageStructure = {};
             obj.mutationManager = mutationManager;
-            obj.saveData = struct('Param1', p1, 'Param2', p2, 'matrix', obj.matrix);
+            obj.saveData = struct('Param1', p1, 'Param2', p2, 'matrix', obj.matrix, 'rng', rng());
             obj.updateParams();
         end
       

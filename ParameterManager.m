@@ -46,6 +46,7 @@ classdef ParameterManager < handle
         function obj = ParameterManager(handles, classConstants)
             obj.classConstants = classConstants;
             obj.currentModel = 1;
+            obj.currentType = 1;
             obj.setMatrixOn(handles.matrixOn_button.Value);
             obj.spatialOn = 1;
             obj.edgesOn = 1;
@@ -226,7 +227,6 @@ classdef ParameterManager < handle
         end
             
         
-
         
         
         function updateNumTypes(obj, num)
@@ -473,7 +473,7 @@ classdef ParameterManager < handle
             out = 1;
             if ~ParameterManager.isNumber(n)
                 out = 0;
-            elseif any(n < lower || n > upper)
+            elseif any(n < lower) || any(n > upper)
                 out = 0;
             end 
         end

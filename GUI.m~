@@ -61,12 +61,11 @@ if ~isempty(errorMessage)
     warndlg(errorMessage);
 end
 if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && isempty(errorMessage)
-    modifiers = get(gcf,'currentModifier');
+    modifiers = get(gcf,'currentModifier')
     if ismember('shift',modifiers)
-        filename = uigetfile;
+        filename = uigetfile
         if filename
-            matFile = load(filename);
-            rng(matFile.saveData.rng);
+            X = load(file
         end
     end
     handles.f.UserData.run(0);

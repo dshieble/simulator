@@ -50,14 +50,14 @@ classdef GUIHelper < handle
                 e = [];
                 for i = 1:length(names)
                     try 
-                        obj.getConstantProperty(names{i}, 'Name');
-                        obj.getConstantProperty(names{i}, 'OverlappingGenerations');
-                        obj.getConstantProperty(names{i}, 'ParamName1');
-                        obj.getConstantProperty(names{i}, 'ParamName2');
-                        obj.getConstantProperty(names{i}, 'ParamBounds1');
-                        obj.getConstantProperty(names{i}, 'ParamBounds2');
-                        obj.getConstantProperty(names{i}, 'atCapacity');
-                        obj.getConstantProperty(names{i}, 'plottingEnabled');
+                        GUIHelper.getConstantProperty(names{i}, 'Name');
+                        GUIHelper.getConstantProperty(names{i}, 'OverlappingGenerations');
+                        GUIHelper.getConstantProperty(names{i}, 'ParamName1');
+                        GUIHelper.getConstantProperty(names{i}, 'ParamName2');
+                        GUIHelper.getConstantProperty(names{i}, 'ParamBounds1');
+                        GUIHelper.getConstantProperty(names{i}, 'ParamBounds2');
+                        GUIHelper.getConstantProperty(names{i}, 'atCapacity');
+                        GUIHelper.getConstantProperty(names{i}, 'plottingEnabled');
                     catch e
                         fprintf('%s is not a valid class. Initializing with the default classes.', names{i});
                         break
@@ -85,14 +85,14 @@ classdef GUIHelper < handle
             );
             for i = 1:length(classNames)
                 classConstants(i).className = classNames{i};
-                classConstants(i).Name = obj.getConstantProperty(classNames{i}, 'Name');
-                classConstants(i).OverlappingGenerations = obj.getConstantProperty(classNames{i}, 'OverlappingGenerations');
-                classConstants(i).ParamName1 = obj.getConstantProperty(classNames{i}, 'ParamName1');
-                classConstants(i).ParamName2 = obj.getConstantProperty(classNames{i}, 'ParamName2');
-                classConstants(i).ParamBounds1 = obj.getConstantProperty(classNames{i}, 'ParamBounds1');
-                classConstants(i).ParamBounds2 = obj.getConstantProperty(classNames{i}, 'ParamBounds2');
-                classConstants(i).atCapacity = obj.getConstantProperty(classNames{i}, 'atCapacity');
-                classConstants(i).plottingEnabled = obj.getConstantProperty(classNames{i}, 'plottingEnabled');
+                classConstants(i).Name = GUIHelper.getConstantProperty(classNames{i}, 'Name');
+                classConstants(i).OverlappingGenerations = GUIHelper.getConstantProperty(classNames{i}, 'OverlappingGenerations');
+                classConstants(i).ParamName1 = GUIHelper.getConstantProperty(classNames{i}, 'ParamName1');
+                classConstants(i).ParamName2 = GUIHelper.getConstantProperty(classNames{i}, 'ParamName2');
+                classConstants(i).ParamBounds1 = GUIHelper.getConstantProperty(classNames{i}, 'ParamBounds1');
+                classConstants(i).ParamBounds2 = GUIHelper.getConstantProperty(classNames{i}, 'ParamBounds2');
+                classConstants(i).atCapacity = GUIHelper.getConstantProperty(classNames{i}, 'atCapacity');
+                classConstants(i).plottingEnabled = GUIHelper.getConstantProperty(classNames{i}, 'plottingEnabled');
             end
             % Set text based on the classNames and classConstants
             obj.handles.model_name_banner.String = classConstants(1).Name;
@@ -577,16 +577,18 @@ classdef GUIHelper < handle
             cla(obj.handles.axes_graph);
             obj.rects = cell(sqrt(numel(obj.gridManager.matrix)));
         end
-
-        function prop = getConstantProperty(obj, name, propName)
+    end
+    
+    methods (Static)
+        function prop = getConstantProperty(name, propName)
             % Gets a constant property of a class, given that class's name as a string
             mc=meta.class.fromName(name);
             mp=mc.PropertyList;
             [~,loc]=ismember(propName,{mp.Name});
             prop = mp(loc).DefaultValue;
         end
-
     end
+
     
 end
 

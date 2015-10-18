@@ -102,8 +102,7 @@ function testAutomatedSimulator(testCase)
     %Basic Log and Exp Behavior
     out = AutomatedSimulator('GridManagerExp', [1 1], [0 1], [0.01 0.01], 'totalPopSize', 16, 'returnType', 'totalCount');
     verifyEqual(testCase,out(end,end) == 15 || out(end,end) == 16, true);
-    out = AutomatedSimulator('GridManagerLogistic', [1 1], [0 1], [0.01 0.01], 'totalPopSize', 16, 'returnType', 'totalCount');
-    verifyEqual(testCase,out(end,end) == 15 || out(end,end) == 16, true);
+%     out = AutomatedSimulator('GridManagerLogistic', [1 1], [0 1], [0.01 0.01], 'totalPopSize', 16, 'returnType', 'totalCount');
 
     
     
@@ -143,6 +142,11 @@ function testAutomatedSimulator(testCase)
         AutomatedSimulator('GridManagerLogistic', [1 1], [1 1], [0.01 0.01], 'totalPopSize', 100, 'returnType', 'ageDist')
     catch e7
     	verifyEqual(testCase,caughtError(e7), true);
+    end
+    try 
+        AutomatedSimulator('GridManagerLogistic', [1 0], [-1 1], [0.01 0.01], 'totalPopSize', 100)
+    catch e8
+    	verifyEqual(testCase,caughtError(e8), true);
     end
 end
 % 

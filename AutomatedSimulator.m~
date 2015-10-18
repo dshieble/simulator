@@ -67,16 +67,32 @@ function out = AutomatedSimulator(GridManagerClass, Ninit, p1, p2, varargin)
     assert(p.Results.matrixOn || ~strcmp(p.Results.returnType, 'ageDist'), 'ASSERTION ERROR: In order to track ages, we must turn the matrix on.');
     
     %Verify that values for parameter 1 and parameter 2 are good
-    if p.Results.mutating && p.Results.numLoci > 1
-        assert(ParameterManager.isNumber(p.Results.p1) & ParameterManager.isNumber(p.Results.p2), 'ASSERTION ERROR: s and e must be numeric');
-    else
-        b1 = GUIHelper.getConstantProperty(GridManagerClass, 'ParamBounds1');
-        b2 = GUIHelper.getConstantProperty(GridManagerClass, 'ParamBounds2');
-        a1 = ParameterManager.isNumberWithin(p.Results.p1, b1(1), b1(2));
-        a2 = ParameterManager.isNumberWithin(p.Results.p2, b2(1), b2(2));
-        assert(logical(a1), 'ASSERTION ERROR: Parameter 1 (e.g. birth rate or fitness) is not within the correct range')
-        assert(logical(a2), 'ASSERTION ERROR: Parameter 2 (e.g. death rate) is not within the correct range')
-    end
+                if ParameterManager.isNumber(tempParam1) && obj.mutating && obj.numLoci > 1
+                obj.s = tempParam1;
+            elseif ParameterManager.isNumberWithin(tempParam1, ...
+                    obj.classConstants(obj.currentModel).ParamBounds1(1),...
+                    obj.classConstants(obj.currentModel).ParamBounds1(2))
+                obj.modelParameters(obj.currentModel).Param1(obj.currentType) = tempParam1;
+            else
+                if obj.mutating && obj.numLoci > 1
+                    message = sprintf('ERROR: s must be a number\n');
+                else
+                    message = sprintf('ERROR: %s must be a number between %d and %d.\n', ...
+                        obj.classConstants(obj.currentModel).ParamName1,...
+                        obj.classConstants(obj.currentModel).ParamBounds1(1),...
+                        obj.classConstants(obj.currentModel).ParamBounds1(2));
+                end
+            end
+            
+            
+            %Param 2
+            if ParameterManager.isNumber(tempParam2) && obj.mutating && obj.numLoci > 1
+                obj.e = tempParam2;
+            elseif ParameterManager.isNumberWithin(tempParam2, ...
+                    obj.classConstants(obj.currentModel).ParamBounds2(1),...
+                    obj.classConstants(obj.currentModel).ParamBounds2(2))
+                obj.modelParameters(obj.currentModel).Param2(obj.currentType) = tempParam2;
+            else
 
     
     

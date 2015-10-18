@@ -8,8 +8,8 @@ classdef GridManagerLogistic < GridManagerLogExpAbstract
         OverlappingGenerations = 1;
         ParamName1 = 'Birth Rate';
         ParamName2 = 'Death Rate';
-        ParamBounds1 = [0 1];
-        ParamBounds2 = [0 1];
+        ParamBounds1 = [0 inf];
+        ParamBounds2 = [0 inf];
         atCapacity = 0;
         plottingEnabled = 1;
     end
