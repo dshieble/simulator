@@ -1,0 +1,22 @@
+This file describes what happens when you press "run"
+
+When you press run, first an instance of a GridManager class is created. This can be a GridManagerWright object, GridManagerMoran, etc.
+
+Then, the GridManager class creates the totalCount array that stores how many organisms of each type are represented 
+at each timestep. If the petri dish is enabled, the class also creates a matrix that stores the location of each organism.
+
+During each generation, the following process occurs:
+
+-- In the GridManagerAbstract class, the getNext function updates the timestep and calls the getNextGeneration function. 
+-- In Exponential, Logistic and Moran, the getNextGeneration function calls the reproductiveEvent function N times, 
+where N is the size of the population. Each of these classes implement their own reproductiveEvent function.
+-- For example, in the Exponential Case, the reproductiveEvent function does the following (this code is in the GridManagerLogExpAbstract class):
+    Repeat the following process until a birth event takes place:
+        randoselect a type, where the weight of each 
+        with probability d/(b+d) perform a death event (select a random organism of 
+        with probability b/(b+d) perform a birth event
+
+-- In Wright-Fisher, the GridManagerWright class implements its own getNextGeneration function, which performs the Wright-Fisher
+generation update
+
+

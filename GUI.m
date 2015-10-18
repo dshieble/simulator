@@ -62,6 +62,8 @@ if ~isempty(errorMessage)
 end
 if ~handles.f.UserData.evolving && ~handles.f.UserData.paused && isempty(errorMessage)
     modifiers = get(gcf,'currentModifier');
+    %Shift-Click lets you pick a saved file to seed the random number
+    %generator the same way as that file
     if ismember('shift',modifiers)
         filename = uigetfile;
         if filename
